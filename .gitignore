@@ -1,0 +1,60 @@
+# Flutter
+spk_mobile/build/
+spk_mobile/.dart_tool/
+spk_mobile/.flutter-plugins
+spk_mobile/.flutter-plugins-dependencies
+spk_mobile/.packages
+spk_mobile/*.iml
+spk_mobile/.gradle/
+spk_mobile/.idea/
+spk_mobile/android/.gradle/
+spk_mobile/android/local.properties
+spk_mobile/ios/Pods/
+spk_mobile/ios/Podfile.lock
+spk_mobile/macos/Podfile.lock
+spk_mobile/windows/flutter/ephemeral/
+
+# Laravel
+spk_kontrakan/vendor/
+spk_kontrakan/node_modules/
+spk_kontrakan/.env
+spk_kontrakan/.env.local
+spk_kontrakan/.env.*.local
+spk_kontrakan/storage/logs/*
+spk_kontrakan/storage/backups/*
+spk_kontrakan/public/storage/
+spk_kontrakan/bootstrap/cache/
+spk_kontrakan/.vscode/
+spk_kontrakan/dist/
+spk_kontrakan/build/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Build artifacts
+*.apk
+*.aab
+*.ipa
+*.dmg
+*.exe
+*.msi
+
+# Dependencies
+node_modules/
+.npm
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
