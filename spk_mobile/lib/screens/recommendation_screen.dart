@@ -9,7 +9,7 @@ import '../widgets/kontrakan_card.dart';
 import '../widgets/laundry_card.dart';
 
 class RecommendationScreen extends StatefulWidget {
-  final String category; // 'kontrakan' atau 'laundry'
+  final String category;
 
   const RecommendationScreen({Key? key, required this.category})
       : super(key: key);
@@ -20,28 +20,131 @@ class RecommendationScreen extends StatefulWidget {
 
 class _RecommendationScreenState extends State<RecommendationScreen> {
   bool _isLoading = false;
+  bool _hasCalculated = false;
   List<dynamic> _recommendations = [];
   String? _errorMessage;
 
-  // Filter values
-  double? _hargaMin;
-  double? _hargaMax;
-  double? _jarakMax;
-  int? _jumlahKamar;
-  String? _fasilitas;
-  
-  // Location values (for laundry)
-  bool _useUserLocation = false;
+  // Bobot values (percentage, total must = 100)
+  // Default: profil mahasiswa
+  int _bobotHarga = 50;
+  int _bobotJarak = 20;
+  int _bobotKriteria3 = 15; // jumlah_kamar (kontrakan) or kecepatan (laundry)
+  int _bobotKriteria4 = 15; // fasilitas (kontrakan) or layanan (laundry)
+
+  // Jenis layanan selection for laundry
+  String _selectedJenisLayanan = 'reguler';
+
+  // Location values
+  String _referensiJarak = 'kampus';
   double? _userLatitude;
   double? _userLongitude;
+  bool _isDetectingLocation = false;
+
+  String get _kriteria3Label =>
+      widget.category == 'kontrakan' ? 'Jumlah Kamar' : 'Kecepatan Layanan';
+  String get _kriteria4Label =>
+      widget.category == 'kontrakan' ? 'Fasilitas' : 'Variasi Layanan';
+  String get _kriteria3Key =>
+      widget.category == 'kontrakan' ? 'jumlah_kamar' : 'kecepatan';
+  String get _kriteria4Key =>
+      widget.category == 'kontrakan' ? 'fasilitas' : 'layanan';
+
+  int get _totalBobot =>
+      _bobotHarga + _bobotJarak + _bobotKriteria3 + _bobotKriteria4;
+
+  Color get _categoryColor => widget.category == 'kontrakan'
+      ? const Color(0xFF667eea)
+      : const Color(0xFF764ba2);
 
   @override
   void initState() {
     super.initState();
-    _loadRecommendations();
+    // Default bobot: profil mahasiswa
+    _bobotHarga = 50;
+    _bobotJarak = 20;
+    _bobotKriteria3 = 15;
+    _bobotKriteria4 = 15;
   }
 
-  Future<void> _loadRecommendations() async {
+  /// Auto-balance: when one bobot changes, redistribute the remaining
+  /// percentage proportionally among the other three (min 10% each).
+  void _updateBobot(int index, int newValue) {
+    setState(() {
+      List<int> bobots = [_bobotHarga, _bobotJarak, _bobotKriteria3, _bobotKriteria4];
+      int oldValue = bobots[index];
+      if (newValue == oldValue) return;
+
+      // Clamp newValue: max = 100 - 3*10 = 70
+      newValue = newValue.clamp(10, 70);
+      bobots[index] = newValue;
+
+      int remaining = 100 - newValue;
+      // Indices of the other 3 bobots
+      List<int> otherIdx = [0, 1, 2, 3].where((i) => i != index).toList();
+      int otherSum = otherIdx.fold(0, (sum, i) => sum + bobots[i]);
+
+      if (otherSum == 0) {
+        // Edge case: distribute equally
+        for (int i = 0; i < otherIdx.length; i++) {
+          bobots[otherIdx[i]] = (remaining / 3).round().clamp(10, 70);
+        }
+      } else {
+        // Proportional redistribution
+        int distributed = 0;
+        for (int i = 0; i < otherIdx.length - 1; i++) {
+          int idx = otherIdx[i];
+          int proportional = (bobots[idx] * remaining / otherSum).round();
+          proportional = proportional.clamp(10, 70);
+          bobots[idx] = proportional;
+          distributed += proportional;
+        }
+        // Last one gets the remainder to ensure total = 100
+        int lastIdx = otherIdx.last;
+        bobots[lastIdx] = (remaining - distributed).clamp(10, 70);
+
+        // Final adjustment pass to guarantee sum = 100
+        int total = bobots.reduce((a, b) => a + b);
+        if (total != 100) {
+          int diff = 100 - total;
+          // Adjust the largest adjustable bobot (not the one just set)
+          int adjustIdx = otherIdx.reduce((a, b) => bobots[a] >= bobots[b] ? a : b);
+          bobots[adjustIdx] = (bobots[adjustIdx] + diff).clamp(10, 70);
+        }
+      }
+
+      _bobotHarga = bobots[0];
+      _bobotJarak = bobots[1];
+      _bobotKriteria3 = bobots[2];
+      _bobotKriteria4 = bobots[3];
+    });
+  }
+
+  /// Get the maximum dropdown value for a given bobot index
+  int _getMaxBobot(int index) {
+    List<int> bobots = [_bobotHarga, _bobotJarak, _bobotKriteria3, _bobotKriteria4];
+    int othersMin = 0;
+    for (int i = 0; i < 4; i++) {
+      if (i != index) othersMin += 10; // minimum 10% each
+    }
+    return (100 - othersMin).clamp(10, 70); // max 70
+  }
+
+  List<int> _getBobotOptionsFor(int index) {
+    int max = _getMaxBobot(index);
+    return List.generate(((max - 10) ~/ 5) + 1, (i) => 10 + i * 5);
+  }
+
+  Future<void> _calculateSAW() async {
+    if (_totalBobot != 100) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Total bobot harus 100%! Saat ini: $_totalBobot%'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -52,18 +155,20 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
           ? '/saw/calculate/kontrakan'
           : '/saw/calculate/laundry';
 
-      // Build body parameters
       final bodyParams = <String, dynamic>{};
+      bodyParams['bobot_harga'] = _bobotHarga;
+      bodyParams['bobot_jarak'] = _bobotJarak;
 
-      if (_hargaMin != null) bodyParams['harga_min'] = _hargaMin;
-      if (_hargaMax != null) bodyParams['harga_max'] = _hargaMax;
-      if (_jarakMax != null) bodyParams['jarak_max'] = _jarakMax;
-      if (_jumlahKamar != null) bodyParams['jumlah_kamar'] = _jumlahKamar;
-      if (_fasilitas != null && _fasilitas!.isNotEmpty) {
-        bodyParams['fasilitas'] = _fasilitas;
+      if (widget.category == 'kontrakan') {
+        bodyParams['bobot_jumlah_kamar'] = _bobotKriteria3;
+        bodyParams['bobot_fasilitas'] = _bobotKriteria4;
+      } else {
+        bodyParams['bobot_kecepatan'] = _bobotKriteria3;
+        bodyParams['bobot_layanan'] = _bobotKriteria4;
+        bodyParams['jenis_layanan'] = _selectedJenisLayanan;
       }
-      // Add user location if enabled (for laundry only)
-      if (widget.category == 'laundry' && _useUserLocation) {
+
+      if (widget.category == 'laundry' && _referensiJarak == 'user') {
         if (_userLatitude != null && _userLongitude != null) {
           bodyParams['user_lat'] = _userLatitude;
           bodyParams['user_lng'] = _userLongitude;
@@ -84,15 +189,23 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         if (data['success'] == true) {
           setState(() {
             _recommendations = data['data']['hasil'] ?? [];
+            _hasCalculated = true;
           });
         } else {
           setState(() {
             _errorMessage = data['message'] ?? 'Terjadi kesalahan';
           });
         }
+      } else if (response.statusCode == 404) {
+        final data = json.decode(response.body);
+        setState(() {
+          _errorMessage = data['message'] ?? 'Tidak ada data ditemukan';
+          _recommendations = [];
+          _hasCalculated = true;
+        });
       } else {
         setState(() {
-          _errorMessage = 'Gagal memuat data. Coba lagi nanti.';
+          _errorMessage = 'Gagal memuat data (${response.statusCode})';
         });
       }
     } catch (e) {
@@ -106,866 +219,30 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final categoryTitle = widget.category == 'kontrakan' 
-        ? 'Rekomendasi Kontrakan' 
-        : 'Rekomendasi Laundry';
-    
-    final categoryIcon = widget.category == 'kontrakan' 
-        ? Icons.home 
-        : Icons.local_laundry_service;
-        
-    final categoryColor = widget.category == 'kontrakan'
-        ? const Color(0xFF1565C0)
-        : const Color(0xFF00ACC1);
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        backgroundColor: categoryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(categoryIcon, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              categoryTitle,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: _showFilterDialog,
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Location Status Banner (only for laundry)
-          if (widget.category == 'laundry' && _useUserLocation)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.green.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.my_location,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          '📍 Menggunakan Lokasi Anda',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                        if (_userLatitude != null && _userLongitude != null)
-                          Text(
-                            'Lat: ${_userLatitude!.toStringAsFixed(4)}, Lng: ${_userLongitude!.toStringAsFixed(4)}',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 10,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white, size: 18),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: () {
-                      setState(() {
-                        _useUserLocation = false;
-                        _userLatitude = null;
-                        _userLongitude = null;
-                      });
-                      _loadRecommendations();
-                    },
-                  ),
-                ],
-              ),
-            ),
-          
-          // Filter Summary
-          if (_hasActiveFilters()) _buildFilterSummary(categoryColor),
-          
-          // Content
-          Expanded(
-            child: _buildContent(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  bool _hasActiveFilters() {
-    return _hargaMin != null ||
-        _hargaMax != null ||
-        _jarakMax != null ||
-        _jumlahKamar != null ||
-        (_fasilitas != null && _fasilitas!.isNotEmpty) ||
-        _useUserLocation;
-  }
-
-  Widget _buildFilterSummary(Color categoryColor) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: categoryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: categoryColor.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.filter_alt,
-                color: categoryColor,
-                size: 16,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Filter Aktif:',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: categoryColor,
-                  fontSize: 12,
-                ),
-              ),
-              const Spacer(),
-              GestureDetector(
-                onTap: _clearFilters,
-                child: Text(
-                  'Hapus Semua',
-                  style: TextStyle(
-                    color: categoryColor,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              if (_hargaMin != null || _hargaMax != null)
-                _buildFilterChip(
-                  'Harga: ${_formatPrice(_hargaMin)} - ${_formatPrice(_hargaMax)}',
-                  categoryColor,
-                ),
-              if (_jarakMax != null)
-                _buildFilterChip(
-                  'Jarak: ≤ ${_jarakMax!.toStringAsFixed(1)} km',
-                  categoryColor,
-                ),
-              if (_jumlahKamar != null)
-                _buildFilterChip(
-                  'Kamar: $_jumlahKamar',
-                  categoryColor,
-                ),
-              if (_fasilitas != null && _fasilitas!.isNotEmpty)
-                _buildFilterChip(
-                  'Fasilitas: $_fasilitas',
-                  categoryColor,
-                ),
-              if (_useUserLocation)
-                _buildFilterChip(
-                  '📍 Dari Lokasi Saya',
-                  Colors.green,
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterChip(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          color: color,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
-
-  String _formatPrice(double? price) {
-    if (price == null) return 'N/A';
-    if (price >= 1000000) {
-      return '${(price / 1000000).toStringAsFixed(0)}jt';
-    } else if (price >= 1000) {
-      return '${(price / 1000).toStringAsFixed(0)}rb';
-    } else {
-      return price.toStringAsFixed(0);
-    }
-  }
-
-  void _clearFilters() {
-    setState(() {
-      _hargaMin = null;
-      _hargaMax = null;
-      _jarakMax = null;
-      _jumlahKamar = null;
-      _fasilitas = null;
-      _useUserLocation = false;
-      _userLatitude = null;
-      _userLongitude = null;
-    });
-    _loadRecommendations();
-  }
-
-  Widget _buildContent() {
-    if (_isLoading) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Memuat rekomendasi terbaik...'),
-          ],
-        ),
-      );
-    }
-
-    if (_errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.grey[400],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Oops!',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[700],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _errorMessage!,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                ),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: _loadRecommendations,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Coba Lagi'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_recommendations.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                widget.category == 'kontrakan' 
-                    ? Icons.home_outlined 
-                    : Icons.local_laundry_service_outlined,
-                size: 64,
-                color: Colors.grey[400],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Tidak Ada Hasil',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[700],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Tidak ditemukan ${widget.category} yang sesuai dengan kriteria Anda.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                ),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () {
-                  _clearFilters();
-                },
-                icon: const Icon(Icons.clear_all),
-                label: const Text('Reset Filter'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _loadRecommendations,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _recommendations.length,
-        itemBuilder: (context, index) {
-          final item = _recommendations[index];
-          final itemData = item['data'] ?? item;
-          
-          // Add ranking badge
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            child: Stack(
-              children: [
-                // Main card
-                widget.category == 'kontrakan'
-                    ? KontrakanCard(kontrakan: Kontrakan.fromJson(itemData))
-                    : LaundryCard(laundry: Laundry.fromJson(itemData)),
-                
-                // Ranking badge
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _getRankingColor(index + 1),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _getRankingIcon(index + 1),
-                          color: Colors.white,
-                          size: 14,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '#${index + 1}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Color _getRankingColor(int rank) {
-    switch (rank) {
-      case 1:
-        return const Color(0xFFFFD700); // Gold
-      case 2:
-        return const Color(0xFFC0C0C0); // Silver
-      case 3:
-        return const Color(0xFFCD7F32); // Bronze
-      default:
-        return const Color(0xFF1565C0); // Blue
-    }
-  }
-
-  IconData _getRankingIcon(int rank) {
-    switch (rank) {
-      case 1:
-        return Icons.emoji_events;
-      case 2:
-        return Icons.workspace_premium;
-      case 3:
-        return Icons.military_tech;
-      default:
-        return Icons.star;
-    }
-  }
-
-  void _showFilterDialog() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (BuildContext context, StateSetter setModalState) {
-          return Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(ctx).viewInsets.bottom,
-              left: 20,
-              right: 20,
-              top: 20,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.filter_list,
-                            color: widget.category == 'kontrakan'
-                                ? const Color(0xFF1565C0)
-                                : const Color(0xFF00ACC1),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Filter Pencarian',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey[800],
-                            ),
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Harga Range
-              _buildFilterSection(
-                'Rentang Harga',
-                Icons.attach_money,
-                [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: 'Harga Min',
-                            prefixText: 'Rp ',
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                          ),
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            _hargaMin = double.tryParse(value);
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: 'Harga Max',
-                            prefixText: 'Rp ',
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                          ),
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            _hargaMax = double.tryParse(value);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-
-              // Jarak Maksimal
-              _buildFilterSection(
-                'Jarak Maksimal dari Kampus',
-                Icons.location_on,
-                [
-                  TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: 'Jarak Maksimal (km)',
-                      suffixText: 'km',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                    ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    onChanged: (value) {
-                      _jarakMax = double.tryParse(value);
-                    },
-                  ),
-                ],
-              ),
-
-              // Jumlah Kamar (hanya untuk kontrakan)
-              if (widget.category == 'kontrakan')
-                _buildFilterSection(
-                  'Jumlah Kamar',
-                  Icons.hotel,
-                  [
-                    TextFormField(
-                      decoration: const InputDecoration(
-                        labelText: 'Jumlah Kamar Minimum',
-                        suffixText: 'kamar',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                      ),
-                      keyboardType: TextInputType.number,
-                      onChanged: (value) {
-                        _jumlahKamar = int.tryParse(value);
-                      },
-                    ),
-                  ],
-                ),
-
-              // Fasilitas
-              _buildFilterSection(
-                'Fasilitas',
-                Icons.wifi,
-                [
-                  TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: 'Cari fasilitas...',
-                      hintText: 'WiFi, AC, Parkir, dll',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                    ),
-                    onChanged: (value) {
-                      _fasilitas = value.isEmpty ? null : value;
-                    },
-                  ),
-                ],
-              ),
-
-              // Lokasi User (hanya untuk Laundry)
-              if (widget.category == 'laundry')
-                _buildFilterSection(
-                  'Referensi Jarak',
-                  Icons.my_location,
-                  [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.cyan.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Colors.cyan.withOpacity(0.3),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                _useUserLocation
-                                    ? Icons.location_on
-                                    : Icons.business,
-                                size: 20,
-                                color: const Color(0xFF00ACC1),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  _useUserLocation
-                                      ? 'Dari Lokasi Saya'
-                                      : 'Dari Kampus',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                              Switch(
-                                value: _useUserLocation,
-                                onChanged: (value) {
-                                  setModalState(() {
-                                    setState(() {
-                                      _useUserLocation = value;
-                                      if (value) {
-                                        _detectUserLocation();
-                                      } else {
-                                        _userLatitude = null;
-                                        _userLongitude = null;
-                                      }
-                                    });
-                                  });
-                                },
-                                activeColor: const Color(0xFF00ACC1),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _useUserLocation
-                                ? 'Jarak dihitung dari lokasi Anda saat ini'
-                                : 'Jarak dihitung dari Kampus Polije',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          if (_useUserLocation &&
-                              _userLatitude != null &&
-                              _userLongitude != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.check_circle,
-                                      size: 16,
-                                      color: Colors.green,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Text(
-                                        'Lokasi terdeteksi: ${_userLatitude!.toStringAsFixed(6)}, ${_userLongitude!.toStringAsFixed(6)}',
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          color: Colors.green,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-              // Action Buttons
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        _clearFilters();
-                        Navigator.pop(ctx);
-                      },
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        side: BorderSide(
-                          color: widget.category == 'kontrakan'
-                              ? const Color(0xFF1565C0)
-                              : const Color(0xFF00ACC1),
-                        ),
-                      ),
-                      child: Text(
-                        'Reset',
-                        style: TextStyle(
-                          color: widget.category == 'kontrakan'
-                              ? const Color(0xFF1565C0)
-                              : const Color(0xFF00ACC1),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        _loadRecommendations();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: widget.category == 'kontrakan'
-                            ? const Color(0xFF1565C0)
-                            : const Color(0xFF00ACC1),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text(
-                        'Terapkan Filter',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
-      );
-        },
-      ),
-    );
-  }
-
-  Widget _buildFilterSection(
-    String title,
-    IconData icon,
-    List<Widget> children,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color: widget.category == 'kontrakan'
-                  ? const Color(0xFF1565C0)
-                  : const Color(0xFF00ACC1),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        ...children,
-        const SizedBox(height: 20),
-      ],
-    );
-  }
-
   Future<void> _detectUserLocation() async {
+    setState(() => _isDetectingLocation = true);
     try {
-      // Check if location service is enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Layanan lokasi tidak aktif. Aktifkan GPS Anda.'),
-              backgroundColor: Colors.red,
-            ),
+            const SnackBar(content: Text('Aktifkan GPS Anda terlebih dahulu'), backgroundColor: Colors.red),
           );
         }
-        setState(() => _useUserLocation = false);
+        setState(() { _referensiJarak = 'kampus'; _isDetectingLocation = false; });
         return;
       }
 
-      // Check permission
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Izin lokasi ditolak'),
-                backgroundColor: Colors.red,
-              ),
+              const SnackBar(content: Text('Izin lokasi ditolak'), backgroundColor: Colors.red),
             );
           }
-          setState(() => _useUserLocation = false);
+          setState(() { _referensiJarak = 'kampus'; _isDetectingLocation = false; });
           return;
         }
       }
@@ -973,45 +250,712 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       if (permission == LocationPermission.deniedForever) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Izin lokasi ditolak permanen. Ubah di pengaturan.'),
-              backgroundColor: Colors.red,
-            ),
+            const SnackBar(content: Text('Izin lokasi ditolak permanen. Ubah di pengaturan.'), backgroundColor: Colors.red),
           );
         }
-        setState(() => _useUserLocation = false);
+        setState(() { _referensiJarak = 'kampus'; _isDetectingLocation = false; });
         return;
       }
 
-      // Get position
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       setState(() {
         _userLatitude = position.latitude;
         _userLongitude = position.longitude;
+        _isDetectingLocation = false;
       });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Lokasi berhasil dideteksi!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
+          const SnackBar(content: Text('Lokasi berhasil dideteksi!'), backgroundColor: Colors.green, duration: Duration(seconds: 2)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal mendeteksi lokasi: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Gagal mendeteksi lokasi: $e'), backgroundColor: Colors.red),
         );
       }
-      setState(() => _useUserLocation = false);
+      setState(() { _referensiJarak = 'kampus'; _isDetectingLocation = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final categoryTitle = widget.category == 'kontrakan'
+        ? 'SPK Rekomendasi Kontrakan'
+        : 'SPK Rekomendasi Laundry';
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        backgroundColor: _categoryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text(categoryTitle, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        actions: [
+          if (_hasCalculated)
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Hitung Ulang',
+              onPressed: () => setState(() { _hasCalculated = false; _recommendations = []; _errorMessage = null; }),
+            ),
+        ],
+      ),
+      body: _hasCalculated ? _buildResultView() : _buildInputView(),
+    );
+  }
+
+  // ===================== INPUT VIEW =====================
+  Widget _buildInputView() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildMethodInfoCard(),
+          const SizedBox(height: 16),
+          if (widget.category == 'laundry') ...[  
+            _buildJenisLayananSection(),
+            const SizedBox(height: 16),
+          ],
+          _buildBobotSection(),
+          const SizedBox(height: 16),
+          if (widget.category == 'laundry') ...[
+            _buildLocationSection(),
+            const SizedBox(height: 16),
+          ],
+          _buildCalculateButton(),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMethodInfoCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [_categoryColor, _categoryColor.withOpacity(0.8)]),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: _categoryColor.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.analytics, color: Colors.white, size: 24),
+              SizedBox(width: 8),
+              Text('Metode SAW', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Simple Additive Weighting (SAW) menghitung skor rekomendasi berdasarkan bobot kriteria yang Anda tentukan.',
+            style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+            child: Text('Vi = Σ(Wj × Rij)',
+                style: TextStyle(color: Colors.white.withOpacity(0.95), fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'monospace')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJenisLayananSection() {
+    final jenisOptions = [
+      {'value': 'reguler', 'label': 'Reguler', 'icon': Icons.schedule, 'desc': 'Layanan standar dengan harga terjangkau'},
+      {'value': 'express', 'label': 'Express', 'icon': Icons.flash_on, 'desc': 'Layanan cepat dengan waktu lebih singkat'},
+      {'value': 'kilat', 'label': 'Kilat', 'icon': Icons.bolt, 'desc': 'Layanan tercepat, selesai dalam hitungan jam'},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(Icons.local_laundry_service_outlined, color: _categoryColor, size: 20),
+            const SizedBox(width: 8),
+            Text('Jenis Layanan', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.grey[800])),
+          ]),
+          const SizedBox(height: 4),
+          Text('Pilih jenis layanan laundry yang ingin dibandingkan', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+          const SizedBox(height: 12),
+          ...jenisOptions.map((opt) {
+            final isSelected = _selectedJenisLayanan == opt['value'];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: InkWell(
+                onTap: () => setState(() => _selectedJenisLayanan = opt['value'] as String),
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: isSelected ? _categoryColor.withOpacity(0.1) : Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected ? _categoryColor : Colors.grey[300]!,
+                      width: isSelected ? 2 : 1,
+                    ),
+                  ),
+                  child: Row(children: [
+                    Icon(opt['icon'] as IconData, size: 22, color: isSelected ? _categoryColor : Colors.grey[500]),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(opt['label'] as String, style: TextStyle(fontSize: 14, fontWeight: isSelected ? FontWeight.bold : FontWeight.w500, color: isSelected ? _categoryColor : Colors.grey[800])),
+                          const SizedBox(height: 2),
+                          Text(opt['desc'] as String, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                        ],
+                      ),
+                    ),
+                    if (isSelected)
+                      Icon(Icons.check_circle, color: _categoryColor, size: 20),
+                  ]),
+                ),
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBobotSection() {
+    final isValid = _totalBobot == 100;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(Icons.tune, color: _categoryColor, size: 20),
+            const SizedBox(width: 8),
+            Text('Bobot Kriteria', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.grey[800])),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: isValid ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: isValid ? Colors.green.withOpacity(0.5) : Colors.red.withOpacity(0.5)),
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(isValid ? Icons.check_circle : Icons.warning, size: 14, color: isValid ? Colors.green : Colors.red),
+                const SizedBox(width: 4),
+                Text('Total: $_totalBobot%', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isValid ? Colors.green[700] : Colors.red[700])),
+              ]),
+            ),
+          ]),
+          const SizedBox(height: 4),
+          Text('Bobot otomatis disesuaikan agar total selalu 100%', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+          const SizedBox(height: 16),
+          _buildBobotDropdown(label: 'Harga', icon: Icons.payments_outlined, tipe: 'Cost', tipeDesc: 'Semakin murah semakin baik', value: _bobotHarga, options: _getBobotOptionsFor(0), onChanged: (val) => _updateBobot(0, val!)),
+          const SizedBox(height: 12),
+          _buildBobotDropdown(label: 'Jarak', icon: Icons.location_on_outlined, tipe: 'Cost', tipeDesc: 'Semakin dekat semakin baik', value: _bobotJarak, options: _getBobotOptionsFor(1), onChanged: (val) => _updateBobot(1, val!)),
+          const SizedBox(height: 12),
+          _buildBobotDropdown(
+            label: _kriteria3Label,
+            icon: widget.category == 'kontrakan' ? Icons.bed_outlined : Icons.speed_outlined,
+            tipe: 'Benefit',
+            tipeDesc: widget.category == 'kontrakan' ? 'Semakin banyak semakin baik' : 'Semakin cepat semakin baik',
+            value: _bobotKriteria3,
+            options: _getBobotOptionsFor(2),
+            onChanged: (val) => _updateBobot(2, val!),
+          ),
+          const SizedBox(height: 12),
+          _buildBobotDropdown(
+            label: _kriteria4Label,
+            icon: widget.category == 'kontrakan' ? Icons.wifi_outlined : Icons.local_laundry_service_outlined,
+            tipe: 'Benefit',
+            tipeDesc: widget.category == 'kontrakan' ? 'Semakin lengkap semakin baik' : 'Semakin bervariasi semakin baik',
+            value: _bobotKriteria4,
+            options: _getBobotOptionsFor(3),
+            onChanged: (val) => _updateBobot(3, val!),
+          ),
+          if (!isValid) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.red[200]!)),
+              child: Row(children: [
+                const Icon(Icons.info_outline, color: Colors.red, size: 16),
+                const SizedBox(width: 8),
+                Expanded(child: Text(
+                  _totalBobot > 100 ? 'Total bobot kelebihan ${_totalBobot - 100}%. Kurangi salah satu bobot.' : 'Total bobot kurang ${100 - _totalBobot}%. Tambah salah satu bobot.',
+                  style: TextStyle(fontSize: 12, color: Colors.red[700]),
+                )),
+              ]),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBobotDropdown({required String label, required IconData icon, required String tipe, required String tipeDesc, required int value, required List<int> options, required ValueChanged<int?> onChanged}) {
+    final isCost = tipe.toLowerCase() == 'cost';
+    // Ensure current value is in options list
+    final safeValue = options.contains(value) ? value : options.reduce((a, b) => (a - value).abs() < (b - value).abs() ? a : b);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[200]!)),
+      child: Row(children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(color: _categoryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+          child: Icon(icon, size: 20, color: _categoryColor),
+        ),
+        const SizedBox(width: 12),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey[800])),
+          const SizedBox(height: 2),
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(color: isCost ? Colors.orange.withOpacity(0.15) : Colors.green.withOpacity(0.15), borderRadius: BorderRadius.circular(4)),
+              child: Text(tipe, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isCost ? Colors.orange[800] : Colors.green[800])),
+            ),
+            const SizedBox(width: 6),
+            Expanded(child: Text(tipeDesc, style: TextStyle(fontSize: 10, color: Colors.grey[500]), overflow: TextOverflow.ellipsis)),
+          ]),
+        ])),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: _categoryColor.withOpacity(0.3))),
+          child: DropdownButtonHideUnderline(child: DropdownButton<int>(
+            value: safeValue, isDense: true,
+            icon: Icon(Icons.arrow_drop_down, color: _categoryColor),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _categoryColor),
+            items: options.map((int val) => DropdownMenuItem<int>(value: val, child: Text('$val%'))).toList(),
+            onChanged: onChanged,
+          )),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildLocationSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(Icons.my_location, color: _categoryColor, size: 20),
+          const SizedBox(width: 8),
+          Text('Referensi Jarak', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.grey[800])),
+        ]),
+        const SizedBox(height: 4),
+        Text('Tentukan titik referensi untuk perhitungan jarak', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[200]!)),
+          child: DropdownButtonHideUnderline(child: DropdownButton<String>(
+            value: _referensiJarak, isExpanded: true,
+            icon: Icon(Icons.arrow_drop_down, color: _categoryColor),
+            items: [
+              DropdownMenuItem(value: 'kampus', child: Row(children: [
+                Icon(Icons.school, size: 18, color: _categoryColor), const SizedBox(width: 10), const Text('Dari Kampus Polije'),
+              ])),
+              DropdownMenuItem(value: 'user', child: Row(children: [
+                Icon(Icons.location_on, size: 18, color: Colors.green[700]), const SizedBox(width: 10), const Text('Dari Lokasi Saya'),
+              ])),
+            ],
+            onChanged: (val) {
+              setState(() { _referensiJarak = val!; });
+              if (val == 'user' && _userLatitude == null) _detectUserLocation();
+            },
+          )),
+        ),
+        if (_referensiJarak == 'user') ...[
+          const SizedBox(height: 10),
+          if (_isDetectingLocation)
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(8)),
+              child: const Row(children: [SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)), SizedBox(width: 10), Text('Mendeteksi lokasi...', style: TextStyle(fontSize: 12))]),
+            )
+          else if (_userLatitude != null && _userLongitude != null)
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.green[200]!)),
+              child: Row(children: [
+                const Icon(Icons.check_circle, size: 16, color: Colors.green),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Lokasi: ${_userLatitude!.toStringAsFixed(6)}, ${_userLongitude!.toStringAsFixed(6)}', style: TextStyle(fontSize: 11, color: Colors.green[700]))),
+                InkWell(onTap: _detectUserLocation, child: Icon(Icons.refresh, size: 16, color: Colors.green[700])),
+              ]),
+            )
+          else
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: Colors.orange[50], borderRadius: BorderRadius.circular(8)),
+              child: Row(children: [
+                const Icon(Icons.warning, size: 16, color: Colors.orange),
+                const SizedBox(width: 8),
+                const Expanded(child: Text('Lokasi belum terdeteksi', style: TextStyle(fontSize: 12))),
+                TextButton(onPressed: _detectUserLocation, child: const Text('Deteksi', style: TextStyle(fontSize: 12))),
+              ]),
+            ),
+        ],
+      ]),
+    );
+  }
+
+  Widget _buildCalculateButton() {
+    final isValid = _totalBobot == 100;
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: isValid && !_isLoading ? _calculateSAW : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _categoryColor,
+          disabledBackgroundColor: Colors.grey[300],
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: isValid ? 4 : 0,
+          shadowColor: _categoryColor.withOpacity(0.4),
+        ),
+        child: _isLoading
+            ? const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+                SizedBox(width: 12),
+                Text('Menghitung SAW...', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              ])
+            : const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Icon(Icons.calculate, color: Colors.white, size: 22),
+                SizedBox(width: 10),
+                Text('Hitung Rekomendasi', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              ]),
+      ),
+    );
+  }
+
+  // ===================== RESULT VIEW =====================
+  Widget _buildResultView() {
+    return Column(children: [
+      _buildBobotSummary(),
+      if (widget.category == 'laundry' && _referensiJarak == 'user' && _userLatitude != null)
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          color: Colors.green[50],
+          child: Row(children: [
+            Icon(Icons.location_on, size: 16, color: Colors.green[700]),
+            const SizedBox(width: 8),
+            Text('Jarak dihitung dari lokasi Anda', style: TextStyle(fontSize: 12, color: Colors.green[700])),
+          ]),
+        ),
+      Expanded(child: _buildResultContent()),
+    ]);
+  }
+
+  Widget _buildBobotSummary() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [_categoryColor.withOpacity(0.05), Colors.white]),
+        border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+      ),
+      child: Column(children: [
+        Row(children: [
+          Icon(Icons.tune, size: 14, color: _categoryColor),
+          const SizedBox(width: 6),
+          Text('Bobot yang digunakan:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[700])),
+          if (widget.category == 'laundry') ...[  
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(color: _categoryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+              child: Text(_getJenisLayananLabel(_selectedJenisLayanan), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _categoryColor)),
+            ),
+          ],
+          const Spacer(),
+          InkWell(
+            onTap: () => setState(() { _hasCalculated = false; _recommendations = []; _errorMessage = null; }),
+            child: Row(children: [
+              Icon(Icons.edit, size: 14, color: _categoryColor),
+              const SizedBox(width: 4),
+              Text('Ubah', style: TextStyle(fontSize: 12, color: _categoryColor, fontWeight: FontWeight.w600)),
+            ]),
+          ),
+        ]),
+        const SizedBox(height: 8),
+        Row(children: [
+          _buildBobotMiniChip('Harga', _bobotHarga, 'Cost'),
+          const SizedBox(width: 6),
+          _buildBobotMiniChip('Jarak', _bobotJarak, 'Cost'),
+          const SizedBox(width: 6),
+          _buildBobotMiniChip(_kriteria3Label, _bobotKriteria3, 'Benefit'),
+          const SizedBox(width: 6),
+          _buildBobotMiniChip(_kriteria4Label, _bobotKriteria4, 'Benefit'),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _buildBobotMiniChip(String label, int value, String tipe) {
+    final isCost = tipe == 'Cost';
+    return Expanded(child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      decoration: BoxDecoration(
+        color: isCost ? Colors.orange.withOpacity(0.08) : Colors.green.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: isCost ? Colors.orange.withOpacity(0.2) : Colors.green.withOpacity(0.2)),
+      ),
+      child: Column(children: [
+        Text(label, style: TextStyle(fontSize: 9, color: Colors.grey[600]), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
+        const SizedBox(height: 2),
+        Text('$value%', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isCost ? Colors.orange[700] : Colors.green[700])),
+      ]),
+    ));
+  }
+
+  String _getJenisLayananLabel(String key) {
+    switch (key) {
+      case 'reguler': return 'Reguler';
+      case 'express': return 'Express';
+      case 'kilat': return 'Kilat';
+      default: return key;
+    }
+  }
+
+  Widget _buildResultContent() {
+    if (_isLoading) {
+      return const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        CircularProgressIndicator(), SizedBox(height: 16), Text('Menghitung rekomendasi SAW...'),
+      ]));
+    }
+
+    if (_errorMessage != null && _recommendations.isEmpty) {
+      return Center(child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(_errorMessage!, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => setState(() { _hasCalculated = false; _errorMessage = null; }),
+            icon: const Icon(Icons.arrow_back),
+            label: const Text('Ubah Kriteria'),
+            style: ElevatedButton.styleFrom(backgroundColor: _categoryColor, foregroundColor: Colors.white),
+          ),
+        ]),
+      ));
+    }
+
+    if (_recommendations.isEmpty) {
+      return Center(child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Icon(widget.category == 'kontrakan' ? Icons.home_outlined : Icons.local_laundry_service_outlined, size: 64, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text('Tidak ada hasil', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[700])),
+        ]),
+      ));
+    }
+
+    return RefreshIndicator(
+      onRefresh: _calculateSAW,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _recommendations.length,
+        itemBuilder: (context, index) {
+          final item = _recommendations[index];
+          return _buildResultCard(item, index);
+        },
+      ),
+    );
+  }
+
+  Widget _buildResultCard(Map<String, dynamic> item, int index) {
+    final ranking = item['ranking'] ?? (index + 1);
+    final skor = (item['skor'] ?? item['skor_akhir'] ?? 0).toDouble();
+    final normalisasi = item['normalisasi'] != null ? Map<String, dynamic>.from(item['normalisasi']) : <String, dynamic>{};
+    final nilai = item['nilai'] != null ? Map<String, dynamic>.from(item['nilai']) : <String, dynamic>{};
+    final itemData = item['data'] ?? item;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(
+          color: ranking <= 3 ? _getRankingColor(ranking).withOpacity(0.2) : Colors.grey.withOpacity(0.1),
+          blurRadius: 8, offset: const Offset(0, 2),
+        )],
+        border: ranking <= 3 ? Border.all(color: _getRankingColor(ranking).withOpacity(0.3), width: 1.5) : null,
+      ),
+      child: Column(children: [
+        // Ranking Header
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [_getRankingColor(ranking).withOpacity(0.1), Colors.transparent]),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: Row(children: [
+            Container(
+              width: 36, height: 36,
+              decoration: BoxDecoration(
+                color: _getRankingColor(ranking), shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: _getRankingColor(ranking).withOpacity(0.4), blurRadius: 6, offset: const Offset(0, 2))],
+              ),
+              child: Center(child: ranking <= 3
+                  ? Icon(_getRankingIcon(ranking), color: Colors.white, size: 18)
+                  : Text('#$ranking', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(item['nama'] ?? 'N/A', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[800])),
+              Text('Peringkat $ranking', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+            ])),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(gradient: LinearGradient(colors: [_categoryColor, _categoryColor.withOpacity(0.8)]), borderRadius: BorderRadius.circular(20)),
+              child: Text('Skor: ${skor.toStringAsFixed(4)}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+            ),
+          ]),
+        ),
+
+        // SAW Detail
+        if (normalisasi.isNotEmpty)
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), child: _buildNormalizationDetail(normalisasi, nilai)),
+
+        // Score Progress Bar
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Text('Skor Akhir (Vi)', style: TextStyle(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w500)),
+              Text('${(skor * 100).toStringAsFixed(2)}%', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: _categoryColor)),
+            ]),
+            const SizedBox(height: 4),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(value: skor.clamp(0.0, 1.0), backgroundColor: Colors.grey[200], valueColor: AlwaysStoppedAnimation<Color>(_categoryColor), minHeight: 6),
+            ),
+          ]),
+        ),
+
+        const SizedBox(height: 8),
+        const Divider(height: 1),
+
+        // Item Card
+        Padding(
+          padding: const EdgeInsets.all(8),
+          child: widget.category == 'kontrakan'
+              ? KontrakanCard(kontrakan: Kontrakan.fromJson(itemData))
+              : LaundryCard(laundry: Laundry.fromJson(itemData)),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildNormalizationDetail(Map<String, dynamic> normalisasi, Map<String, dynamic> nilai) {
+    return ExpansionTile(
+      title: Row(children: [
+        Icon(Icons.table_chart, size: 16, color: _categoryColor),
+        const SizedBox(width: 8),
+        Text('Detail Perhitungan SAW', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[700])),
+      ]),
+      tilePadding: EdgeInsets.zero,
+      childrenPadding: EdgeInsets.zero,
+      initiallyExpanded: false,
+      children: [
+        Container(
+          decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(8)),
+          child: Table(
+            border: TableBorder.all(color: Colors.grey[300]!, width: 0.5, borderRadius: BorderRadius.circular(8)),
+            columnWidths: const { 0: FlexColumnWidth(2.5), 1: FlexColumnWidth(1.5), 2: FlexColumnWidth(1.5), 3: FlexColumnWidth(1.5) },
+            children: [
+              TableRow(
+                decoration: BoxDecoration(color: _categoryColor.withOpacity(0.1), borderRadius: const BorderRadius.vertical(top: Radius.circular(8))),
+                children: [_tableHeader('Kriteria'), _tableHeader('Nilai'), _tableHeader('Normalisasi'), _tableHeader('Bobot')],
+              ),
+              ...normalisasi.entries.map((entry) {
+                final key = entry.key;
+                final norm = (entry.value is num) ? entry.value.toDouble() : 0.0;
+                final nilaiVal = nilai[key] ?? 0;
+                final bobot = _getBobotForKey(key);
+                return TableRow(children: [
+                  _tableCell(_getKriteriaDisplayName(key)),
+                  _tableCell(nilaiVal is double ? nilaiVal.toStringAsFixed(2) : nilaiVal.toString()),
+                  _tableCell(norm is double ? norm.toStringAsFixed(4) : norm.toString()),
+                  _tableCell('${(bobot * 100).toInt()}%'),
+                ]);
+              }),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _tableHeader(String text) => Padding(padding: const EdgeInsets.all(6), child: Text(text, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _categoryColor), textAlign: TextAlign.center));
+  Widget _tableCell(String text) => Padding(padding: const EdgeInsets.all(6), child: Text(text, style: TextStyle(fontSize: 10, color: Colors.grey[700]), textAlign: TextAlign.center));
+
+  String _getKriteriaDisplayName(String key) {
+    switch (key) {
+      case 'harga': return 'Harga';
+      case 'jarak': return 'Jarak';
+      case 'jumlah_kamar': return 'Jml Kamar';
+      case 'fasilitas_count': return 'Fasilitas';
+      case 'kecepatan_layanan': return 'Kecepatan';
+      case 'layanan': return 'Layanan';
+      default: return key;
+    }
+  }
+
+  double _getBobotForKey(String key) {
+    switch (key) {
+      case 'harga': return _bobotHarga / 100;
+      case 'jarak': return _bobotJarak / 100;
+      case 'jumlah_kamar': case 'kecepatan_layanan': return _bobotKriteria3 / 100;
+      case 'fasilitas_count': case 'layanan': return _bobotKriteria4 / 100;
+      default: return 0;
+    }
+  }
+
+  Color _getRankingColor(int rank) {
+    switch (rank) {
+      case 1: return const Color(0xFFFFD700);
+      case 2: return const Color(0xFFC0C0C0);
+      case 3: return const Color(0xFFCD7F32);
+      default: return _categoryColor;
+    }
+  }
+
+  IconData _getRankingIcon(int rank) {
+    switch (rank) {
+      case 1: return Icons.emoji_events;
+      case 2: return Icons.workspace_premium;
+      case 3: return Icons.military_tech;
+      default: return Icons.star;
     }
   }
 }

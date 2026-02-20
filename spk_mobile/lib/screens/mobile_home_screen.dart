@@ -210,7 +210,9 @@ class _MobileHomeScreenState extends State<MobileHomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const LaundryListScreen(),
+                        builder: (context) => const RecommendationScreen(
+                          category: 'laundry',
+                        ),
                       ),
                     );
                   },

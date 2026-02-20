@@ -1,11 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/laundry.dart';
+import '../services/location_service.dart';
 
-class LaundryDetailScreen extends StatelessWidget {
+class LaundryDetailScreen extends StatefulWidget {
   final Laundry laundry;
 
   const LaundryDetailScreen({super.key, required this.laundry});
+
+  @override
+  State<LaundryDetailScreen> createState() => _LaundryDetailScreenState();
+}
+
+class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
+  double? userLat;
+  double? userLng;
+  double? distance;
+  bool isLoadingLocation = false;
+  String? locationError;
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +73,7 @@ class LaundryDetailScreen extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    laundry.nama,
+                                    widget.laundry.nama,
                                     style: const TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,
@@ -78,8 +90,7 @@ class LaundryDetailScreen extends StatelessWidget {
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        laundry.rating?.toStringAsFixed(1) ??
-                                            'N/A',
+                                        widget.laundry.rating.toStringAsFixed(1),
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
@@ -108,8 +119,13 @@ class LaundryDetailScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // Status Card
+          // Status Card
                 _buildStatusCard(),
+                const SizedBox(height: 16),
+
+                // Location Detection Card
+                if (widget.laundry.latitude != null && widget.laundry.longitude != null)
+                  _buildLocationCard(),
                 const SizedBox(height: 16),
 
                 // Info Section
@@ -121,17 +137,17 @@ class LaundryDetailScreen extends StatelessWidget {
                       _buildInfoRow(
                         Icons.location_on,
                         'Alamat',
-                        laundry.alamat,
+                        widget.laundry.alamat,
                       ),
                       _buildInfoRow(
                         Icons.access_time,
                         'Jam Operasional',
-                        '${laundry.jamBuka} - ${laundry.jamTutup}',
+                        '${widget.laundry.jamBuka} - ${widget.laundry.jamTutup}',
                       ),
                       _buildInfoRow(
                         Icons.schedule,
                         'Estimasi Selesai',
-                        '${laundry.estimasiSelesai} jam',
+                        '${widget.laundry.estimasiSelesai} jam',
                       ),
                     ],
                   ),
@@ -146,14 +162,14 @@ class LaundryDetailScreen extends StatelessWidget {
                     children: [
                       _buildPriceCard(
                         'Laundry Kiloan',
-                        laundry.formattedHargaKiloan,
+                        widget.laundry.formattedHargaKiloan,
                         Icons.scale,
                         const Color(0xFF00BCD4),
                       ),
                       const SizedBox(height: 12),
                       _buildPriceCard(
                         'Laundry Satuan',
-                        laundry.formattedHargaSatuan,
+                        widget.laundry.formattedHargaSatuan,
                         Icons.checkroom,
                         Colors.purple,
                       ),
@@ -163,12 +179,12 @@ class LaundryDetailScreen extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // Action Buttons
-                if (laundry.noWhatsapp != null) ...[
+                if (widget.laundry.noWhatsapp != null) ...[
                   SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton.icon(
-                      onPressed: () => _launchWhatsApp(laundry.noWhatsapp!),
+                      onPressed: () => _launchWhatsApp(widget.laundry.noWhatsapp!),
                       icon: const Icon(Icons.message, size: 24),
                       label: const Text(
                         'Hubungi via WhatsApp',
@@ -189,13 +205,13 @@ class LaundryDetailScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                 ],
 
-                if (laundry.latitude != null && laundry.longitude != null)
+                if (widget.laundry.latitude != null && widget.laundry.longitude != null)
                   SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: OutlinedButton.icon(
                       onPressed: () =>
-                          _launchMaps(laundry.latitude!, laundry.longitude!),
+                          _launchMaps(widget.laundry.latitude!, widget.laundry.longitude!),
                       icon: const Icon(Icons.map, size: 24),
                       label: const Text(
                         'Lihat di Maps',
@@ -227,8 +243,8 @@ class LaundryDetailScreen extends StatelessWidget {
   }
 
   Widget _buildStatusCard() {
-    Color statusColor = laundry.status == 'buka' ? Colors.green : Colors.red;
-    if (laundry.status == 'buka' && !laundry.isOpen) {
+    Color statusColor = widget.laundry.status == 'buka' ? Colors.green : Colors.red;
+    if (widget.laundry.status == 'buka' && !widget.laundry.isOpen) {
       statusColor = Colors.orange;
     }
 
@@ -260,7 +276,7 @@ class LaundryDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  laundry.statusText,
+                  widget.laundry.statusText,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -273,6 +289,193 @@ class LaundryDetailScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildLocationCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.purple.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.purple.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.location_on,
+                    color: Colors.purple,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Deteksi Lokasi Saya',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+              if (isLoadingLocation)
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (distance != null) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green, size: 20),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Jarak dari Lokasi Saya',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      Text(
+                        distance! < 1
+                            ? '${(distance! * 1000).toStringAsFixed(0)} m'
+                            : '${distance!.toStringAsFixed(2)} km',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ] else if (locationError != null) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.error, color: Colors.red, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      locationError!,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: ElevatedButton.icon(
+              onPressed: isLoadingLocation ? null : _detectLocation,
+              icon: Icon(
+                isLoadingLocation ? Icons.hourglass_bottom : Icons.my_location,
+                size: 20,
+              ),
+              label: Text(
+                isLoadingLocation ? 'Mendeteksi...' : 'Deteksi Lokasi Saya',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: Colors.grey,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _detectLocation() async {
+    setState(() {
+      isLoadingLocation = true;
+      locationError = null;
+    });
+
+    try {
+      final locationService = LocationService();
+      final isEnabled = await locationService.isLocationServiceEnabled();
+
+      if (!isEnabled) {
+        setState(() {
+          locationError = 'Layanan lokasi tidak aktif';
+          isLoadingLocation = false;
+        });
+        return;
+      }
+
+      final position = await locationService.getCurrentLocation();
+
+      if (position != null) {
+        final dist = LocationService.calculateDistance(
+          position.latitude,
+          position.longitude,
+          widget.laundry.latitude!,
+          widget.laundry.longitude!,
+        );
+
+        setState(() {
+          userLat = position.latitude;
+          userLng = position.longitude;
+          distance = dist;
+          isLoadingLocation = false;
+        });
+      } else {
+        setState(() {
+          locationError = 'Gagal mendapatkan lokasi Anda';
+          isLoadingLocation = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        locationError = 'Error: ${e.toString()}';
+        isLoadingLocation = false;
+      });
+    }
   }
 
   Widget _buildSection({

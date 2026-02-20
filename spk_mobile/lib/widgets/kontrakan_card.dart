@@ -121,13 +121,13 @@ class KontrakanCard extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: kontrakan.status == 'tersedia'
+                      color: kontrakan.isAvailable
                           ? Colors.green
                           : Colors.red,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      kontrakan.status == 'tersedia' ? 'Tersedia' : 'Penuh',
+                      kontrakan.isAvailable ? 'Tersedia' : 'Penuh',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,

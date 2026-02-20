@@ -12,6 +12,8 @@ class Kontrakan {
   final List<Galeri> galeri;
   final double? avgRating;
   final int? totalReviews;
+  final double? latitude;
+  final double? longitude;
 
   Kontrakan({
     required this.id,
@@ -27,6 +29,8 @@ class Kontrakan {
     this.galeri = const [],
     this.avgRating,
     this.totalReviews,
+    this.latitude,
+    this.longitude,
   });
 
   factory Kontrakan.fromJson(Map<String, dynamic> json) {
@@ -57,8 +61,17 @@ class Kontrakan {
           ? double.tryParse(json['avg_rating'].toString())
           : null,
       totalReviews: json['total_reviews'],
+      latitude: json['latitude'] != null
+          ? double.tryParse(json['latitude'].toString())
+          : null,
+      longitude: json['longitude'] != null
+          ? double.tryParse(json['longitude'].toString())
+          : null,
     );
   }
+
+  // Check if kontrakan is available
+  bool get isAvailable => status == 'available' || status == 'tersedia';
 
   // Get primary photo URL
   String get primaryPhoto {
