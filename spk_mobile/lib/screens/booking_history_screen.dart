@@ -1,4 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import '../config/app_config.dart';
 import '../services/booking_service.dart';
 import '../models/booking.dart';
 
@@ -12,11 +15,13 @@ class BookingHistoryScreen extends StatefulWidget {
 class _BookingHistoryScreenState extends State<BookingHistoryScreen>
     with SingleTickerProviderStateMixin {
   final _bookingService = BookingService();
+  final _imagePicker = ImagePicker();
   late TabController _tabController;
 
   List<Booking> _activeBookings = [];
   List<Booking> _pastBookings = [];
   bool _isLoading = true;
+  int? _uploadingBookingId;
 
   @override
   void initState() {
@@ -43,6 +48,114 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
           .toList();
       _isLoading = false;
     });
+  }
+
+  Future<void> _cancelBooking(int bookingId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Batalkan Booking'),
+        content: const Text('Apakah Anda yakin ingin membatalkan booking ini?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Tidak'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              'Ya, Batalkan',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    final result = await _bookingService.cancelBooking(bookingId);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? ''),
+          backgroundColor: result['success'] == true
+              ? Colors.green
+              : Colors.red,
+        ),
+      );
+      if (result['success'] == true) _loadBookings();
+    }
+  }
+
+  Future<void> _uploadPaymentProof(Booking booking) async {
+    // Show source dialog
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Unggah Bukti Pembayaran',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Pilih foto struk transfer atau bukti pembayaran lainnya',
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(
+                  Icons.photo_library,
+                  color: Color(0xFF4CAF50),
+                ),
+                title: const Text('Pilih dari Galeri'),
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Color(0xFF4CAF50)),
+                title: const Text('Ambil Foto'),
+                onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (source == null) return;
+
+    final picked = await _imagePicker.pickImage(
+      source: source,
+      maxWidth: 1920,
+      maxHeight: 1920,
+      imageQuality: 85,
+    );
+    if (picked == null) return;
+
+    setState(() => _uploadingBookingId = booking.id);
+    final result = await _bookingService.uploadPaymentProof(
+      booking.id,
+      File(picked.path),
+    );
+    if (mounted) {
+      setState(() => _uploadingBookingId = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? ''),
+          backgroundColor: result['success'] == true
+              ? Colors.green
+              : Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      if (result['success'] == true) _loadBookings();
+    }
   }
 
   @override
@@ -330,14 +443,94 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                 ),
               ],
             ),
+            const SizedBox(height: 8),
+            // Payment status row
+            Row(
+              children: [
+                Icon(
+                  booking.paymentStatus == 'paid'
+                      ? Icons.check_circle
+                      : Icons.payment,
+                  size: 16,
+                  color: booking.paymentStatus == 'paid'
+                      ? Colors.green
+                      : Colors.orange,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  booking.paymentStatus == 'paid'
+                      ? 'Pembayaran: Lunas'
+                      : 'Pembayaran: Belum Dibayar',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: booking.paymentStatus == 'paid'
+                        ? Colors.green
+                        : Colors.orange,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            // Proof already uploaded notice
+            if (booking.paymentProof != null) ...[
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () {
+                  final url = '${AppConfig.storageUrl}/${booking.paymentProof}';
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => Dialog(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AppBar(
+                            title: const Text('Bukti Pembayaran'),
+                            backgroundColor: const Color(0xFF4CAF50),
+                            foregroundColor: Colors.white,
+                            automaticallyImplyLeading: false,
+                            actions: [
+                              IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () => Navigator.pop(ctx),
+                              ),
+                            ],
+                          ),
+                          Image.network(url, fit: BoxFit.contain),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.image, size: 18, color: Colors.green),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Bukti pembayaran sudah diunggah — Tap untuk lihat',
+                        style: TextStyle(fontSize: 13, color: Colors.green),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            // Actions
             if (booking.status == 'pending') ...[
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    // Cancel booking
-                  },
+                  onPressed: () => _cancelBooking(booking.id),
                   icon: const Icon(Icons.cancel),
                   label: const Text('Batalkan Booking'),
                   style: ElevatedButton.styleFrom(
@@ -349,6 +542,37 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                     ),
                   ),
                 ),
+              ),
+            ],
+            if (booking.status == 'confirmed' &&
+                booking.paymentStatus == 'unpaid') ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: _uploadingBookingId == booking.id
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    : ElevatedButton.icon(
+                        onPressed: () => _uploadPaymentProof(booking),
+                        icon: const Icon(Icons.upload_file),
+                        label: Text(
+                          booking.paymentProof == null
+                              ? 'Upload Bukti Pembayaran'
+                              : 'Ganti Bukti Pembayaran',
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4CAF50),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
               ),
             ],
           ],

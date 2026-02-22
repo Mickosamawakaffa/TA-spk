@@ -3,24 +3,24 @@ import 'dart:math';
 
 class LocationService {
   static final LocationService _instance = LocationService._internal();
-  
+
   factory LocationService() => _instance;
   LocationService._internal();
 
   // Request location permission
   Future<bool> requestLocationPermission() async {
     final permission = await Geolocator.checkPermission();
-    
+
     if (permission == LocationPermission.denied) {
       final result = await Geolocator.requestPermission();
-      return result == LocationPermission.whileInUse || 
-             result == LocationPermission.always;
+      return result == LocationPermission.whileInUse ||
+          result == LocationPermission.always;
     } else if (permission == LocationPermission.deniedForever) {
       // Permission permanently denied, open app settings
       await Geolocator.openLocationSettings();
       return false;
     }
-    
+
     return true;
   }
 
@@ -35,7 +35,7 @@ class LocationService {
         desiredAccuracy: LocationAccuracy.high,
         timeLimit: const Duration(seconds: 10),
       );
-      
+
       return position;
     } catch (e) {
       print('Error getting location: $e');
@@ -45,9 +45,9 @@ class LocationService {
 
   // Calculate distance between two coordinates (in km)
   static double calculateDistance(
-    double lat1, 
-    double lon1, 
-    double lat2, 
+    double lat1,
+    double lon1,
+    double lat2,
     double lon2,
   ) {
     const earthRadius = 6371; // km
@@ -55,7 +55,8 @@ class LocationService {
     final dLat = _degreesToRadians(lat2 - lat1);
     final dLon = _degreesToRadians(lon2 - lon1);
 
-    final a = sin(dLat / 2) * sin(dLat / 2) +
+    final a =
+        sin(dLat / 2) * sin(dLat / 2) +
         cos(_degreesToRadians(lat1)) *
             cos(_degreesToRadians(lat2)) *
             sin(dLon / 2) *

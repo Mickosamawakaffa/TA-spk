@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' as intl;
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/kontrakan.dart';
 import '../services/booking_service.dart';
 import '../services/auth_service.dart';
@@ -17,18 +20,29 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   final _bookingService = BookingService();
   final _authService = AuthService();
   final _catatanController = TextEditingController();
+  final _imagePicker = ImagePicker();
 
   DateTime? _tanggalMulai;
   int _durasiBulan = 1;
   bool _isSubmitting = false;
+  File? _paymentProofImage;
 
-  final _currencyFormat = NumberFormat.currency(
+  final _currencyFormat = intl.NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
     decimalDigits: 0,
   );
 
   double get _totalBiaya => widget.kontrakan.harga * _durasiBulan;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize Indonesian locale for date formatting
+    initializeDateFormatting('id_ID', null).catchError((_) {
+      // Ignore if already initialized
+    });
+  }
 
   @override
   void dispose() {
@@ -63,11 +77,74 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     }
   }
 
+  Future<void> _pickPaymentProof() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Unggah Bukti Pembayaran',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Pilih foto struk transfer atau bukti pembayaran',
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Color(0xFF667eea)),
+                title: const Text('Pilih dari Galeri'),
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Color(0xFF667eea)),
+                title: const Text('Ambil Foto'),
+                onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    final picked = await _imagePicker.pickImage(
+      source: source,
+      maxWidth: 1920,
+      maxHeight: 1920,
+      imageQuality: 85,
+    );
+
+    if (picked != null) {
+      setState(() => _paymentProofImage = File(picked.path));
+    }
+  }
+
   Future<void> _submitBooking() async {
     if (_tanggalMulai == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Pilih tanggal mulai terlebih dahulu'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (_paymentProofImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bukti pembayaran wajib diunggah'),
           backgroundColor: Colors.red,
         ),
       );
@@ -102,15 +179,23 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
           children: [
             _buildConfirmRow('Kontrakan', widget.kontrakan.nama),
             const SizedBox(height: 8),
-            _buildConfirmRow('Tanggal Mulai', DateFormat('dd MMMM yyyy', 'id_ID').format(_tanggalMulai!)),
+            _buildConfirmRow(
+              'Tanggal Mulai',
+              intl.DateFormat('dd MMMM yyyy', 'id_ID').format(_tanggalMulai!),
+            ),
             const SizedBox(height: 8),
             _buildConfirmRow('Durasi', '$_durasiBulan bulan'),
             const SizedBox(height: 8),
-            _buildConfirmRow('Total Biaya', _currencyFormat.format(_totalBiaya)),
+            _buildConfirmRow(
+              'Total Biaya',
+              _currencyFormat.format(_totalBiaya),
+            ),
             if (_catatanController.text.isNotEmpty) ...[
               const SizedBox(height: 8),
               _buildConfirmRow('Catatan', _catatanController.text),
             ],
+            const SizedBox(height: 8),
+            _buildConfirmRow('Bukti Bayar', 'Foto terlampir'),
           ],
         ),
         actions: [
@@ -123,7 +208,9 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF667eea),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: const Text('Konfirmasi'),
           ),
@@ -139,7 +226,10 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       kontrakanId: widget.kontrakan.id,
       tanggalMulai: _tanggalMulai!,
       durasiBulan: _durasiBulan,
-      catatan: _catatanController.text.isNotEmpty ? _catatanController.text : null,
+      catatan: _catatanController.text.isNotEmpty
+          ? _catatanController.text
+          : null,
+      paymentProof: _paymentProofImage,
     );
 
     setState(() => _isSubmitting = false);
@@ -151,7 +241,9 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -162,7 +254,11 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                   color: Colors.green.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check_circle, color: Colors.green, size: 64),
+                child: const Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 64,
+                ),
               ),
               const SizedBox(height: 16),
               const Text(
@@ -190,7 +286,9 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                   backgroundColor: const Color(0xFF667eea),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 child: const Text('OK'),
               ),
@@ -214,10 +312,16 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       children: [
         SizedBox(
           width: 100,
-          child: Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+          ),
         ),
         Expanded(
-          child: Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+          child: Text(
+            value,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
         ),
       ],
     );
@@ -261,19 +365,29 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.location_on, size: 16, color: Colors.white70),
+                      const Icon(
+                        Icons.location_on,
+                        size: 16,
+                        color: Colors.white70,
+                      ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           widget.kontrakan.alamat,
-                          style: const TextStyle(fontSize: 13, color: Colors.white70),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.white70,
+                          ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
@@ -305,27 +419,43 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.grey[100],
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: _tanggalMulai != null ? const Color(0xFF667eea) : Colors.grey[300]!),
+                          border: Border.all(
+                            color: _tanggalMulai != null
+                                ? const Color(0xFF667eea)
+                                : Colors.grey[300]!,
+                          ),
                         ),
                         child: Row(
                           children: [
                             Icon(
                               Icons.date_range,
-                              color: _tanggalMulai != null ? const Color(0xFF667eea) : Colors.grey[400],
+                              color: _tanggalMulai != null
+                                  ? const Color(0xFF667eea)
+                                  : Colors.grey[400],
                             ),
                             const SizedBox(width: 12),
                             Text(
                               _tanggalMulai != null
-                                  ? DateFormat('dd MMMM yyyy', 'id_ID').format(_tanggalMulai!)
+                                  ? intl.DateFormat(
+                                      'dd MMMM yyyy',
+                                      'id_ID',
+                                    ).format(_tanggalMulai!)
                                   : 'Pilih tanggal...',
                               style: TextStyle(
                                 fontSize: 15,
-                                color: _tanggalMulai != null ? Colors.black87 : Colors.grey[500],
-                                fontWeight: _tanggalMulai != null ? FontWeight.w600 : FontWeight.normal,
+                                color: _tanggalMulai != null
+                                    ? Colors.black87
+                                    : Colors.grey[500],
+                                fontWeight: _tanggalMulai != null
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
                               ),
                             ),
                           ],
@@ -346,21 +476,31 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                       decoration: BoxDecoration(
                         color: Colors.grey[100],
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF667eea).withOpacity(0.3)),
+                        border: Border.all(
+                          color: const Color(0xFF667eea).withOpacity(0.3),
+                        ),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<int>(
                           value: _durasiBulan,
                           isExpanded: true,
-                          icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF667eea)),
-                          style: const TextStyle(fontSize: 15, color: Colors.black87, fontWeight: FontWeight.w600),
+                          icon: const Icon(
+                            Icons.arrow_drop_down,
+                            color: Color(0xFF667eea),
+                          ),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w600,
+                          ),
                           items: List.generate(12, (i) => i + 1).map((bulan) {
                             return DropdownMenuItem<int>(
                               value: bulan,
                               child: Text('$bulan bulan'),
                             );
                           }).toList(),
-                          onChanged: (val) => setState(() => _durasiBulan = val!),
+                          onChanged: (val) =>
+                              setState(() => _durasiBulan = val!),
                         ),
                       ),
                     ),
@@ -378,7 +518,10 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                       maxLines: 3,
                       decoration: InputDecoration(
                         hintText: 'Contoh: Saya mahasiswa Polije semester 4...',
-                        hintStyle: TextStyle(fontSize: 13, color: Colors.grey[400]),
+                        hintStyle: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey[400],
+                        ),
                         filled: true,
                         fillColor: Colors.grey[100],
                         border: OutlineInputBorder(
@@ -391,10 +534,77 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF667eea)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF667eea),
+                          ),
                         ),
                         contentPadding: const EdgeInsets.all(14),
                       ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Bukti Pembayaran
+                  _buildFormCard(
+                    icon: Icons.receipt,
+                    title: 'Bukti Pembayaran',
+                    subtitle: 'Upload foto struk/bukti transfer pembayaran (Wajib)',
+                    child: Column(
+                      children: [
+                        if (_paymentProofImage != null) ...[
+                          Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(
+                                  _paymentProofImage!,
+                                  width: double.infinity,
+                                  height: 200,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: InkWell(
+                                  onTap: () => setState(() => _paymentProofImage = null),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.close, color: Colors.white, size: 18),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: _pickPaymentProof,
+                            icon: Icon(
+                              _paymentProofImage != null ? Icons.change_circle : Icons.upload_file,
+                              color: const Color(0xFF667eea),
+                            ),
+                            label: Text(
+                              _paymentProofImage != null ? 'Ganti Foto' : 'Pilih Foto Bukti Pembayaran',
+                              style: const TextStyle(color: Color(0xFF667eea)),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFF667eea)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 
@@ -406,30 +616,55 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [const Color(0xFF667eea).withOpacity(0.05), Colors.white],
+                        colors: [
+                          const Color(0xFF667eea).withOpacity(0.05),
+                          Colors.white,
+                        ],
                       ),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFF667eea).withOpacity(0.2)),
+                      border: Border.all(
+                        color: const Color(0xFF667eea).withOpacity(0.2),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.receipt_long, size: 20, color: const Color(0xFF667eea)),
+                            Icon(
+                              Icons.receipt_long,
+                              size: 20,
+                              color: const Color(0xFF667eea),
+                            ),
                             const SizedBox(width: 8),
-                            Text('Ringkasan Biaya', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.grey[800])),
+                            Text(
+                              'Ringkasan Biaya',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[800],
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        _buildBiayaRow('Harga per bulan', widget.kontrakan.formattedHarga),
+                        _buildBiayaRow(
+                          'Harga per bulan',
+                          widget.kontrakan.formattedHarga,
+                        ),
                         const SizedBox(height: 6),
                         _buildBiayaRow('Durasi sewa', '$_durasiBulan bulan'),
                         const Divider(height: 20),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Total Biaya', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            const Text(
+                              'Total Biaya',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             Text(
                               _currencyFormat.format(_totalBiaya),
                               style: const TextStyle(
@@ -456,16 +691,31 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                         backgroundColor: const Color(0xFF667eea),
                         foregroundColor: Colors.white,
                         disabledBackgroundColor: Colors.grey[400],
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         elevation: 3,
                       ),
                       child: _isSubmitting
                           ? const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                ),
                                 SizedBox(width: 12),
-                                Text('Memproses...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                Text(
+                                  'Memproses...',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ],
                             )
                           : const Row(
@@ -473,7 +723,13 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                               children: [
                                 Icon(Icons.bookmark_add, size: 22),
                                 SizedBox(width: 8),
-                                Text('Booking Sekarang', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                Text(
+                                  'Booking Sekarang',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ],
                             ),
                     ),
@@ -501,7 +757,13 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.08), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -510,11 +772,21 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
             children: [
               Icon(icon, size: 20, color: const Color(0xFF667eea)),
               const SizedBox(width: 8),
-              Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.grey[800])),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 4),
-          Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+          Text(
+            subtitle,
+            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+          ),
           const SizedBox(height: 12),
           child,
         ],
@@ -527,7 +799,10 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-        Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
       ],
     );
   }

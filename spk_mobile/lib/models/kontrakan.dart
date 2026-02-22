@@ -42,7 +42,7 @@ class Kontrakan {
       // Backend uses 'jarak' column, convert meters to km
       jarak = (double.tryParse(json['jarak'].toString()) ?? 0) / 1000;
     }
-    
+
     return Kontrakan(
       id: json['id'] ?? 0,
       nama: json['nama'] ?? '',

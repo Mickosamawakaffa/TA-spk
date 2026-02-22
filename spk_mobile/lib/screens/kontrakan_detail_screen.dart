@@ -94,12 +94,16 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                     Icons.directions_walk,
                     '${widget.kontrakan.jarakKampus} km dari kampus',
                   ),
-                  _buildInfoRow(Icons.bed, '${widget.kontrakan.jumlahKamar} Kamar'),
+                  _buildInfoRow(
+                    Icons.bed,
+                    '${widget.kontrakan.jumlahKamar} Kamar',
+                  ),
 
                   const SizedBox(height: 20),
 
                   // Location Detection Card
-                  if (widget.kontrakan.latitude != null && widget.kontrakan.longitude != null)
+                  if (widget.kontrakan.latitude != null &&
+                      widget.kontrakan.longitude != null)
                     _buildLocationCard(),
 
                   const SizedBox(height: 20),
@@ -169,7 +173,9 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                     if (!authService.isAuthenticated) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Silakan login terlebih dahulu untuk booking'),
+                          content: Text(
+                            'Silakan login terlebih dahulu untuk booking',
+                          ),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -178,7 +184,8 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => BookingFormScreen(kontrakan: widget.kontrakan),
+                        builder: (_) =>
+                            BookingFormScreen(kontrakan: widget.kontrakan),
                       ),
                     );
                   }
@@ -196,7 +203,9 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
               ),
             ),
             child: Text(
-              widget.kontrakan.isAvailable ? 'Booking Sekarang' : 'Kontrakan Tidak Tersedia',
+              widget.kontrakan.isAvailable
+                  ? 'Booking Sekarang'
+                  : 'Kontrakan Tidak Tersedia',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
@@ -242,11 +251,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.location_on,
-                    color: Colors.purple,
-                    size: 24,
-                  ),
+                  Icon(Icons.location_on, color: Colors.purple, size: 24),
                   const SizedBox(width: 12),
                   Text(
                     'Deteksi Lokasi Saya',
@@ -286,10 +291,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                     children: [
                       Text(
                         'Jarak dari Lokasi Saya',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                       Text(
                         distance! < 1
@@ -320,10 +322,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                   Expanded(
                     child: Text(
                       locationError!,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.red,
-                      ),
+                      style: const TextStyle(fontSize: 13, color: Colors.red),
                     ),
                   ),
                 ],

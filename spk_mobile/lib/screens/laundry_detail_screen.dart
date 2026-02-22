@@ -90,7 +90,9 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        widget.laundry.rating.toStringAsFixed(1),
+                                        widget.laundry.rating.toStringAsFixed(
+                                          1,
+                                        ),
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
@@ -119,12 +121,13 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
             padding: const EdgeInsets.all(16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-          // Status Card
+                // Status Card
                 _buildStatusCard(),
                 const SizedBox(height: 16),
 
                 // Location Detection Card
-                if (widget.laundry.latitude != null && widget.laundry.longitude != null)
+                if (widget.laundry.latitude != null &&
+                    widget.laundry.longitude != null)
                   _buildLocationCard(),
                 const SizedBox(height: 16),
 
@@ -184,7 +187,8 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton.icon(
-                      onPressed: () => _launchWhatsApp(widget.laundry.noWhatsapp!),
+                      onPressed: () =>
+                          _launchWhatsApp(widget.laundry.noWhatsapp!),
                       icon: const Icon(Icons.message, size: 24),
                       label: const Text(
                         'Hubungi via WhatsApp',
@@ -205,13 +209,16 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                   const SizedBox(height: 12),
                 ],
 
-                if (widget.laundry.latitude != null && widget.laundry.longitude != null)
+                if (widget.laundry.latitude != null &&
+                    widget.laundry.longitude != null)
                   SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: OutlinedButton.icon(
-                      onPressed: () =>
-                          _launchMaps(widget.laundry.latitude!, widget.laundry.longitude!),
+                      onPressed: () => _launchMaps(
+                        widget.laundry.latitude!,
+                        widget.laundry.longitude!,
+                      ),
                       icon: const Icon(Icons.map, size: 24),
                       label: const Text(
                         'Lihat di Maps',
@@ -243,7 +250,9 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
   }
 
   Widget _buildStatusCard() {
-    Color statusColor = widget.laundry.status == 'buka' ? Colors.green : Colors.red;
+    Color statusColor = widget.laundry.status == 'buka'
+        ? Colors.green
+        : Colors.red;
     if (widget.laundry.status == 'buka' && !widget.laundry.isOpen) {
       statusColor = Colors.orange;
     }
@@ -310,11 +319,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.location_on,
-                    color: Colors.purple,
-                    size: 24,
-                  ),
+                  Icon(Icons.location_on, color: Colors.purple, size: 24),
                   const SizedBox(width: 12),
                   Text(
                     'Deteksi Lokasi Saya',
@@ -354,10 +359,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                     children: [
                       Text(
                         'Jarak dari Lokasi Saya',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                       Text(
                         distance! < 1
@@ -388,10 +390,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                   Expanded(
                     child: Text(
                       locationError!,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.red,
-                      ),
+                      style: const TextStyle(fontSize: 13, color: Colors.red),
                     ),
                   ),
                 ],

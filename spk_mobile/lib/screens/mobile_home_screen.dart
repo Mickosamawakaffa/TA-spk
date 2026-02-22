@@ -57,10 +57,7 @@ class _MobileHomeScreenState extends State<MobileHomeScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF1565C0),
-                    Color(0xFF0D47A1),
-                  ],
+                  colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
                 ),
               ),
               child: SafeArea(
@@ -150,10 +147,7 @@ class _MobileHomeScreenState extends State<MobileHomeScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'Temukan rekomendasi terbaik untuk kebutuhan Anda',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
               ],
             ),
@@ -191,15 +185,14 @@ class _MobileHomeScreenState extends State<MobileHomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const RecommendationScreen(
-                          category: 'kontrakan',
-                        ),
+                        builder: (context) =>
+                            const RecommendationScreen(category: 'kontrakan'),
                       ),
                     );
                   },
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Laundry Card
                 _buildCategoryCard(
                   title: 'Layanan Laundry',
@@ -210,9 +203,8 @@ class _MobileHomeScreenState extends State<MobileHomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const RecommendationScreen(
-                          category: 'laundry',
-                        ),
+                        builder: (context) =>
+                            const RecommendationScreen(category: 'laundry'),
                       ),
                     );
                   },
@@ -243,11 +235,7 @@ class _MobileHomeScreenState extends State<MobileHomeScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.search,
-                      color: Colors.grey[600],
-                      size: 20,
-                    ),
+                    Icon(Icons.search, color: Colors.grey[600], size: 20),
                     const SizedBox(width: 8),
                     Text(
                       'Pencarian Cepat',
@@ -272,11 +260,7 @@ class _MobileHomeScreenState extends State<MobileHomeScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.search,
-                          color: Colors.grey[400],
-                          size: 20,
-                        ),
+                        Icon(Icons.search, color: Colors.grey[400], size: 20),
                         const SizedBox(width: 12),
                         Text(
                           'Cari kontrakan atau laundry...',
@@ -329,11 +313,7 @@ class _MobileHomeScreenState extends State<MobileHomeScreen> {
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 32,
-              ),
+              child: Icon(icon, color: color, size: 32),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -351,10 +331,7 @@ class _MobileHomeScreenState extends State<MobileHomeScreen> {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -396,14 +373,8 @@ class _MobileHomeScreenState extends State<MobileHomeScreen> {
             selectedFontSize: 12,
             unselectedFontSize: 11,
             items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home),
-                label: 'Beranda',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.search),
-                label: 'Cari',
-              ),
+              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
+              BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Cari'),
               BottomNavigationBarItem(
                 icon: Icon(Icons.bookmark),
                 label: 'Booking',

@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as path;
 import '../config/app_config.dart';
 import '../models/booking.dart';
 import 'auth_service.dart';
@@ -42,25 +44,43 @@ class BookingService {
     }
   }
 
-  // Create booking
+  // Create booking (with required payment proof image)
   Future<Map<String, dynamic>> createBooking({
     required int kontrakanId,
     required DateTime tanggalMulai,
     required int durasiBulan,
     String? catatan,
+    File? paymentProof,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/bookings'),
-        headers: _headers,
-        body: jsonEncode({
-          'kontrakan_id': kontrakanId,
-          'tanggal_mulai': tanggalMulai.toIso8601String().split('T')[0],
-          'durasi_bulan': durasiBulan,
-          'catatan': catatan,
-        }),
+      // Validate payment proof is provided
+      if (paymentProof == null) {
+        return {
+          'success': false,
+          'message': 'Bukti pembayaran wajib diunggah',
+        };
+      }
+
+      // Use multipart request with payment proof
+      final uri = Uri.parse('${AppConfig.baseUrl}/bookings');
+      final request = http.MultipartRequest('POST', uri);
+
+      if (_authService.token != null) {
+        request.headers['Authorization'] = 'Bearer ${_authService.token}';
+        request.headers['Accept'] = 'application/json';
+      }
+
+      request.fields['kontrakan_id'] = kontrakanId.toString();
+      request.fields['tanggal_mulai'] = tanggalMulai.toIso8601String().split('T')[0];
+      request.fields['durasi_bulan'] = durasiBulan.toString();
+      if (catatan != null) request.fields['catatan'] = catatan;
+
+      request.files.add(
+        await http.MultipartFile.fromPath('payment_proof', paymentProof.path),
       );
 
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 30));
+      final response = await http.Response.fromStream(streamedResponse);
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 201 && data['success'] == true) {
@@ -122,6 +142,51 @@ class BookingService {
     } catch (e) {
       print('Error getting booking detail: $e');
       return null;
+    }
+  }
+
+  // Upload payment proof image
+  Future<Map<String, dynamic>> uploadPaymentProof(
+    int bookingId,
+    File imageFile,
+  ) async {
+    try {
+      final uri = Uri.parse(
+        '${AppConfig.baseUrl}/bookings/$bookingId/payment-proof',
+      );
+      final request = http.MultipartRequest('POST', uri);
+
+      // Add auth header
+      if (_authService.token != null) {
+        request.headers['Authorization'] = 'Bearer ${_authService.token}';
+        request.headers['Accept'] = 'application/json';
+      }
+
+      // Attach image file
+      request.files.add(
+        await http.MultipartFile.fromPath('payment_proof', imageFile.path),
+      );
+
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 30),
+      );
+      final response = await http.Response.fromStream(streamedResponse);
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Bukti pembayaran berhasil diunggah',
+          'booking': Booking.fromJson(data['data']),
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Gagal mengunggah bukti pembayaran',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error: $e'};
     }
   }
 }

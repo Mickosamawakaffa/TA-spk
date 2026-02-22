@@ -173,4 +173,82 @@ class AuthService {
       return null;
     }
   }
+
+  // Update profile
+  Future<Map<String, dynamic>> updateProfile({
+    required String name,
+    required String email,
+    String? phone,
+  }) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${AppConfig.baseUrl}/profile/update'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({
+          'name': name,
+          'email': email,
+          'phone': phone,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        final user = User.fromJson(data['data']);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(AppConfig.userKey, jsonEncode(user.toJson()));
+        _currentUser = user;
+        return {'success': true, 'message': data['message']};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Gagal update profil',
+          'errors': data['errors'],
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error: $e'};
+    }
+  }
+
+  // Change password
+  Future<Map<String, dynamic>> changePassword({
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${AppConfig.baseUrl}/profile/update'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({
+          'name': _currentUser?.name ?? '',
+          'email': _currentUser?.email ?? '',
+          'password': password,
+          'password_confirmation': passwordConfirmation,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return {'success': true, 'message': 'Password berhasil diubah'};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Gagal mengubah password',
+          'errors': data['errors'],
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error: $e'};
+    }
+  }
 }
