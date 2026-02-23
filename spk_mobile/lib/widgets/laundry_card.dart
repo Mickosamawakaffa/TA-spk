@@ -185,7 +185,7 @@ class LaundryCard extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF00BCD4),
+                              color: Color(0xFF00897B),
                             ),
                           ),
                           const Text(
@@ -203,7 +203,7 @@ class LaundryCard extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF00BCD4).withOpacity(0.1),
+                          color: const Color(0xFF00897B).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -211,7 +211,7 @@ class LaundryCard extends StatelessWidget {
                             const Icon(
                               Icons.access_time,
                               size: 14,
-                              color: Color(0xFF00BCD4),
+                              color: Color(0xFF00897B),
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -219,7 +219,7 @@ class LaundryCard extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF00BCD4),
+                                color: Color(0xFF00897B),
                               ),
                             ),
                           ],
@@ -299,7 +299,7 @@ class LaundryCard extends StatelessWidget {
     if (ranking == 1) return Colors.amber;
     if (ranking == 2) return Colors.grey[400]!;
     if (ranking == 3) return Colors.brown[300]!;
-    return const Color(0xFF00BCD4);
+    return const Color(0xFF00897B);
   }
 
   IconData _getRankingIcon(int ranking) {

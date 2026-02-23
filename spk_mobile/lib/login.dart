@@ -30,35 +30,65 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           // Header
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: const EdgeInsets.fromLTRB(8, 0, 16, 24),
             decoration: const BoxDecoration(
-              color: Color(0xFF1565C0), // Dark blue
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
+              ),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(28),
+                bottomRight: Radius.circular(28),
+              ),
             ),
             child: SafeArea(
               bottom: false,
-              child: Row(
+              child: Column(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                  const Spacer(),
+                  const SizedBox(height: 20),
                   Container(
-                    width: 40,
-                    height: 40,
-                    decoration: const BoxDecoration(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
                     ),
-                    child: const Icon(Icons.person, color: Color(0xFF1565C0)),
+                    child: const Icon(
+                      Icons.person_rounded,
+                      color: Color(0xFF1565C0),
+                      size: 36,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Selamat Datang',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Masuk ke akun Anda untuk melanjutkan',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
                   ),
                 ],
               ),
@@ -67,132 +97,97 @@ class _LoginScreenState extends State<LoginScreen> {
 
           // Main Content
           Expanded(
-            child: Container(
-              color: Colors.white,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Title Section
-                      const Text(
-                        'LOGIN',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(height: 1, color: Colors.grey[300]),
-                      const SizedBox(height: 24),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
 
-                      // Section Heading
-                      RichText(
-                        text: const TextSpan(
+                    // Email Field
+                    _buildTextField(
+                      label: 'Email',
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      prefixIcon: Icons.email_outlined,
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // Password Field
+                    _buildTextField(
+                      label: 'Password',
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      prefixIcon: Icons.lock_outline,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: const Color(0xFF1565C0),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // Login Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: _buildActionButton(
+                        label: 'MASUK',
+                        onPressed: _isLoading ? null : _handleLogin,
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Info Aplikasi untuk Mahasiswa Polije
+                    _buildInfoCard(),
+
+                    const SizedBox(height: 20),
+
+                    // Register Link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Belum punya akun? ',
                           style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                            fontSize: 14,
+                            color: Colors.grey[600],
                           ),
-                          children: [
-                            TextSpan(text: 'Masuk ke '),
-                            TextSpan(
-                              text: 'Akun',
-                              style: TextStyle(color: Color(0xFF1565C0)),
-                            ),
-                            TextSpan(text: ' Anda'),
-                          ],
                         ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Email Field
-                      _buildTextField(
-                        label: 'Email',
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        prefixIcon: Icons.email_outlined,
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Password Field
-                      _buildTextField(
-                        label: 'Password',
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        prefixIcon: Icons.lock_outline,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                            color: const Color(0xFF1565C0),
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const RegisterScreen(),
+                              ),
+                            );
                           },
-                        ),
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // Login Button
-                      SizedBox(
-                        width: double.infinity,
-                        child: _buildActionButton(
-                          label: 'LOGIN',
-                          onPressed: _isLoading ? null : _handleLogin,
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Info Aplikasi untuk Mahasiswa Polije
-                      _buildInfoCard(),
-
-                      const SizedBox(height: 16),
-
-                      // Register Link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Belum punya akun? ',
+                          child: const Text(
+                            'Daftar Sekarang',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.black87,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1565C0),
                             ),
                           ),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const RegisterScreen(),
-                                ),
-                              );
-                            },
-                            child: const Text(
-                              'Daftar',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF1565C0),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
+                    ),
 
-                      const SizedBox(height: 20),
-                    ],
-                  ),
+                    const SizedBox(height: 20),
+                  ],
                 ),
               ),
             ),
@@ -266,9 +261,9 @@ class _LoginScreenState extends State<LoginScreen> {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1A1A2E),
           ),
         ),
         const SizedBox(height: 8),
@@ -289,32 +284,30 @@ class _LoginScreenState extends State<LoginScreen> {
           },
           decoration: InputDecoration(
             prefixIcon: prefixIcon != null
-                ? Icon(prefixIcon, color: const Color(0xFF1565C0))
+                ? Icon(prefixIcon, color: const Color(0xFF1565C0), size: 20)
                 : null,
             suffixIcon: suffixIcon,
             filled: true,
-            fillColor: Colors.white,
+            fillColor: const Color(0xFFF7F8FC),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(
-                color: Color(0xFF1565C0),
-                width: 1.5,
-              ),
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(
-                color: Color(0xFF1565C0),
-                width: 1.5,
-              ),
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFF1565C0), width: 2),
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFF1565C0), width: 1.5),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFFEF5350)),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
-              vertical: 14,
+              vertical: 15,
             ),
           ),
         ),
@@ -324,20 +317,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildInfoCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF1565C0).withValues(alpha: 0.1),
-            const Color(0xFF1565C0).withValues(alpha: 0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
+        color: const Color(0xFFF7F8FC),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFF1565C0).withValues(alpha: 0.3),
-          width: 1.5,
+          color: const Color(0xFFE0E0E0),
         ),
       ),
       child: Column(
@@ -348,30 +333,30 @@ class _LoginScreenState extends State<LoginScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1565C0),
-                  borderRadius: BorderRadius.circular(10),
+                  color: const Color(0xFF1565C0).withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.school, color: Colors.white, size: 24),
+                child: const Icon(Icons.school_rounded, color: Color(0xFF1565C0), size: 22),
               ),
               const SizedBox(width: 12),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Khusus untuk Mahasiswa',
+                    Text(
+                      'Untuk Mahasiswa',
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1565C0),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1A1A2E),
                       ),
                     ),
-                    const Text(
+                    Text(
                       'Politeknik Negeri Jember',
                       style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF1565C0),
                       ),
                     ),
                   ],
@@ -380,62 +365,22 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildInfoItem(
-                  Icons.location_city,
-                  'Temukan Kontrakan Terbaik',
-                  'Dapatkan rekomendasi kontrakan terdekat dari kampus Polije dengan harga terjangkau dan fasilitas lengkap',
-                ),
-                const SizedBox(height: 12),
-                _buildInfoItem(
-                  Icons.local_laundry_service,
-                  'Cari Laundry Terpercaya',
-                  'Temukan jasa laundry terdekat dengan kualitas terbaik untuk kebutuhan harian Anda',
-                ),
-                const SizedBox(height: 12),
-                _buildInfoItem(
-                  Icons.star,
-                  'Rekomendasi Terpercaya',
-                  'Sistem akan memberikan rekomendasi terbaik berdasarkan preferensi dan kebutuhan Anda',
-                ),
-              ],
-            ),
+          _buildInfoItem(
+            Icons.home_rounded,
+            'Temukan Kontrakan Terbaik',
+            'Rekomendasi kontrakan terdekat dari kampus',
           ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1565C0).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.info_outline,
-                  color: Color(0xFF1565C0),
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Aplikasi ini menggunakan metode SAW untuk memberikan rekomendasi terbaik',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[700],
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          const SizedBox(height: 10),
+          _buildInfoItem(
+            Icons.local_laundry_service_rounded,
+            'Cari Laundry Terpercaya',
+            'Temukan laundry dengan kualitas terbaik',
+          ),
+          const SizedBox(height: 10),
+          _buildInfoItem(
+            Icons.analytics_rounded,
+            'Metode SAW',
+            'Rekomendasi berdasarkan preferensi Anda',
           ),
         ],
       ),
@@ -446,8 +391,8 @@ class _LoginScreenState extends State<LoginScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: const Color(0xFF1565C0), size: 20),
-        const SizedBox(width: 12),
+        Icon(icon, color: const Color(0xFF1565C0).withOpacity(0.6), size: 18),
+        const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -457,16 +402,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: Color(0xFF1A1A2E),
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               Text(
                 description,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[600],
-                  height: 1.4,
+                  color: Colors.grey[500],
+                  height: 1.3,
                 ),
               ),
             ],
@@ -485,18 +430,19 @@ class _LoginScreenState extends State<LoginScreen> {
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color(0xFF1565C0),
         foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         elevation: 0,
-        disabledBackgroundColor: Colors.grey,
+        disabledBackgroundColor: Colors.grey[300],
+        shadowColor: const Color(0xFF1565C0).withOpacity(0.3),
       ),
       child: _isLoading
           ? const SpinKitThreeBounce(color: Colors.white, size: 20)
           : Text(
               label,
               style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
               ),
             ),

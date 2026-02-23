@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/laundry.dart';
 import '../services/location_service.dart';
+import '../services/favorite_service.dart';
 
 class LaundryDetailScreen extends StatefulWidget {
   final Laundry laundry;
@@ -18,25 +19,93 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
   double? distance;
   bool isLoadingLocation = false;
   String? locationError;
+  bool _isFavorite = false;
+  bool _isFavLoading = false;
+  final _favoriteService = FavoriteService();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFavorite();
+  }
+
+  Future<void> _checkFavorite() async {
+    final result = await _favoriteService.isLaundryFavorite(widget.laundry.id);
+    if (mounted) setState(() => _isFavorite = result);
+  }
+
+  Future<void> _toggleFavorite() async {
+    setState(() => _isFavLoading = true);
+    final result = await _favoriteService.toggleLaundryFavorite(widget.laundry.id);
+    if (mounted) {
+      setState(() {
+        _isFavLoading = false;
+        if (result['success'] == true) {
+          _isFavorite = result['isFavorite'] ?? !_isFavorite;
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                color: Colors.white, size: 20,
+              ),
+              const SizedBox(width: 10),
+              Text(result['message'] ?? 'Status favorit diubah'),
+            ],
+          ),
+          backgroundColor: _isFavorite ? const Color(0xFF00897B) : Colors.grey[700],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFF7F8FC),
       body: CustomScrollView(
         slivers: [
           // App Bar with gradient
           SliverAppBar(
             expandedHeight: 200,
             pinned: true,
-            backgroundColor: const Color(0xFF00BCD4),
+            backgroundColor: const Color(0xFF00897B),
+            actions: [
+              _isFavLoading
+                  ? const Padding(
+                      padding: EdgeInsets.all(14),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      ),
+                    )
+                  : IconButton(
+                      onPressed: _toggleFavorite,
+                      icon: Icon(
+                        _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                        color: _isFavorite ? Colors.redAccent : Colors.white,
+                        size: 26,
+                      ),
+                    ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF00BCD4), Color(0xFF00ACC1)],
+                    colors: [Color(0xFF00897B), Color(0xFF00695C)],
                   ),
                 ),
                 child: SafeArea(
@@ -64,7 +133,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                               child: const Icon(
                                 Icons.local_laundry_service,
                                 size: 40,
-                                color: Color(0xFF00BCD4),
+                                color: Color(0xFF00897B),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -167,7 +236,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                         'Laundry Kiloan',
                         widget.laundry.formattedHargaKiloan,
                         Icons.scale,
-                        const Color(0xFF00BCD4),
+                        const Color(0xFF00897B),
                       ),
                       const SizedBox(height: 12),
                       _buildPriceCard(
@@ -228,9 +297,9 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF00BCD4),
+                        foregroundColor: const Color(0xFF00897B),
                         side: const BorderSide(
-                          color: Color(0xFF00BCD4),
+                          color: Color(0xFF00897B),
                           width: 2,
                         ),
                         shape: RoundedRectangleBorder(
@@ -500,7 +569,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
         children: [
           Row(
             children: [
-              Icon(icon, color: const Color(0xFF00BCD4)),
+              Icon(icon, color: const Color(0xFF00897B)),
               const SizedBox(width: 8),
               Text(
                 title,

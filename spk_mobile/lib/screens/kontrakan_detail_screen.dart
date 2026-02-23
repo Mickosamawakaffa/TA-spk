@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/kontrakan.dart';
 import '../services/location_service.dart';
 import '../services/auth_service.dart';
+import '../services/favorite_service.dart';
 import 'booking_form_screen.dart';
 
 class KontrakanDetailScreen extends StatefulWidget {
@@ -20,15 +22,84 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
   double? distance;
   bool isLoadingLocation = false;
   String? locationError;
+  bool _isFavorite = false;
+  bool _isFavLoading = false;
+  final _favoriteService = FavoriteService();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFavorite();
+  }
+
+  Future<void> _checkFavorite() async {
+    final result = await _favoriteService.isKontrakanFavorite(widget.kontrakan.id);
+    if (mounted) setState(() => _isFavorite = result);
+  }
+
+  Future<void> _toggleFavorite() async {
+    setState(() => _isFavLoading = true);
+    final result = await _favoriteService.toggleKontrakanFavorite(widget.kontrakan.id);
+    if (mounted) {
+      setState(() {
+        _isFavLoading = false;
+        if (result['success'] == true) {
+          _isFavorite = result['isFavorite'] ?? !_isFavorite;
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                color: Colors.white, size: 20,
+              ),
+              const SizedBox(width: 10),
+              Text(result['message'] ?? 'Status favorit diubah'),
+            ],
+          ),
+          backgroundColor: _isFavorite ? const Color(0xFF1565C0) : Colors.grey[700],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFF7F8FC),
       appBar: AppBar(
         title: const Text('Detail Kontrakan'),
         backgroundColor: const Color(0xFF1565C0),
         foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          _isFavLoading
+              ? const Padding(
+                  padding: EdgeInsets.all(14),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+              : IconButton(
+                  onPressed: _toggleFavorite,
+                  icon: Icon(
+                    _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                    color: _isFavorite ? Colors.redAccent : Colors.white,
+                    size: 26,
+                  ),
+                ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -154,60 +225,88 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
         ),
       ),
       bottomSheet: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, -4),
             ),
           ],
         ),
         child: SafeArea(
-          child: ElevatedButton(
-            onPressed: widget.kontrakan.isAvailable
-                ? () {
-                    final authService = AuthService();
-                    if (!authService.isAuthenticated) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Silakan login terlebih dahulu untuk booking',
-                          ),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                      return;
-                    }
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            BookingFormScreen(kontrakan: widget.kontrakan),
+          child: Row(
+            children: [
+              // WhatsApp Button
+              if (widget.kontrakan.noWhatsapp != null && widget.kontrakan.noWhatsapp!.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.only(right: 12),
+                  child: ElevatedButton(
+                    onPressed: () => _openWhatsApp(widget.kontrakan.noWhatsapp!),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF25D366),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    );
-                  }
-                : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: widget.kontrakan.isAvailable
-                  ? const Color(0xFF667eea)
-                  : Colors.grey,
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: Colors.grey[400],
-              disabledForegroundColor: Colors.white70,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                      elevation: 0,
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.chat_rounded, size: 20),
+                        SizedBox(width: 6),
+                        Text('WhatsApp', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ),
+              // Booking Button
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: widget.kontrakan.isAvailable
+                      ? () {
+                          final authService = AuthService();
+                          if (!authService.isAuthenticated) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Silakan login terlebih dahulu untuk booking'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => BookingFormScreen(kontrakan: widget.kontrakan),
+                            ),
+                          );
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: widget.kontrakan.isAvailable
+                        ? const Color(0xFF1565C0)
+                        : Colors.grey,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: Colors.grey[400],
+                    disabledForegroundColor: Colors.white70,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    widget.kontrakan.isAvailable ? 'Booking Sekarang' : 'Tidak Tersedia',
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                  ),
+                ),
               ),
-            ),
-            child: Text(
-              widget.kontrakan.isAvailable
-                  ? 'Booking Sekarang'
-                  : 'Kontrakan Tidak Tersedia',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
+            ],
           ),
         ),
       ),
@@ -359,6 +458,28 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _openWhatsApp(String phone) async {
+    // Clean number: remove spaces, dashes, parentheses, etc.
+    String cleaned = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    // Convert leading 0 to 62
+    if (cleaned.startsWith('0')) {
+      cleaned = '62${cleaned.substring(1)}';
+    } else if (!cleaned.startsWith('62')) {
+      cleaned = '62$cleaned';
+    }
+    final message = Uri.encodeComponent('Halo, saya tertarik dengan kontrakan ${widget.kontrakan.nama}');
+    final url = Uri.parse('https://wa.me/$cleaned?text=$message');
+    try {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tidak dapat membuka WhatsApp. Pastikan WhatsApp terpasang.'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   Future<void> _detectLocation() async {

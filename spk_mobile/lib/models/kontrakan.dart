@@ -9,6 +9,7 @@ class Kontrakan {
   final String? deskripsi;
   final String status;
   final String? fotoUtama;
+  final String? noWhatsapp;
   final List<Galeri> galeri;
   final double? avgRating;
   final int? totalReviews;
@@ -26,6 +27,7 @@ class Kontrakan {
     this.deskripsi,
     required this.status,
     this.fotoUtama,
+    this.noWhatsapp,
     this.galeri = const [],
     this.avgRating,
     this.totalReviews,
@@ -54,6 +56,7 @@ class Kontrakan {
       deskripsi: json['deskripsi'],
       status: json['status'] ?? 'tersedia',
       fotoUtama: json['foto_utama'],
+      noWhatsapp: json['no_whatsapp'],
       galeri: json['galeri'] != null
           ? (json['galeri'] as List).map((g) => Galeri.fromJson(g)).toList()
           : [],

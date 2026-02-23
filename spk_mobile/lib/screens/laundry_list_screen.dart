@@ -58,7 +58,7 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
     setState(() {
       _sortBy = sortBy;
       if (sortBy == 'rating') {
-        _filteredList.sort((a, b) => (b.rating ?? 0).compareTo(a.rating ?? 0));
+        _filteredList.sort((a, b) => b.rating.compareTo(a.rating));
       } else if (sortBy == 'harga') {
         _filteredList.sort((a, b) => a.hargaKiloan.compareTo(b.hargaKiloan));
       }
@@ -68,7 +68,7 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFF7F8FC),
       body: SafeArea(
         child: Column(
           children: [
@@ -77,9 +77,13 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF00BCD4), Color(0xFF00ACC1)],
+                  colors: [Color(0xFF00897B), Color(0xFF00695C)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
+                ),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -283,12 +287,12 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF00BCD4).withValues(alpha: 0.1),
+                      color: const Color(0xFF00897B).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
                       Icons.local_laundry_service,
-                      color: Color(0xFF00BCD4),
+                      color: Color(0xFF00897B),
                       size: 28,
                     ),
                   ),
@@ -311,7 +315,7 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
                             Icon(Icons.star, size: 16, color: Colors.amber[700]),
                             const SizedBox(width: 4),
                             Text(
-                              laundry.rating?.toStringAsFixed(1) ?? 'N/A',
+                              laundry.rating.toStringAsFixed(1),
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -403,7 +407,7 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00BCD4).withValues(alpha: 0.1),
+                        color: const Color(0xFF00897B).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Column(
@@ -422,7 +426,7 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF00BCD4),
+                              color: Color(0xFF00897B),
                             ),
                           ),
                         ],

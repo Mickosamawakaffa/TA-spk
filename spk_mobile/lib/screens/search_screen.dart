@@ -4,6 +4,8 @@ import '../models/kontrakan.dart';
 import '../models/laundry.dart';
 import '../services/kontrakan_service.dart';
 import '../services/laundry_service.dart';
+import '../services/auth_service.dart';
+import '../services/favorite_service.dart';
 import 'kontrakan_detail_screen.dart';
 import 'laundry_detail_screen.dart';
 
@@ -17,12 +19,16 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final _kontrakanService = KontrakanService();
   final _laundryService = LaundryService();
+  final _authService = AuthService();
+  final _favoriteService = FavoriteService();
   final _searchController = TextEditingController();
 
   List<Kontrakan> _allKontrakan = [];
   List<Kontrakan> _filteredKontrakan = [];
   List<Laundry> _allLaundry = [];
   List<Laundry> _filteredLaundry = [];
+  Set<int> _favKontrakanIds = {};
+  Set<int> _favLaundryIds = {};
   bool _isLoading = true;
   String _selectedCategory = 'Kontrakan';
   String _selectedFilter = 'Semua';
@@ -51,6 +57,48 @@ class _SearchScreenState extends State<SearchScreen> {
       _filteredLaundry = laundry;
       _isLoading = false;
     });
+    _loadFavoriteIds();
+  }
+
+  Future<void> _loadFavoriteIds() async {
+    try {
+      if (!_authService.isAuthenticated) return;
+      final ids = await _favoriteService.getFavoriteIds();
+      if (mounted) {
+        setState(() {
+          _favKontrakanIds = (ids['kontrakan'] ?? []).toSet();
+          _favLaundryIds = (ids['laundry'] ?? []).toSet();
+        });
+      }
+    } catch (e) {
+      print('Error loading favorite ids: $e');
+    }
+  }
+
+  Future<void> _toggleKontrakanFav(int id) async {
+    final wasFav = _favKontrakanIds.contains(id);
+    setState(() {
+      if (wasFav) _favKontrakanIds.remove(id); else _favKontrakanIds.add(id);
+    });
+    final result = await _favoriteService.toggleKontrakanFavorite(id);
+    if (result['success'] != true && mounted) {
+      setState(() {
+        if (wasFav) _favKontrakanIds.add(id); else _favKontrakanIds.remove(id);
+      });
+    }
+  }
+
+  Future<void> _toggleLaundryFav(int id) async {
+    final wasFav = _favLaundryIds.contains(id);
+    setState(() {
+      if (wasFav) _favLaundryIds.remove(id); else _favLaundryIds.add(id);
+    });
+    final result = await _favoriteService.toggleLaundryFavorite(id);
+    if (result['success'] != true && mounted) {
+      setState(() {
+        if (wasFav) _favLaundryIds.add(id); else _favLaundryIds.remove(id);
+      });
+    }
   }
 
   void _filterKontrakan(String query) {
@@ -140,123 +188,148 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFF7F8FC),
       body: SafeArea(
         child: Column(
           children: [
             // Header with Search Bar
             Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF1565C0), Color(0xFF1976D2)],
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
               ),
               child: Column(
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.search, color: Colors.white, size: 28),
-                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.search_rounded, color: Colors.white, size: 22),
+                      ),
+                      const SizedBox(width: 14),
                       const Text(
                         'Cari & Jelajahi',
                         style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
                           color: Colors.white,
+                          letterSpacing: 0.3,
                         ),
                       ),
                       const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.tune, color: Colors.white),
-                        onPressed: _showFilterDialog,
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.tune_rounded, color: Colors.white, size: 22),
+                          onPressed: _showFilterDialog,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
 
                   // Category Tabs
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () =>
-                              setState(() => _selectedCategory = 'Kontrakan'),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: _selectedCategory == 'Kontrakan'
-                                  ? Colors.white
-                                  : Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.home_work,
-                                  color: _selectedCategory == 'Kontrakan'
-                                      ? const Color(0xFF1565C0)
-                                      : Colors.white,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Kontrakan',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () =>
+                                setState(() => _selectedCategory = 'Kontrakan'),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color: _selectedCategory == 'Kontrakan'
+                                    ? Colors.white
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(11),
+                                boxShadow: _selectedCategory == 'Kontrakan'
+                                    ? [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 4, offset: const Offset(0, 2))]
+                                    : null,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.home_work_rounded,
                                     color: _selectedCategory == 'Kontrakan'
                                         ? const Color(0xFF1565C0)
-                                        : Colors.white,
+                                        : Colors.white.withOpacity(0.85),
+                                    size: 18,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Kontrakan',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: _selectedCategory == 'Kontrakan'
+                                          ? const Color(0xFF1565C0)
+                                          : Colors.white.withOpacity(0.85),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () =>
-                              setState(() => _selectedCategory = 'Laundry'),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: _selectedCategory == 'Laundry'
-                                  ? Colors.white
-                                  : Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.local_laundry_service,
-                                  color: _selectedCategory == 'Laundry'
-                                      ? const Color(0xFF00BCD4)
-                                      : Colors.white,
-                                  size: 20,
-                                ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () =>
+                                setState(() => _selectedCategory = 'Laundry'),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color: _selectedCategory == 'Laundry'
+                                    ? Colors.white
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(11),
+                                boxShadow: _selectedCategory == 'Laundry'
+                                    ? [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 4, offset: const Offset(0, 2))]
+                                    : null,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.local_laundry_service_rounded,
+                                    color: _selectedCategory == 'Laundry'
+                                        ? const Color(0xFF00897B)
+                                        : Colors.white.withOpacity(0.85),
+                                    size: 18,
+                                  ),
                                 const SizedBox(width: 8),
                                 Text(
                                   'Laundry',
                                   style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
                                     color: _selectedCategory == 'Laundry'
-                                        ? const Color(0xFF00BCD4)
-                                        : Colors.white,
+                                        ? const Color(0xFF00897B)
+                                        : Colors.white.withOpacity(0.85),
                                   ),
                                 ),
                               ],
@@ -266,20 +339,22 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                     ],
                   ),
+                  ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   TextField(
                     controller: _searchController,
                     onChanged: _filterKontrakan,
-                    style: const TextStyle(fontSize: 16),
+                    style: const TextStyle(fontSize: 14),
                     decoration: InputDecoration(
                       hintText: _selectedCategory == 'Kontrakan'
                           ? 'Cari kontrakan...'
                           : 'Cari laundry...',
-                      prefixIcon: const Icon(Icons.search),
+                      hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                      prefixIcon: Icon(Icons.search_rounded, color: Colors.grey[400], size: 20),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(Icons.clear),
+                              icon: Icon(Icons.close_rounded, color: Colors.grey[400], size: 20),
                               onPressed: () {
                                 _searchController.clear();
                                 _filterKontrakan('');
@@ -289,12 +364,12 @@ class _SearchScreenState extends State<SearchScreen> {
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
-                        vertical: 14,
+                        vertical: 13,
                       ),
                     ),
                   ),
@@ -486,49 +561,78 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                bottomLeft: Radius.circular(16),
-              ),
-              child:
-                  kontrakan.fotoUtama != null && kontrakan.fotoUtama!.isNotEmpty
-                  ? CachedNetworkImage(
-                      imageUrl:
-                          'http://192.168.18.16:8000/storage/${kontrakan.fotoUtama}',
-                      width: 120,
-                      height: 140,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        width: 120,
-                        height: 140,
-                        color: Colors.grey[200],
-                        child: const Center(
-                          child: CircularProgressIndicator(strokeWidth: 2),
+            // Image with favorite heart
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    bottomLeft: Radius.circular(16),
+                  ),
+                  child:
+                      kontrakan.fotoUtama != null && kontrakan.fotoUtama!.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: kontrakan.primaryPhoto,
+                          width: 120,
+                          height: 140,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            width: 120,
+                            height: 140,
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            width: 120,
+                            height: 140,
+                            color: Colors.grey[200],
+                            child: Icon(
+                              Icons.home_work,
+                              size: 40,
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                        )
+                      : Container(
+                          width: 120,
+                          height: 140,
+                          color: Colors.grey[200],
+                          child: Icon(
+                            Icons.home_work,
+                            size: 40,
+                            color: Colors.grey[400],
+                          ),
                         ),
+                ),
+                Positioned(
+                  top: 6,
+                  left: 6,
+                  child: GestureDetector(
+                    onTap: () => _toggleKontrakanFav(kontrakan.id),
+                    child: Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4),
+                        ],
                       ),
-                      errorWidget: (context, url, error) => Container(
-                        width: 120,
-                        height: 140,
-                        color: Colors.grey[200],
-                        child: Icon(
-                          Icons.home_work,
-                          size: 40,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                    )
-                  : Container(
-                      width: 120,
-                      height: 140,
-                      color: Colors.grey[200],
                       child: Icon(
-                        Icons.home_work,
-                        size: 40,
-                        color: Colors.grey[400],
+                        _favKontrakanIds.contains(kontrakan.id)
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border_rounded,
+                        size: 16,
+                        color: _favKontrakanIds.contains(kontrakan.id)
+                            ? Colors.red
+                            : Colors.grey[600],
                       ),
                     ),
+                  ),
+                ),
+              ],
             ),
             // Info
             Expanded(
@@ -677,28 +781,58 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image/Icon
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                bottomLeft: Radius.circular(16),
-              ),
-              child: Container(
-                width: 120,
-                height: 140,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Colors.cyan[400]!, Colors.cyan[600]!],
+            // Image/Icon with favorite heart
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    bottomLeft: Radius.circular(16),
+                  ),
+                  child: Container(
+                    width: 120,
+                    height: 140,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Colors.cyan[400]!, Colors.cyan[600]!],
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.local_laundry_service,
+                      size: 50,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
-                child: const Icon(
-                  Icons.local_laundry_service,
-                  size: 50,
-                  color: Colors.white,
+                Positioned(
+                  top: 6,
+                  left: 6,
+                  child: GestureDetector(
+                    onTap: () => _toggleLaundryFav(laundry.id),
+                    child: Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4),
+                        ],
+                      ),
+                      child: Icon(
+                        _favLaundryIds.contains(laundry.id)
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border_rounded,
+                        size: 16,
+                        color: _favLaundryIds.contains(laundry.id)
+                            ? Colors.red
+                            : Colors.grey[600],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
             // Info
             Expanded(
@@ -774,7 +908,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         horizontal: 10,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00BCD4).withValues(alpha: 0.1),
+                        color: const Color(0xFF00897B).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -782,7 +916,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF00BCD4),
+                          color: Color(0xFF00897B),
                         ),
                       ),
                     ),

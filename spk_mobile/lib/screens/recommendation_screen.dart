@@ -47,8 +47,10 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       widget.category == 'kontrakan' ? 'Jumlah Kamar' : 'Kecepatan Layanan';
   String get _kriteria4Label =>
       widget.category == 'kontrakan' ? 'Fasilitas' : 'Variasi Layanan';
+  // ignore: unused_element
   String get _kriteria3Key =>
       widget.category == 'kontrakan' ? 'jumlah_kamar' : 'kecepatan';
+  // ignore: unused_element
   String get _kriteria4Key =>
       widget.category == 'kontrakan' ? 'fasilitas' : 'layanan';
 
@@ -142,12 +144,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
 
   /// Get the maximum dropdown value for a given bobot index
   int _getMaxBobot(int index) {
-    List<int> bobots = [
-      _bobotHarga,
-      _bobotJarak,
-      _bobotKriteria3,
-      _bobotKriteria4,
-    ];
     int othersMin = 0;
     for (int i = 0; i < 4; i++) {
       if (i != index) othersMin += 10; // minimum 10% each

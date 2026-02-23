@@ -5,7 +5,6 @@ import 'search_screen.dart';
 import 'booking_history_screen.dart';
 import 'profile_screen.dart';
 import 'recommendation_screen.dart';
-import 'laundry_list_screen.dart';
 
 class MobileHomeScreen extends StatefulWidget {
   const MobileHomeScreen({super.key});
