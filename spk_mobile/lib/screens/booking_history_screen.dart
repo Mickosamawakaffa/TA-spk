@@ -349,13 +349,14 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
 
   Widget _buildBookingList(List<Booking> bookings, bool isActive) {
     if (bookings.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
+      return RefreshIndicator(
+        onRefresh: _loadBookings,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+            Center(
+              child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: const Color(0xFF1565C0).withOpacity(0.06),
@@ -367,8 +368,10 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                   color: const Color(0xFF1565C0).withOpacity(0.3),
                 ),
               ),
-              const SizedBox(height: 20),
-              Text(
+            ),
+            const SizedBox(height: 20),
+            Center(
+              child: Text(
                 isActive ? 'Belum ada booking aktif' : 'Belum ada riwayat',
                 style: const TextStyle(
                   fontSize: 17,
@@ -376,26 +379,32 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                   color: Color(0xFF1A1A2E),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: Text(
                 isActive
                     ? 'Booking kontrakan Anda akan muncul di sini'
                     : 'Riwayat booking sebelumnya akan muncul di sini',
                 style: TextStyle(fontSize: 13, color: Colors.grey[500]),
                 textAlign: TextAlign.center,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-      itemCount: bookings.length,
-      itemBuilder: (context, index) {
-        return _buildBookingCard(bookings[index]);
-      },
+    return RefreshIndicator(
+      onRefresh: _loadBookings,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+        itemCount: bookings.length,
+        itemBuilder: (context, index) {
+          return _buildBookingCard(bookings[index]);
+        },
+      ),
     );
   }
 

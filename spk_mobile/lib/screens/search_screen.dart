@@ -6,6 +6,7 @@ import '../services/kontrakan_service.dart';
 import '../services/laundry_service.dart';
 import '../services/auth_service.dart';
 import '../services/favorite_service.dart';
+import '../utils/currency_formatter.dart';
 import 'kontrakan_detail_screen.dart';
 import 'laundry_detail_screen.dart';
 
@@ -71,7 +72,7 @@ class _SearchScreenState extends State<SearchScreen> {
         });
       }
     } catch (e) {
-      print('Error loading favorite ids: $e');
+      // Error loading favorite ids silently
     }
   }
 
@@ -434,71 +435,91 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildKontrakanList() {
     if (_filteredKontrakan.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      return RefreshIndicator(
+        onRefresh: _loadData,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
+            SizedBox(height: MediaQuery.of(context).size.height * 0.2),
             Icon(Icons.search_off, size: 80, color: Colors.grey[300]),
             const SizedBox(height: 16),
-            Text(
-              'Tidak ada hasil',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[600],
+            Center(
+              child: Text(
+                'Tidak ada hasil',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                ),
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              'Coba kata kunci lain',
-              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            Center(
+              child: Text(
+                'Coba kata kunci lain',
+                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+              ),
             ),
           ],
         ),
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _filteredKontrakan.length,
-      itemBuilder: (context, index) {
-        return _buildKontrakanItem(_filteredKontrakan[index]);
-      },
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: _filteredKontrakan.length,
+        itemBuilder: (context, index) {
+          return _buildKontrakanItem(_filteredKontrakan[index]);
+        },
+      ),
     );
   }
 
   Widget _buildLaundryList() {
     if (_filteredLaundry.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      return RefreshIndicator(
+        onRefresh: _loadData,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
+            SizedBox(height: MediaQuery.of(context).size.height * 0.2),
             Icon(Icons.search_off, size: 80, color: Colors.grey[300]),
             const SizedBox(height: 16),
-            Text(
-              'Tidak ada hasil',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[600],
+            Center(
+              child: Text(
+                'Tidak ada hasil',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                ),
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              'Coba kata kunci lain',
-              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            Center(
+              child: Text(
+                'Coba kata kunci lain',
+                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+              ),
             ),
           ],
         ),
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _filteredLaundry.length,
-      itemBuilder: (context, index) {
-        return _buildLaundryItem(_filteredLaundry[index]);
-      },
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: _filteredLaundry.length,
+        itemBuilder: (context, index) {
+          return _buildLaundryItem(_filteredLaundry[index]);
+        },
+      ),
     );
   }
 
@@ -552,9 +573,9 @@ class _SearchScreenState extends State<SearchScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -663,16 +684,18 @@ class _SearchScreenState extends State<SearchScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: kontrakan.status == 'available'
-                                ? Colors.green
-                                : Colors.orange,
-                            borderRadius: BorderRadius.circular(12),
+                                ? const Color(0xFFE8F5E9)
+                                : const Color(0xFFFFF3E0),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             kontrakan.status == 'available'
                                 ? 'Tersedia'
                                 : 'Penuh',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: kontrakan.status == 'available'
+                                  ? const Color(0xFF2E7D32)
+                                  : const Color(0xFFF57C00),
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                             ),
@@ -702,47 +725,37 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
-                        Icon(Icons.bed, size: 14, color: Colors.grey[600]),
+                        Icon(Icons.bed_rounded, size: 14, color: Colors.grey[500]),
                         const SizedBox(width: 4),
                         Text(
                           '${kontrakan.jumlahKamar} Kamar',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[700],
+                            color: Colors.grey[600],
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Icon(Icons.near_me, size: 14, color: Colors.grey[600]),
+                        Icon(Icons.near_me_rounded, size: 14, color: Colors.grey[500]),
                         const SizedBox(width: 4),
                         Text(
                           '${kontrakan.jarakKampus.toStringAsFixed(1)} km',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[700],
+                            color: Colors.grey[600],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 6,
-                        horizontal: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1565C0).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'Rp ${(kontrakan.harga / 1000).toStringAsFixed(0)}K/bln',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1565C0),
-                        ),
+                    const SizedBox(height: 10),
+                    Text(
+                      '${kontrakan.formattedHarga}/bln',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1565C0),
                       ),
                     ),
                   ],
@@ -873,51 +886,41 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
                         Icon(
-                          Icons.access_time,
+                          Icons.schedule_rounded,
                           size: 14,
-                          color: Colors.grey[600],
+                          color: Colors.grey[500],
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${laundry.estimasiSelesai}jam',
+                          '${laundry.waktuProses} jam',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[700],
+                            color: Colors.grey[600],
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Icon(Icons.near_me, size: 14, color: Colors.grey[600]),
+                        Icon(Icons.near_me_rounded, size: 14, color: Colors.grey[500]),
                         const SizedBox(width: 4),
                         Text(
                           '${laundry.jarak.toStringAsFixed(1)} km',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[700],
+                            color: Colors.grey[600],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 6,
-                        horizontal: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF00897B).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'Rp ${(laundry.hargaKiloan / 1000).toStringAsFixed(0)}K/kg',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF00897B),
-                        ),
+                    const SizedBox(height: 10),
+                    Text(
+                      '${laundry.formattedHarga}/kg',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF00897B),
                       ),
                     ),
                   ],
@@ -946,7 +949,7 @@ class _SearchScreenState extends State<SearchScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Rp ${(_priceRange.start / 1000000).toStringAsFixed(1)}jt - Rp ${(_priceRange.end / 1000000).toStringAsFixed(1)}jt',
+                '${CurrencyFormatter.formatCompact(_priceRange.start)} - ${CurrencyFormatter.formatCompact(_priceRange.end)}',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -961,8 +964,8 @@ class _SearchScreenState extends State<SearchScreen> {
                 divisions: 20,
                 activeColor: const Color(0xFF1565C0),
                 labels: RangeLabels(
-                  'Rp ${(_priceRange.start / 1000).toStringAsFixed(0)}K',
-                  'Rp ${(_priceRange.end / 1000).toStringAsFixed(0)}K',
+                  CurrencyFormatter.formatCompact(_priceRange.start),
+                  CurrencyFormatter.formatCompact(_priceRange.end),
                 ),
                 onChanged: (values) {
                   setDialogState(() => _priceRange = values);

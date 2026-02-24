@@ -239,7 +239,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     } catch (e) {
       setState(() {
         _errorMessage =
-            'Tidak dapat terhubung ke server. Pastikan server Laravel aktif dan IP di app_config.dart benar.';
+            'Tidak dapat terhubung ke server. Periksa koneksi internet Anda dan coba lagi.';
         _hasCalculated = true;
       });
     } finally {

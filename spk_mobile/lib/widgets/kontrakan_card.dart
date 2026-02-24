@@ -29,10 +29,12 @@ class KontrakanCard extends StatelessWidget {
         );
       },
       child: Card(
-        elevation: 3,
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.1),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -177,25 +179,27 @@ class KontrakanCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            kontrakan.formattedHarga,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1565C0),
+                      Flexible(
+                        child: Row(
+                          children: [
+                            Text(
+                              kontrakan.formattedHarga,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1565C0),
+                              ),
                             ),
-                          ),
-                          const Text(
-                            '/bulan',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey,
+                            Text(
+                              '/bln',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[500],
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -227,20 +231,20 @@ class KontrakanCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       const Icon(
-                        Icons.directions_walk,
+                        Icons.near_me_rounded,
                         size: 14,
                         color: Colors.orange,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '${kontrakan.jarakKampus.toStringAsFixed(1)} km dari kampus',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
-                          color: Colors.grey,
+                          color: Colors.grey[500],
                         ),
                       ),
                     ],

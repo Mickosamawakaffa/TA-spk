@@ -56,7 +56,7 @@ class KontrakanService {
       }
       return [];
     } catch (e) {
-      print('Error getting kontrakan: $e');
+      // Error getting kontrakan silently
       return [];
     }
   }
@@ -77,7 +77,7 @@ class KontrakanService {
       }
       return null;
     } catch (e) {
-      print('Error getting kontrakan detail: $e');
+      // Error getting kontrakan detail silently
       return null;
     }
   }

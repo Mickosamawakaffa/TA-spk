@@ -38,7 +38,7 @@ class BookingService {
       }
       return [];
     } catch (e) {
-      print('Error getting booking history: $e');
+      // Error getting booking history silently
       return [];
     }
   }
@@ -139,7 +139,7 @@ class BookingService {
       }
       return null;
     } catch (e) {
-      print('Error getting booking detail: $e');
+      // Error getting booking detail silently
       return null;
     }
   }

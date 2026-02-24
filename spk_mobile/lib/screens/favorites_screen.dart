@@ -368,13 +368,25 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      kontrakan.formattedHarga,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF1565C0),
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          kontrakan.formattedHarga,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1565C0),
+                          ),
+                        ),
+                        Text(
+                          '/bln',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 6),
                     Row(
@@ -530,13 +542,25 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      laundry.formattedHarga,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF00897B),
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          laundry.formattedHarga,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF00897B),
+                          ),
+                        ),
+                        Text(
+                          '/kg',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 6),
                     Row(

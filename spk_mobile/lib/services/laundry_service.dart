@@ -27,9 +27,6 @@ class LaundryService {
           .get(Uri.parse('${AppConfig.baseUrl}/laundry'), headers: _headers)
           .timeout(AppConfig.connectionTimeout);
 
-      print('Laundry API Response: ${response.statusCode}');
-      print('Laundry API Body: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
@@ -39,7 +36,7 @@ class LaundryService {
       }
       return [];
     } catch (e) {
-      print('Error getting laundry: $e');
+      // Error getting laundry silently
       return [];
     }
   }
@@ -59,7 +56,7 @@ class LaundryService {
       }
       return null;
     } catch (e) {
-      print('Error getting laundry detail: $e');
+      // Error getting laundry detail silently
       return null;
     }
   }

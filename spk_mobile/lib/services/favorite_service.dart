@@ -45,7 +45,7 @@ class FavoriteService {
         };
       }
     } catch (e) {
-      print('Error getting favorites: $e');
+      // Error getting favorites silently
       return {
         'success': false,
         'kontrakan': [],
@@ -74,7 +74,7 @@ class FavoriteService {
         'laundry': laundryList,
       };
     } catch (e) {
-      print('Error parsing favorites: $e');
+      // Error parsing favorites silently
       return {
         'success': false,
         'kontrakan': <Kontrakan>[],
@@ -191,7 +191,7 @@ class FavoriteService {
       final kontrakanList = favorites['kontrakan'] as List<int>? ?? [];
       return kontrakanList.contains(kontrakanId);
     } catch (e) {
-      print('Error checking favorite: $e');
+      // Error checking favorite silently
       return false;
     }
   }
@@ -203,7 +203,7 @@ class FavoriteService {
       final laundryList = favorites['laundry'] as List<int>? ?? [];
       return laundryList.contains(laundryId);
     } catch (e) {
-      print('Error checking favorite: $e');
+      // Error checking favorite silently
       return false;
     }
   }

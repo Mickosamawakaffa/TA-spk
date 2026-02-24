@@ -56,7 +56,7 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
         _favLaundryIds = (ids['laundry'] ?? []).toSet();
       });
     } catch (e) {
-      print('Error loading favorite ids: $e');
+      // Error loading favorite ids silently
     }
   }
 
@@ -107,7 +107,7 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
       final list = await _kontrakanService.getKontrakan();
       setState(() => _kontrakanList = list.take(6).toList());
     } catch (e) {
-      print('Error loading kontrakan: $e');
+      // Error loading kontrakan silently
     }
   }
 
@@ -116,7 +116,7 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
       final list = await _laundryService.getLaundry();
       setState(() => _laundryList = list.take(6).toList());
     } catch (e) {
-      print('Error loading laundry: $e');
+      // Error loading laundry silently
     }
   }
 
@@ -1004,13 +1004,28 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          kontrakan.formattedHarga,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1565C0),
-                          ),
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                kontrakan.formattedHarga,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1565C0),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Text(
+                              '/bln',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       Container(
@@ -1198,13 +1213,28 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          laundry.formattedHarga,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF00897B),
-                          ),
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                laundry.formattedHarga,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF00897B),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Text(
+                              '/kg',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       Container(

@@ -7,8 +7,8 @@ class AppConfig {
 
   // CATATAN: Untuk real device, ganti IP sesuai dengan IP komputer Anda
   // Cek IP dengan: ipconfig (di Windows) atau ifconfig (di Linux/Mac)
-  static const String baseUrl = 'http://10.215.176.99:8000/api';
-  static const String storageUrl = 'http://10.215.176.99:8000/storage';
+  static const String baseUrl = 'http://192.168.18.16:8000/api';
+  static const String storageUrl = 'http://192.168.18.16:8000/storage';
 
   // Timeouts
   static const Duration connectionTimeout = Duration(seconds: 10);

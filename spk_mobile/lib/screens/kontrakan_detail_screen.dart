@@ -145,16 +145,36 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: Color(0xFF1A1A2E),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${widget.kontrakan.formattedHarga}/bulan',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1565C0),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1565C0).withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          widget.kontrakan.formattedHarga,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1565C0),
+                          ),
+                        ),
+                        Text(
+                          ' /bulan',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -183,19 +203,31 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                   const Text(
                     'Fasilitas',
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1A1A2E),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: widget.kontrakan.fasilitasList.map((f) {
-                      return Chip(
-                        label: Text(f),
-                        backgroundColor: Colors.blue[50],
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE3F2FD),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFF1565C0).withOpacity(0.15)),
+                        ),
+                        child: Text(
+                          f,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF1565C0),
+                          ),
+                        ),
                       );
                     }).toList(),
                   ),
@@ -205,15 +237,15 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                     const Text(
                       'Deskripsi',
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1A1A2E),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       widget.kontrakan.deskripsi!,
-                      style: const TextStyle(fontSize: 14, height: 1.5),
+                      style: TextStyle(fontSize: 14, height: 1.6, color: Colors.grey[700]),
                     ),
                   ],
 
@@ -315,15 +347,22 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
 
   Widget _buildInfoRow(IconData icon, String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Colors.grey[600]),
-          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1565C0).withOpacity(0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 18, color: const Color(0xFF1565C0)),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 14, color: Colors.black87),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF333333), height: 1.3),
             ),
           ),
         ],

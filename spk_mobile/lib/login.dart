@@ -198,11 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
-    print('=== LOGIN BUTTON CLICKED ===');
-    print('FormKey currentState: ${_formKey.currentState}');
-
     if (_formKey.currentState == null) {
-      print('ERROR: FormKey currentState is null!');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error: Form not initialized')),
       );
@@ -210,12 +206,8 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     if (!_formKey.currentState!.validate()) {
-      print('Form validation failed');
       return;
     }
-
-    print('Form validated, attempting login...');
-    print('Email: ${_emailController.text.trim()}');
 
     setState(() => _isLoading = true);
 
@@ -224,20 +216,16 @@ class _LoginScreenState extends State<LoginScreen> {
       password: _passwordController.text,
     );
 
-    print('Login result: $result');
-
     setState(() => _isLoading = false);
 
     if (!mounted) return;
 
     if (result['success']) {
-      print('Login successful, navigating to home...');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const ImprovedHomeScreen()),
       );
     } else {
-      print('Login failed: ${result['message']}');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['message'] ?? 'Login gagal'),

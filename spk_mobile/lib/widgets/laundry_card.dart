@@ -29,10 +29,12 @@ class LaundryCard extends StatelessWidget {
         );
       },
       child: Card(
-        elevation: 3,
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.1),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -177,25 +179,27 @@ class LaundryCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            laundry.formattedHarga,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF00897B),
+                      Flexible(
+                        child: Row(
+                          children: [
+                            Text(
+                              laundry.formattedHarga,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF00897B),
+                              ),
                             ),
-                          ),
-                          const Text(
-                            '/kg',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey,
+                            Text(
+                              '/kg',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[500],
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
