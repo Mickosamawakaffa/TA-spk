@@ -1,0 +1,47 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* -------------------------
+   Debug UI readability fix
+   - Scope-only to debug/exception/dump tool selectors (conservative)
+   - Forces text color and opacity to ensure legibility when vendor debug styles apply low alpha
+   ------------------------- */
+
+/* Target common Symfony/Laravel debug UI selectors and Ignition */
+body .exception-summary,
+body .exception-properties,
+body .trace-line,
+body .trace-head,
+body .trace-message,
+body .trace-file-path,
+body .trace-class,
+body .sf-toolbar,
+body .sf-toolbar *,
+.sf-dump,
+.sf-dump *,
+.ignition,
+.ignition * {
+    color: #222 !important;
+    opacity: 1 !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+/* Keep `.text-muted` styling in app but make muted text inside debug UI readable */
+body .exception-summary .text-muted,
+body .exception-properties .text-muted,
+body .trace-line .text-muted,
+body .sf-toolbar .text-muted,
+.ignition .text-muted {
+    color: #666 !important;
+    opacity: 1 !important;
+}
