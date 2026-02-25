@@ -38,19 +38,11 @@ class FavoriteService {
           'laundry': data['data']['laundry'] ?? [],
         };
       } else {
-        return {
-          'success': false,
-          'kontrakan': [],
-          'laundry': [],
-        };
+        return {'success': false, 'kontrakan': [], 'laundry': []};
       }
     } catch (e) {
       // Error getting favorites silently
-      return {
-        'success': false,
-        'kontrakan': [],
-        'laundry': [],
-      };
+      return {'success': false, 'kontrakan': [], 'laundry': []};
     }
   }
 

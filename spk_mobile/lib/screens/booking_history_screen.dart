@@ -57,10 +57,16 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.red.shade600, size: 24),
+            Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.red.shade600,
+              size: 24,
+            ),
             const SizedBox(width: 10),
-            const Text('Batalkan Booking',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            const Text(
+              'Batalkan Booking',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
           ],
         ),
         content: const Text('Apakah Anda yakin ingin membatalkan booking ini?'),
@@ -92,8 +98,11 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
           content: Row(
             children: [
               Icon(
-                result['success'] == true ? Icons.check_circle_rounded : Icons.error_outline_rounded,
-                color: Colors.white, size: 20,
+                result['success'] == true
+                    ? Icons.check_circle_rounded
+                    : Icons.error_outline_rounded,
+                color: Colors.white,
+                size: 20,
               ),
               const SizedBox(width: 10),
               Expanded(child: Text(result['message'] ?? '')),
@@ -103,7 +112,9 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
               ? const Color(0xFF2E7D32)
               : const Color(0xFFC62828),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -164,8 +175,10 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                     size: 22,
                   ),
                 ),
-                title: const Text('Pilih dari Galeri',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
+                title: const Text(
+                  'Pilih dari Galeri',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
                 onTap: () => Navigator.pop(ctx, ImageSource.gallery),
               ),
               ListTile(
@@ -182,8 +195,10 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                     size: 22,
                   ),
                 ),
-                title: const Text('Ambil Foto',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
+                title: const Text(
+                  'Ambil Foto',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
                 onTap: () => Navigator.pop(ctx, ImageSource.camera),
               ),
             ],
@@ -213,8 +228,11 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
           content: Row(
             children: [
               Icon(
-                result['success'] == true ? Icons.check_circle_rounded : Icons.error_outline_rounded,
-                color: Colors.white, size: 20,
+                result['success'] == true
+                    ? Icons.check_circle_rounded
+                    : Icons.error_outline_rounded,
+                color: Colors.white,
+                size: 20,
               ),
               const SizedBox(width: 10),
               Expanded(child: Text(result['message'] ?? '')),
@@ -224,7 +242,9 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
               ? const Color(0xFF2E7D32)
               : const Color(0xFFC62828),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           margin: const EdgeInsets.all(16),
           duration: const Duration(seconds: 3),
         ),
@@ -363,7 +383,9 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  isActive ? Icons.bookmark_outline_rounded : Icons.history_rounded,
+                  isActive
+                      ? Icons.bookmark_outline_rounded
+                      : Icons.history_rounded,
                   size: 56,
                   color: const Color(0xFF1565C0).withOpacity(0.3),
                 ),
@@ -562,10 +584,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Divider(
-                          height: 1,
-                          color: Colors.grey[200],
-                        ),
+                        child: Divider(height: 1, color: Colors.grey[200]),
                       ),
                       _buildDateRow(
                         Icons.logout_rounded,
@@ -574,10 +593,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Divider(
-                          height: 1,
-                          color: Colors.grey[200],
-                        ),
+                        child: Divider(height: 1, color: Colors.grey[200]),
                       ),
                       _buildDateRow(
                         Icons.timelapse_rounded,
@@ -641,7 +657,9 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                           ),
                           const SizedBox(width: 5),
                           Text(
-                            booking.paymentStatus == 'paid' ? 'Lunas' : 'Belum Bayar',
+                            booking.paymentStatus == 'paid'
+                                ? 'Lunas'
+                                : 'Belum Bayar',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -661,7 +679,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                   const SizedBox(height: 12),
                   GestureDetector(
                     onTap: () {
-                      final url = '${AppConfig.storageUrl}/${booking.paymentProof}';
+                      final url =
+                          '${AppConfig.storageUrl}/${booking.paymentProof}';
                       showDialog(
                         context: context,
                         builder: (ctx) => Dialog(
@@ -685,8 +704,11 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.receipt_long_rounded,
-                                        color: Colors.white, size: 20),
+                                    const Icon(
+                                      Icons.receipt_long_rounded,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
                                     const SizedBox(width: 10),
                                     const Expanded(
                                       child: Text(
@@ -704,10 +726,15 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                                         padding: const EdgeInsets.all(4),
                                         decoration: BoxDecoration(
                                           color: Colors.white.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
-                                        child: const Icon(Icons.close_rounded,
-                                            color: Colors.white, size: 18),
+                                        child: const Icon(
+                                          Icons.close_rounded,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -742,8 +769,11 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                               color: const Color(0xFF2E7D32).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(Icons.image_rounded,
-                                size: 16, color: Color(0xFF2E7D32)),
+                            child: const Icon(
+                              Icons.image_rounded,
+                              size: 16,
+                              color: Color(0xFF2E7D32),
+                            ),
                           ),
                           const SizedBox(width: 10),
                           const Expanded(
@@ -756,8 +786,11 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                               ),
                             ),
                           ),
-                          const Icon(Icons.chevron_right_rounded,
-                              color: Color(0xFF2E7D32), size: 20),
+                          const Icon(
+                            Icons.chevron_right_rounded,
+                            color: Color(0xFF2E7D32),
+                            size: 20,
+                          ),
                         ],
                       ),
                     ),
@@ -854,8 +887,18 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
 
   String _formatDate(DateTime date) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agt',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }

@@ -149,7 +149,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Text(
                                     'Halo, ${_authService.currentUser?.name ?? "User"} 👋',
                                     style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.85),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.85,
+                                      ),
                                       fontSize: 13,
                                       fontWeight: FontWeight.w400,
                                     ),
@@ -212,7 +214,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF6C63FF).withValues(alpha: 0.1),
+                                    color: const Color(
+                                      0xFF6C63FF,
+                                    ).withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: const Icon(
@@ -366,7 +370,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: const Row(
                       children: [
-                        Text('Semua', style: TextStyle(fontWeight: FontWeight.w600)),
+                        Text(
+                          'Semua',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
                         SizedBox(width: 4),
                         Icon(Icons.arrow_forward_ios_rounded, size: 14),
                       ],
@@ -383,29 +390,35 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: SizedBox(
                     height: 230,
                     child: Center(
-                      child: CircularProgressIndicator(color: Color(0xFF6C63FF)),
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF6C63FF),
+                      ),
                     ),
                   ),
                 )
               : _kontrakanList.isEmpty
-                  ? SliverToBoxAdapter(child: _buildEmptyState(
-                      icon: Icons.home_work_outlined,
-                      message: 'Belum ada kontrakan',
-                    ))
-                  : SliverToBoxAdapter(
-                      child: SizedBox(
-                        height: 265,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: _kontrakanList.length > 6 ? 6 : _kontrakanList.length,
-                          itemBuilder: (context, index) {
-                            return _buildKontrakanCard(_kontrakanList[index]);
-                          },
-                        ),
-                      ),
+              ? SliverToBoxAdapter(
+                  child: _buildEmptyState(
+                    icon: Icons.home_work_outlined,
+                    message: 'Belum ada kontrakan',
+                  ),
+                )
+              : SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 265,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: _kontrakanList.length > 6
+                          ? 6
+                          : _kontrakanList.length,
+                      itemBuilder: (context, index) {
+                        return _buildKontrakanCard(_kontrakanList[index]);
+                      },
                     ),
+                  ),
+                ),
 
           // LAUNDRY SECTION TITLE
           SliverToBoxAdapter(
@@ -453,7 +466,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: const Row(
                       children: [
-                        Text('Semua', style: TextStyle(fontWeight: FontWeight.w600)),
+                        Text(
+                          'Semua',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
                         SizedBox(width: 4),
                         Icon(Icons.arrow_forward_ios_rounded, size: 14),
                       ],
@@ -470,26 +486,32 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: SizedBox(
                     height: 150,
                     child: Center(
-                      child: CircularProgressIndicator(color: Color(0xFF00BFA5)),
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF00BFA5),
+                      ),
                     ),
                   ),
                 )
               : _laundryList.isEmpty
-                  ? SliverToBoxAdapter(child: _buildEmptyState(
-                      icon: Icons.local_laundry_service_outlined,
-                      message: 'Belum ada laundry',
-                    ))
-                  : SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            return _buildLaundryCard(_laundryList[index]);
-                          },
-                          childCount: _laundryList.length > 5 ? 5 : _laundryList.length,
-                        ),
-                      ),
+              ? SliverToBoxAdapter(
+                  child: _buildEmptyState(
+                    icon: Icons.local_laundry_service_outlined,
+                    message: 'Belum ada laundry',
+                  ),
+                )
+              : SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        return _buildLaundryCard(_laundryList[index]);
+                      },
+                      childCount: _laundryList.length > 5
+                          ? 5
+                          : _laundryList.length,
                     ),
+                  ),
+                ),
         ],
       ),
     );
@@ -673,7 +695,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(18),
                   ),
-                  child: kontrakan.fotoUtama != null &&
+                  child:
+                      kontrakan.fotoUtama != null &&
                           kontrakan.fotoUtama!.isNotEmpty
                       ? CachedNetworkImage(
                           imageUrl:
@@ -780,7 +803,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     const Spacer(),
                     Row(
                       children: [
-                        Icon(Icons.bed_rounded, size: 13, color: Colors.grey[500]),
+                        Icon(
+                          Icons.bed_rounded,
+                          size: 13,
+                          color: Colors.grey[500],
+                        ),
                         const SizedBox(width: 3),
                         Text(
                           '${kontrakan.jumlahKamar}',
@@ -791,7 +818,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Icon(Icons.near_me_rounded, size: 13, color: Colors.grey[500]),
+                        Icon(
+                          Icons.near_me_rounded,
+                          size: 13,
+                          color: Colors.grey[500],
+                        ),
                         const SizedBox(width: 3),
                         Text(
                           '${kontrakan.jarakKampus.toStringAsFixed(1)} km',
@@ -867,7 +898,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: const Color(0xFF00BFA5).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: laundry.fotoUtama != null && laundry.fotoUtama!.isNotEmpty
+                child:
+                    laundry.fotoUtama != null && laundry.fotoUtama!.isNotEmpty
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(14),
                         child: CachedNetworkImage(
@@ -935,12 +967,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        Icon(Icons.location_on_rounded, size: 13, color: Colors.grey[500]),
+                        Icon(
+                          Icons.location_on_rounded,
+                          size: 13,
+                          color: Colors.grey[500],
+                        ),
                         const SizedBox(width: 3),
                         Expanded(
                           child: Text(
                             laundry.alamat,
-                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -951,9 +990,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF00BFA5).withValues(alpha: 0.08),
+                            color: const Color(
+                              0xFF00BFA5,
+                            ).withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -966,15 +1010,26 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Icon(Icons.near_me_rounded, size: 13, color: Colors.grey[500]),
+                        Icon(
+                          Icons.near_me_rounded,
+                          size: 13,
+                          color: Colors.grey[500],
+                        ),
                         const SizedBox(width: 3),
                         Text(
                           '${laundry.jarakKampus.toStringAsFixed(1)} km',
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
                         ),
                         const SizedBox(width: 8),
                         if (laundry.avgRating != null) ...[
-                          const Icon(Icons.star_rounded, size: 14, color: Color(0xFFFFB800)),
+                          const Icon(
+                            Icons.star_rounded,
+                            size: 14,
+                            color: Color(0xFFFFB800),
+                          ),
                           const SizedBox(width: 2),
                           Text(
                             laundry.avgRating!.toStringAsFixed(1),
@@ -991,7 +1046,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.chevron_right_rounded, color: Colors.grey, size: 22),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: Colors.grey,
+                size: 22,
+              ),
             ],
           ),
         ),

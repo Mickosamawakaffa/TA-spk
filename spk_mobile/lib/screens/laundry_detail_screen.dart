@@ -36,7 +36,9 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
 
   Future<void> _toggleFavorite() async {
     setState(() => _isFavLoading = true);
-    final result = await _favoriteService.toggleLaundryFavorite(widget.laundry.id);
+    final result = await _favoriteService.toggleLaundryFavorite(
+      widget.laundry.id,
+    );
     if (mounted) {
       setState(() {
         _isFavLoading = false;
@@ -49,16 +51,23 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
           content: Row(
             children: [
               Icon(
-                _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                color: Colors.white, size: 20,
+                _isFavorite
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
+                color: Colors.white,
+                size: 20,
               ),
               const SizedBox(width: 10),
               Text(result['message'] ?? 'Status favorit diubah'),
             ],
           ),
-          backgroundColor: _isFavorite ? const Color(0xFF00897B) : Colors.grey[700],
+          backgroundColor: _isFavorite
+              ? const Color(0xFF00897B)
+              : Colors.grey[700],
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           margin: const EdgeInsets.all(16),
           duration: const Duration(seconds: 2),
         ),
@@ -93,7 +102,9 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                   : IconButton(
                       onPressed: _toggleFavorite,
                       icon: Icon(
-                        _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                        _isFavorite
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border_rounded,
                         color: _isFavorite ? Colors.redAccent : Colors.white,
                         size: 26,
                       ),
@@ -616,7 +627,11 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
               children: [
                 Text(
                   label,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500], fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[500],
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 const SizedBox(height: 3),
                 Text(

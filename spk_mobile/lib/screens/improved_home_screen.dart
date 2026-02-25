@@ -403,7 +403,9 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const RecommendationScreen(category: 'kontrakan'),
+                              builder: (_) => const RecommendationScreen(
+                                category: 'kontrakan',
+                              ),
                             ),
                           );
                         },
@@ -421,7 +423,9 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const RecommendationScreen(category: 'laundry'),
+                              builder: (_) => const RecommendationScreen(
+                                category: 'laundry',
+                              ),
                             ),
                           );
                         },
@@ -451,18 +455,21 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                     child: Center(child: CircularProgressIndicator()),
                   )
                 : _kontrakanList.isEmpty
-                    ? _buildEmptyState('Belum ada data kontrakan', Icons.home_work_outlined)
-                    : SizedBox(
-                        height: 250,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.fromLTRB(20, 0, 8, 0),
-                          itemCount: _kontrakanList.length,
-                          itemBuilder: (context, index) {
-                            return _buildKontrakanCard(_kontrakanList[index]);
-                          },
-                        ),
-                      ),
+                ? _buildEmptyState(
+                    'Belum ada data kontrakan',
+                    Icons.home_work_outlined,
+                  )
+                : SizedBox(
+                    height: 250,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.fromLTRB(20, 0, 8, 0),
+                      itemCount: _kontrakanList.length,
+                      itemBuilder: (context, index) {
+                        return _buildKontrakanCard(_kontrakanList[index]);
+                      },
+                    ),
+                  ),
           ),
 
           // ── Laundry Section ──
@@ -483,18 +490,21 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                     child: Center(child: CircularProgressIndicator()),
                   )
                 : _laundryList.isEmpty
-                    ? _buildEmptyState('Belum ada data laundry', Icons.local_laundry_service_outlined)
-                    : SizedBox(
-                        height: 240,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.fromLTRB(20, 0, 8, 0),
-                          itemCount: _laundryList.length,
-                          itemBuilder: (context, index) {
-                            return _buildLaundryCard(_laundryList[index]);
-                          },
-                        ),
-                      ),
+                ? _buildEmptyState(
+                    'Belum ada data laundry',
+                    Icons.local_laundry_service_outlined,
+                  )
+                : SizedBox(
+                    height: 240,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.fromLTRB(20, 0, 8, 0),
+                      itemCount: _laundryList.length,
+                      itemBuilder: (context, index) {
+                        return _buildLaundryCard(_laundryList[index]);
+                      },
+                    ),
+                  ),
           ),
 
           // ── Quick Actions ──
@@ -589,10 +599,7 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
             const SizedBox(height: 6),
             Text(
               'Pilih jenis layanan yang ingin Anda cari',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
             ),
             const SizedBox(height: 24),
             Padding(
@@ -603,7 +610,8 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                     child: _buildChoiceCard(
                       icon: Icons.home_work_rounded,
                       label: 'Kontrakan',
-                      description: 'Cari kontrakan terbaik sesuai budget dan kebutuhan',
+                      description:
+                          'Cari kontrakan terbaik sesuai budget dan kebutuhan',
                       color: const Color(0xFF1565C0),
                       bgColor: const Color(0xFFE3F2FD),
                       onTap: () {
@@ -611,7 +619,9 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const RecommendationScreen(category: 'kontrakan'),
+                            builder: (_) => const RecommendationScreen(
+                              category: 'kontrakan',
+                            ),
                           ),
                         );
                       },
@@ -622,7 +632,8 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                     child: _buildChoiceCard(
                       icon: Icons.local_laundry_service_rounded,
                       label: 'Laundry',
-                      description: 'Cari laundry terbaik dari harga dan kecepatan',
+                      description:
+                          'Cari laundry terbaik dari harga dan kecepatan',
                       color: const Color(0xFF00897B),
                       bgColor: const Color(0xFFE0F2F1),
                       onTap: () {
@@ -630,7 +641,8 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const RecommendationScreen(category: 'laundry'),
+                            builder: (_) =>
+                                const RecommendationScreen(category: 'laundry'),
                           ),
                         );
                       },
@@ -745,7 +757,11 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                 ),
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded, size: 14, color: color.withOpacity(0.5)),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: color.withOpacity(0.5),
+            ),
           ],
         ),
       ),
@@ -767,8 +783,14 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
         decoration: BoxDecoration(
           borderRadius: isLast
-              ? const BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))
-              : const BorderRadius.only(topLeft: Radius.circular(20), bottomLeft: Radius.circular(20)),
+              ? const BorderRadius.only(
+                  topRight: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                )
+              : const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  bottomLeft: Radius.circular(20),
+                ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -793,7 +815,11 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Icon(Icons.arrow_forward_rounded, size: 16, color: color.withOpacity(0.6)),
+            Icon(
+              Icons.arrow_forward_rounded,
+              size: 16,
+              color: color.withOpacity(0.6),
+            ),
           ],
         ),
       ),
@@ -836,7 +862,9 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
             onPressed: onSeeAll,
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -891,7 +919,9 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
                   child: CachedNetworkImage(
                     imageUrl: kontrakan.primaryPhoto,
                     height: 120,
@@ -902,7 +932,11 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                       width: 200,
                       color: const Color(0xFFE3F2FD),
                       child: const Center(
-                        child: Icon(Icons.home_work_rounded, size: 36, color: Color(0xFF90CAF9)),
+                        child: Icon(
+                          Icons.home_work_rounded,
+                          size: 36,
+                          color: Color(0xFF90CAF9),
+                        ),
                       ),
                     ),
                     errorWidget: (_, __, ___) => Container(
@@ -910,7 +944,11 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                       width: 200,
                       color: const Color(0xFFE3F2FD),
                       child: const Center(
-                        child: Icon(Icons.home_work_rounded, size: 36, color: Color(0xFF90CAF9)),
+                        child: Icon(
+                          Icons.home_work_rounded,
+                          size: 36,
+                          color: Color(0xFF90CAF9),
+                        ),
                       ),
                     ),
                   ),
@@ -920,7 +958,10 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                   top: 8,
                   right: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: kontrakan.isAvailable
                           ? const Color(0xFF2E7D32)
@@ -988,12 +1029,19 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(Icons.location_on_rounded, size: 12, color: Colors.grey[400]),
+                      Icon(
+                        Icons.location_on_rounded,
+                        size: 12,
+                        color: Colors.grey[400],
+                      ),
                       const SizedBox(width: 3),
                       Expanded(
                         child: Text(
                           kontrakan.alamat,
-                          style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[500],
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -1029,7 +1077,10 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFE3F2FD),
                           borderRadius: BorderRadius.circular(6),
@@ -1037,7 +1088,11 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.bed_rounded, size: 12, color: Color(0xFF1565C0)),
+                            const Icon(
+                              Icons.bed_rounded,
+                              size: 12,
+                              color: Color(0xFF1565C0),
+                            ),
                             const SizedBox(width: 3),
                             Text(
                               '${kontrakan.jumlahKamar}',
@@ -1055,7 +1110,11 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Icon(Icons.directions_walk_rounded, size: 12, color: Colors.grey[400]),
+                      Icon(
+                        Icons.directions_walk_rounded,
+                        size: 12,
+                        color: Colors.grey[400],
+                      ),
                       const SizedBox(width: 3),
                       Text(
                         '${kontrakan.jarakKampus.toStringAsFixed(1)} km dari kampus',
@@ -1104,7 +1163,9 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
                   child: Container(
                     height: 110,
                     width: 200,
@@ -1129,7 +1190,10 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                   top: 8,
                   right: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: laundry.status == 'buka'
                           ? const Color(0xFF2E7D32)
@@ -1197,12 +1261,19 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(Icons.location_on_rounded, size: 12, color: Colors.grey[400]),
+                      Icon(
+                        Icons.location_on_rounded,
+                        size: 12,
+                        color: Colors.grey[400],
+                      ),
                       const SizedBox(width: 3),
                       Expanded(
                         child: Text(
                           laundry.alamat,
-                          style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[500],
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -1238,7 +1309,10 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFE0F2F1),
                           borderRadius: BorderRadius.circular(6),
@@ -1246,7 +1320,11 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.schedule_rounded, size: 12, color: Color(0xFF00897B)),
+                            const Icon(
+                              Icons.schedule_rounded,
+                              size: 12,
+                              color: Color(0xFF00897B),
+                            ),
                             const SizedBox(width: 3),
                             Text(
                               '${laundry.waktuProses}h',
@@ -1264,7 +1342,11 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Icon(Icons.access_time_rounded, size: 12, color: Colors.grey[400]),
+                      Icon(
+                        Icons.access_time_rounded,
+                        size: 12,
+                        color: Colors.grey[400],
+                      ),
                       const SizedBox(width: 3),
                       Text(
                         '${laundry.jamBuka} - ${laundry.jamTutup}',
@@ -1331,7 +1413,10 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
           children: [
             Icon(icon, size: 48, color: Colors.grey[300]),
             const SizedBox(height: 8),
-            Text(message, style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+            Text(
+              message,
+              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+            ),
           ],
         ),
       ),
@@ -1343,8 +1428,16 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
     const items = [
       _NavItem(Icons.home_outlined, Icons.home_rounded, 'Beranda'),
       _NavItem(Icons.search_outlined, Icons.search_rounded, 'Cari'),
-      _NavItem(Icons.favorite_outline_rounded, Icons.favorite_rounded, 'Favorit'),
-      _NavItem(Icons.bookmark_outline_rounded, Icons.bookmark_rounded, 'Booking'),
+      _NavItem(
+        Icons.favorite_outline_rounded,
+        Icons.favorite_rounded,
+        'Favorit',
+      ),
+      _NavItem(
+        Icons.bookmark_outline_rounded,
+        Icons.bookmark_rounded,
+        'Booking',
+      ),
       _NavItem(Icons.person_outline_rounded, Icons.person_rounded, 'Profil'),
     ];
 
@@ -1403,7 +1496,9 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                           items[i].label,
                           style: TextStyle(
                             fontSize: 11,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w400,
                             color: isSelected
                                 ? const Color(0xFF1565C0)
                                 : const Color(0xFF9E9E9E),

@@ -31,9 +31,7 @@ class LaundryCard extends StatelessWidget {
       child: Card(
         elevation: 2,
         shadowColor: Colors.black.withOpacity(0.1),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,7 +91,9 @@ class LaundryCard extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(showRanking && ranking != null ? 0 : 16),
+                    top: Radius.circular(
+                      showRanking && ranking != null ? 0 : 16,
+                    ),
                   ),
                   child: CachedNetworkImage(
                     imageUrl: laundry.primaryPhoto,
@@ -103,9 +103,7 @@ class LaundryCard extends StatelessWidget {
                     placeholder: (context, url) => Container(
                       height: 180,
                       color: Colors.grey[300],
-                      child: const Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      child: const Center(child: CircularProgressIndicator()),
                     ),
                     errorWidget: (context, url, error) => Container(
                       height: 180,
@@ -160,7 +158,11 @@ class LaundryCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      const Icon(Icons.location_on, size: 14, color: Colors.grey),
+                      const Icon(
+                        Icons.location_on,
+                        size: 14,
+                        color: Colors.grey,
+                      ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
@@ -252,11 +254,7 @@ class LaundryCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.schedule,
-                        size: 14,
-                        color: Colors.green,
-                      ),
+                      const Icon(Icons.schedule, size: 14, color: Colors.green),
                       const SizedBox(width: 4),
                       Text(
                         '${laundry.jamBuka} - ${laundry.jamTutup}',

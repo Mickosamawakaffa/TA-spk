@@ -173,11 +173,11 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       _noData = false;
     });
 
-    try {
-      final endpoint = widget.category == 'kontrakan'
-          ? '/saw/calculate/kontrakan'
-          : '/saw/calculate/laundry';
+    final endpoint = widget.category == 'kontrakan'
+        ? '/saw/calculate/kontrakan'
+        : '/saw/calculate/laundry';
 
+    try {
       final bodyParams = <String, dynamic>{};
       bodyParams['bobot_harga'] = _bobotHarga;
       bodyParams['bobot_jarak'] = _bobotJarak;
@@ -237,9 +237,11 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         });
       }
     } catch (e) {
+      debugPrint('SAW API Error: $e');
+      debugPrint('URL: ${AppConfig.baseUrl}$endpoint');
       setState(() {
         _errorMessage =
-            'Tidak dapat terhubung ke server. Periksa koneksi internet Anda dan coba lagi.';
+            'Tidak dapat terhubung ke server (${AppConfig.baseUrl}). Periksa koneksi internet Anda dan coba lagi.\n\nDetail: $e';
         _hasCalculated = true;
       });
     } finally {

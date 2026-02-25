@@ -79,12 +79,18 @@ class _SearchScreenState extends State<SearchScreen> {
   Future<void> _toggleKontrakanFav(int id) async {
     final wasFav = _favKontrakanIds.contains(id);
     setState(() {
-      if (wasFav) _favKontrakanIds.remove(id); else _favKontrakanIds.add(id);
+      if (wasFav)
+        _favKontrakanIds.remove(id);
+      else
+        _favKontrakanIds.add(id);
     });
     final result = await _favoriteService.toggleKontrakanFavorite(id);
     if (result['success'] != true && mounted) {
       setState(() {
-        if (wasFav) _favKontrakanIds.add(id); else _favKontrakanIds.remove(id);
+        if (wasFav)
+          _favKontrakanIds.add(id);
+        else
+          _favKontrakanIds.remove(id);
       });
     }
   }
@@ -92,12 +98,18 @@ class _SearchScreenState extends State<SearchScreen> {
   Future<void> _toggleLaundryFav(int id) async {
     final wasFav = _favLaundryIds.contains(id);
     setState(() {
-      if (wasFav) _favLaundryIds.remove(id); else _favLaundryIds.add(id);
+      if (wasFav)
+        _favLaundryIds.remove(id);
+      else
+        _favLaundryIds.add(id);
     });
     final result = await _favoriteService.toggleLaundryFavorite(id);
     if (result['success'] != true && mounted) {
       setState(() {
-        if (wasFav) _favLaundryIds.add(id); else _favLaundryIds.remove(id);
+        if (wasFav)
+          _favLaundryIds.add(id);
+        else
+          _favLaundryIds.remove(id);
       });
     }
   }
@@ -217,7 +229,11 @@ class _SearchScreenState extends State<SearchScreen> {
                           color: Colors.white.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.search_rounded, color: Colors.white, size: 22),
+                        child: const Icon(
+                          Icons.search_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
                       ),
                       const SizedBox(width: 14),
                       const Text(
@@ -236,7 +252,11 @@ class _SearchScreenState extends State<SearchScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.tune_rounded, color: Colors.white, size: 22),
+                          icon: const Icon(
+                            Icons.tune_rounded,
+                            color: Colors.white,
+                            size: 22,
+                          ),
                           onPressed: _showFilterDialog,
                         ),
                       ),
@@ -266,7 +286,13 @@ class _SearchScreenState extends State<SearchScreen> {
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(11),
                                 boxShadow: _selectedCategory == 'Kontrakan'
-                                    ? [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 4, offset: const Offset(0, 2))]
+                                    ? [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.08),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ]
                                     : null,
                               ),
                               child: Row(
@@ -309,7 +335,13 @@ class _SearchScreenState extends State<SearchScreen> {
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(11),
                                 boxShadow: _selectedCategory == 'Laundry'
-                                    ? [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 4, offset: const Offset(0, 2))]
+                                    ? [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.08),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ]
                                     : null,
                               ),
                               child: Row(
@@ -322,24 +354,24 @@ class _SearchScreenState extends State<SearchScreen> {
                                         : Colors.white.withOpacity(0.85),
                                     size: 18,
                                   ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Laundry',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: _selectedCategory == 'Laundry'
-                                        ? const Color(0xFF00897B)
-                                        : Colors.white.withOpacity(0.85),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Laundry',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: _selectedCategory == 'Laundry'
+                                          ? const Color(0xFF00897B)
+                                          : Colors.white.withOpacity(0.85),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: 14),
@@ -351,11 +383,22 @@ class _SearchScreenState extends State<SearchScreen> {
                       hintText: _selectedCategory == 'Kontrakan'
                           ? 'Cari kontrakan...'
                           : 'Cari laundry...',
-                      hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-                      prefixIcon: Icon(Icons.search_rounded, color: Colors.grey[400], size: 20),
+                      hintStyle: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 14,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        color: Colors.grey[400],
+                        size: 20,
+                      ),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
-                              icon: Icon(Icons.close_rounded, color: Colors.grey[400], size: 20),
+                              icon: Icon(
+                                Icons.close_rounded,
+                                color: Colors.grey[400],
+                                size: 20,
+                              ),
                               onPressed: () {
                                 _searchController.clear();
                                 _filterKontrakan('');
@@ -591,7 +634,8 @@ class _SearchScreenState extends State<SearchScreen> {
                     bottomLeft: Radius.circular(16),
                   ),
                   child:
-                      kontrakan.fotoUtama != null && kontrakan.fotoUtama!.isNotEmpty
+                      kontrakan.fotoUtama != null &&
+                          kontrakan.fotoUtama!.isNotEmpty
                       ? CachedNetworkImage(
                           imageUrl: kontrakan.primaryPhoto,
                           width: 120,
@@ -638,7 +682,10 @@ class _SearchScreenState extends State<SearchScreen> {
                         color: Colors.white.withOpacity(0.9),
                         shape: BoxShape.circle,
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4),
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                          ),
                         ],
                       ),
                       child: Icon(
@@ -728,7 +775,11 @@ class _SearchScreenState extends State<SearchScreen> {
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        Icon(Icons.bed_rounded, size: 14, color: Colors.grey[500]),
+                        Icon(
+                          Icons.bed_rounded,
+                          size: 14,
+                          color: Colors.grey[500],
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '${kontrakan.jumlahKamar} Kamar',
@@ -738,7 +789,11 @@ class _SearchScreenState extends State<SearchScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Icon(Icons.near_me_rounded, size: 14, color: Colors.grey[500]),
+                        Icon(
+                          Icons.near_me_rounded,
+                          size: 14,
+                          color: Colors.grey[500],
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '${kontrakan.jarakKampus.toStringAsFixed(1)} km',
@@ -830,7 +885,10 @@ class _SearchScreenState extends State<SearchScreen> {
                         color: Colors.white.withOpacity(0.9),
                         shape: BoxShape.circle,
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4),
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                          ),
                         ],
                       ),
                       child: Icon(
@@ -903,7 +961,11 @@ class _SearchScreenState extends State<SearchScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Icon(Icons.near_me_rounded, size: 14, color: Colors.grey[500]),
+                        Icon(
+                          Icons.near_me_rounded,
+                          size: 14,
+                          color: Colors.grey[500],
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '${laundry.jarak.toStringAsFixed(1)} km',

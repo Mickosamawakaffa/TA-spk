@@ -54,10 +54,7 @@ class BookingService {
     try {
       // Validate payment proof is provided
       if (paymentProof == null) {
-        return {
-          'success': false,
-          'message': 'Bukti pembayaran wajib diunggah',
-        };
+        return {'success': false, 'message': 'Bukti pembayaran wajib diunggah'};
       }
 
       // Use multipart request with payment proof
@@ -70,7 +67,9 @@ class BookingService {
       }
 
       request.fields['kontrakan_id'] = kontrakanId.toString();
-      request.fields['tanggal_mulai'] = tanggalMulai.toIso8601String().split('T')[0];
+      request.fields['tanggal_mulai'] = tanggalMulai.toIso8601String().split(
+        'T',
+      )[0];
       request.fields['durasi_bulan'] = durasiBulan.toString();
       if (catatan != null) request.fields['catatan'] = catatan;
 
@@ -78,7 +77,9 @@ class BookingService {
         await http.MultipartFile.fromPath('payment_proof', paymentProof.path),
       );
 
-      final streamedResponse = await request.send().timeout(const Duration(seconds: 30));
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 30),
+      );
       final response = await http.Response.fromStream(streamedResponse);
       final data = jsonDecode(response.body);
 

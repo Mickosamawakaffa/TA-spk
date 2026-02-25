@@ -60,8 +60,10 @@ class _FavoritesScreenState extends State<FavoritesScreen>
           children: [
             Icon(Icons.favorite_rounded, color: Colors.red.shade400, size: 24),
             const SizedBox(width: 10),
-            const Text('Hapus Favorit',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            const Text(
+              'Hapus Favorit',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
           ],
         ),
         content: const Text('Hapus dari daftar favorit Anda?'),
@@ -99,14 +101,20 @@ class _FavoritesScreenState extends State<FavoritesScreen>
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
               const SizedBox(width: 10),
               Text(result['message'] ?? 'Dihapus dari favorit'),
             ],
           ),
           backgroundColor: const Color(0xFF2E7D32),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -225,7 +233,10 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.local_laundry_service_rounded, size: 18),
+                              const Icon(
+                                Icons.local_laundry_service_rounded,
+                                size: 18,
+                              ),
                               const SizedBox(width: 6),
                               Text('Laundry (${_laundryFavorites.length})'),
                             ],
@@ -242,14 +253,13 @@ class _FavoritesScreenState extends State<FavoritesScreen>
             Expanded(
               child: _isLoading
                   ? const Center(
-                      child: CircularProgressIndicator(color: Color(0xFF1565C0)),
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF1565C0),
+                      ),
                     )
                   : TabBarView(
                       controller: _tabController,
-                      children: [
-                        _buildKontrakanList(),
-                        _buildLaundryList(),
-                      ],
+                      children: [_buildKontrakanList(), _buildLaundryList()],
                     ),
             ),
           ],
@@ -264,7 +274,8 @@ class _FavoritesScreenState extends State<FavoritesScreen>
       return _buildEmptyState(
         icon: Icons.home_work_outlined,
         title: 'Belum ada kontrakan favorit',
-        subtitle: 'Tambahkan kontrakan ke favorit dari halaman detail\natau setelah mendapat hasil rekomendasi',
+        subtitle:
+            'Tambahkan kontrakan ke favorit dari halaman detail\natau setelah mendapat hasil rekomendasi',
       );
     }
 
@@ -322,7 +333,11 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                   height: 120,
                   color: const Color(0xFFE3F2FD),
                   child: const Center(
-                    child: Icon(Icons.home_work_rounded, color: Color(0xFF90CAF9), size: 32),
+                    child: Icon(
+                      Icons.home_work_rounded,
+                      color: Color(0xFF90CAF9),
+                      size: 32,
+                    ),
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(
@@ -330,7 +345,11 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                   height: 120,
                   color: const Color(0xFFE3F2FD),
                   child: const Center(
-                    child: Icon(Icons.home_work_rounded, color: Color(0xFF90CAF9), size: 32),
+                    child: Icon(
+                      Icons.home_work_rounded,
+                      color: Color(0xFF90CAF9),
+                      size: 32,
+                    ),
                   ),
                 ),
               ),
@@ -355,12 +374,19 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.location_on_rounded, size: 13, color: Colors.grey[400]),
+                        Icon(
+                          Icons.location_on_rounded,
+                          size: 13,
+                          color: Colors.grey[400],
+                        ),
                         const SizedBox(width: 3),
                         Expanded(
                           child: Text(
                             kontrakan.alamat,
-                            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[500],
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -391,9 +417,17 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        _buildInfoChip(Icons.bed_rounded, '${kontrakan.jumlahKamar} Kamar', const Color(0xFF1565C0)),
+                        _buildInfoChip(
+                          Icons.bed_rounded,
+                          '${kontrakan.jumlahKamar} Kamar',
+                          const Color(0xFF1565C0),
+                        ),
                         const SizedBox(width: 8),
-                        _buildInfoChip(Icons.directions_walk_rounded, '${kontrakan.jarakKampus.toStringAsFixed(1)} km', const Color(0xFF5C6BC0)),
+                        _buildInfoChip(
+                          Icons.directions_walk_rounded,
+                          '${kontrakan.jarakKampus.toStringAsFixed(1)} km',
+                          const Color(0xFF5C6BC0),
+                        ),
                       ],
                     ),
                   ],
@@ -405,11 +439,18 @@ class _FavoritesScreenState extends State<FavoritesScreen>
               children: [
                 IconButton(
                   onPressed: () => _removeFavorite('kontrakan', kontrakan.id),
-                  icon: const Icon(Icons.favorite_rounded, color: Colors.red, size: 24),
+                  icon: const Icon(
+                    Icons.favorite_rounded,
+                    color: Colors.red,
+                    size: 24,
+                  ),
                   splashRadius: 20,
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: kontrakan.isAvailable
                         ? const Color(0xFFE8F5E9)
@@ -442,7 +483,8 @@ class _FavoritesScreenState extends State<FavoritesScreen>
       return _buildEmptyState(
         icon: Icons.local_laundry_service_outlined,
         title: 'Belum ada laundry favorit',
-        subtitle: 'Tambahkan laundry ke favorit dari halaman detail\natau setelah mendapat hasil rekomendasi',
+        subtitle:
+            'Tambahkan laundry ke favorit dari halaman detail\natau setelah mendapat hasil rekomendasi',
       );
     }
 
@@ -529,12 +571,19 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.location_on_rounded, size: 13, color: Colors.grey[400]),
+                        Icon(
+                          Icons.location_on_rounded,
+                          size: 13,
+                          color: Colors.grey[400],
+                        ),
                         const SizedBox(width: 3),
                         Expanded(
                           child: Text(
                             laundry.alamat,
-                            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[500],
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -565,9 +614,17 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        _buildInfoChip(Icons.schedule_rounded, '${laundry.waktuProses}h proses', const Color(0xFF00897B)),
+                        _buildInfoChip(
+                          Icons.schedule_rounded,
+                          '${laundry.waktuProses}h proses',
+                          const Color(0xFF00897B),
+                        ),
                         const SizedBox(width: 8),
-                        _buildInfoChip(Icons.access_time_rounded, '${laundry.jamBuka}-${laundry.jamTutup}', const Color(0xFF5C6BC0)),
+                        _buildInfoChip(
+                          Icons.access_time_rounded,
+                          '${laundry.jamBuka}-${laundry.jamTutup}',
+                          const Color(0xFF5C6BC0),
+                        ),
                       ],
                     ),
                   ],
@@ -579,11 +636,18 @@ class _FavoritesScreenState extends State<FavoritesScreen>
               children: [
                 IconButton(
                   onPressed: () => _removeFavorite('laundry', laundry.id),
-                  icon: const Icon(Icons.favorite_rounded, color: Colors.red, size: 24),
+                  icon: const Icon(
+                    Icons.favorite_rounded,
+                    color: Colors.red,
+                    size: 24,
+                  ),
                   splashRadius: 20,
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: laundry.status == 'buka'
                         ? const Color(0xFFE8F5E9)
@@ -625,7 +689,11 @@ class _FavoritesScreenState extends State<FavoritesScreen>
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color),
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
           ),
         ],
       ),
@@ -649,7 +717,11 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                 color: const Color(0xFF1565C0).withOpacity(0.06),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 56, color: const Color(0xFF1565C0).withOpacity(0.3)),
+              child: Icon(
+                icon,
+                size: 56,
+                color: const Color(0xFF1565C0).withOpacity(0.3),
+              ),
             ),
             const SizedBox(height: 24),
             Text(
@@ -664,7 +736,11 @@ class _FavoritesScreenState extends State<FavoritesScreen>
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey[500], height: 1.5),
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey[500],
+                height: 1.5,
+              ),
             ),
           ],
         ),

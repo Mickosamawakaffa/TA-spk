@@ -104,7 +104,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     // Email Field
                     _buildTextField(
                       label: 'Email',
@@ -287,7 +286,10 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFF1565C0), width: 1.5),
+              borderSide: const BorderSide(
+                color: Color(0xFF1565C0),
+                width: 1.5,
+              ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -309,9 +311,7 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFF7F8FC),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFE0E0E0),
-        ),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -324,7 +324,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: const Color(0xFF1565C0).withOpacity(0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.school_rounded, color: Color(0xFF1565C0), size: 22),
+                child: const Icon(
+                  Icons.school_rounded,
+                  color: Color(0xFF1565C0),
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 12),
               const Expanded(
