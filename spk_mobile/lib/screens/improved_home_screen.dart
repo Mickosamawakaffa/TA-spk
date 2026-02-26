@@ -14,6 +14,7 @@ import 'kontrakan_detail_screen.dart';
 import 'laundry_detail_screen.dart';
 import '../login.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 class ImprovedHomeScreen extends StatefulWidget {
   const ImprovedHomeScreen({super.key});
@@ -43,6 +44,10 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
+    // Clear image cache agar foto terbaru dari server selalu dimuat
+    await DefaultCacheManager().emptyCache();
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
     await Future.wait([_loadKontrakan(), _loadLaundry(), _loadFavoriteIds()]);
     setState(() => _isLoading = false);
   }

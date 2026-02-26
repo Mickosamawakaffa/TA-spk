@@ -225,6 +225,67 @@
                                     </div>
                                     <small class="text-muted">Fasilitas yang disediakan laundry ini</small>
                                 </div>
+
+                                <!-- Status Operasional -->
+                                <div class="col-md-4">
+                                    <label for="status" class="form-label fw-semibold">
+                                        Status Operasional <span class="text-danger">*</span>
+                                    </label>
+                                    <select name="status" id="status" class="form-select @error('status') is-invalid @enderror" required>
+                                        <option value="buka" {{ old('status', 'buka') == 'buka' ? 'selected' : '' }}>🟢 Buka</option>
+                                        <option value="tutup" {{ old('status') == 'tutup' ? 'selected' : '' }}>🔴 Tutup</option>
+                                    </select>
+                                    @error('status')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <small class="text-muted">Status laundry saat ini</small>
+                                </div>
+
+                                <!-- Jam Buka -->
+                                <div class="col-md-4">
+                                    <label for="jam_buka" class="form-label fw-semibold">
+                                        Jam Buka <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="bi bi-clock-history text-success"></i>
+                                        </span>
+                                        <input 
+                                            type="time" 
+                                            name="jam_buka" 
+                                            id="jam_buka"
+                                            class="form-control border-start-0 @error('jam_buka') is-invalid @enderror"
+                                            value="{{ old('jam_buka', '08:00') }}"
+                                            required
+                                        >
+                                        @error('jam_buka')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Jam Tutup -->
+                                <div class="col-md-4">
+                                    <label for="jam_tutup" class="form-label fw-semibold">
+                                        Jam Tutup <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="bi bi-clock text-danger"></i>
+                                        </span>
+                                        <input 
+                                            type="time" 
+                                            name="jam_tutup" 
+                                            id="jam_tutup"
+                                            class="form-control border-start-0 @error('jam_tutup') is-invalid @enderror"
+                                            value="{{ old('jam_tutup', '20:00') }}"
+                                            required
+                                        >
+                                        @error('jam_tutup')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../models/kontrakan.dart';
 import '../models/laundry.dart';
 import '../services/favorite_service.dart';
@@ -37,6 +38,10 @@ class _FavoritesScreenState extends State<FavoritesScreen>
 
   Future<void> _loadFavorites() async {
     setState(() => _isLoading = true);
+    // Clear image cache agar foto terbaru selalu dimuat
+    await DefaultCacheManager().emptyCache();
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
     try {
       final result = await _favoriteService.getFavoritesWithModels();
       if (mounted) {

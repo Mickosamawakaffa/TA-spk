@@ -128,7 +128,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                 itemBuilder: (context, index) {
                   final imageUrl = widget.kontrakan.galeri.isEmpty
                       ? widget.kontrakan.primaryPhoto
-                      : widget.kontrakan.galeri[index].foto;
+                      : widget.kontrakan.galeri[index].photoUrl;
 
                   return CachedNetworkImage(
                     imageUrl: imageUrl,

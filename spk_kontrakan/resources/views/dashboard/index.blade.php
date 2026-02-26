@@ -756,7 +756,7 @@
                         @foreach($recentLaundry as $l)
                         <div class="list-group-item px-0 py-2">
                             <div class="d-flex w-100 justify-content-between align-items-start">
-                                <div class="flex-grow-1 me-2">
+                                <div class="flex-grow-1 me-2">   
                                     <h6 class="mb-1 fw-semibold" style="font-size: 0.875rem;">{{ $l->nama }}</h6>
                                     <p class="mb-0 text-muted" style="font-size: 0.75rem;">
                                         <i class="bi bi-geo-alt me-1"></i>{{ Str::limit($l->alamat ?? '-', 25) }}

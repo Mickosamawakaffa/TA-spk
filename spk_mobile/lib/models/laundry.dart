@@ -12,6 +12,7 @@ class Laundry {
   final int waktuProses; // dalam jam
   final String? deskripsi;
   final String? fotoUtama;
+  final String? foto; // Field foto dari API
   final List<GaleriLaundry> galeri;
   final double? avgRating;
   final int? totalReviews;
@@ -31,6 +32,7 @@ class Laundry {
     required this.waktuProses,
     this.deskripsi,
     this.fotoUtama,
+    this.foto,
     this.galeri = const [],
     this.avgRating,
     this.totalReviews,
@@ -58,6 +60,28 @@ class Laundry {
           double.tryParse(layananList.first['harga']?.toString() ?? '0') ?? 0;
     }
 
+    // Get foto from API and build gallery list
+    final List<GaleriLaundry> galleryList = [];
+    
+    // Parse galeri array if exists
+    if (json['galeri'] != null && (json['galeri'] as List).isNotEmpty) {
+      galleryList.addAll(
+        (json['galeri'] as List).map((g) => GaleriLaundry.fromJson(g)).toList()
+      );
+    }
+    
+    // If gallery is empty but foto field exists, create a galeri item from it
+    if (galleryList.isEmpty && json['foto'] != null && json['foto'].toString().isNotEmpty) {
+      galleryList.add(
+        GaleriLaundry(
+          id: json['id'] ?? 0,
+          foto: json['foto'].toString(),
+          isPrimary: true,
+          urutan: 0,
+        )
+      );
+    }
+
     return Laundry(
       id: json['id'] ?? 0,
       nama: json['nama'] ?? '',
@@ -70,17 +94,14 @@ class Laundry {
           ? double.tryParse(json['longitude'].toString())
           : null,
       jarakKampus: jarak,
-      jamBuka: json['jam_buka'] ?? '08:00',
-      jamTutup: json['jam_tutup'] ?? '17:00',
+      jamBuka: _parseTime(json['jam_buka'], '08:00'),
+      jamTutup: _parseTime(json['jam_tutup'], '20:00'),
       hargaPerKg: harga,
       waktuProses: json['waktu_proses'] ?? 24,
       deskripsi: json['deskripsi'],
       fotoUtama: json['foto_utama'],
-      galeri: json['galeri'] != null
-          ? (json['galeri'] as List)
-                .map((g) => GaleriLaundry.fromJson(g))
-                .toList()
-          : [],
+      foto: json['foto'], // Store raw foto field
+      galeri: galleryList,
       avgRating: json['avg_rating'] != null
           ? double.tryParse(json['avg_rating'].toString())
           : null,
@@ -89,16 +110,41 @@ class Laundry {
     );
   }
 
+  // Parse time string, stripping seconds if present (e.g. "08:00:00" -> "08:00")
+  static String _parseTime(dynamic value, String fallback) {
+    if (value == null) return fallback;
+    final str = value.toString();
+    if (str.length >= 5) return str.substring(0, 5);
+    return fallback;
+  }
+
   // Get primary photo URL
+  // Prioritize 'foto' field (Admin-set primary photo) over galeri entries,
+  // because galeri items may reference files that have been deleted/replaced.
   String get primaryPhoto {
+    // 1. Prefer the explicit 'foto' field (most up-to-date primary photo)
+    if (foto != null && foto!.isNotEmpty) {
+      if (foto!.startsWith('http')) {
+        return foto!;
+      }
+      const String baseUrl = 'http://192.168.18.16:8000';
+      return '$baseUrl/uploads/Laundry/$foto';
+    }
+    // 2. Fall back to galeri items if foto is not set
     if (galeri.isNotEmpty) {
       final primary = galeri.firstWhere(
         (g) => g.isPrimary,
         orElse: () => galeri.first,
       );
-      return primary.foto;
+      if (primary.foto.isNotEmpty && primary.foto.startsWith('http')) {
+        return primary.foto;
+      }
+      if (primary.foto.isNotEmpty) {
+        const String baseUrl = 'http://192.168.18.16:8000';
+        return '$baseUrl/uploads/Laundry/${primary.foto}';
+      }
     }
-    return fotoUtama ?? 'https://via.placeholder.com/300';
+    return 'https://via.placeholder.com/300';
   }
 
   // Format harga dengan Rupiah
@@ -154,5 +200,16 @@ class GaleriLaundry {
       isPrimary: json['is_primary'] == 1 || json['is_primary'] == true,
       urutan: json['urutan'] ?? 0,
     );
+  }
+
+  // Get full photo URL
+  String get photoUrl {
+    // Check if it's already a full URL
+    if (foto.startsWith('http')) {
+      return foto;
+    }
+    // Build full URL from uploads
+    const String baseUrl = 'http://192.168.18.16:8000';
+    return '$baseUrl/uploads/Laundry/$foto';
   }
 }

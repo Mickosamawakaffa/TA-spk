@@ -302,6 +302,9 @@ class LaundryController extends Controller
                 'latitude' => 'required|numeric|between:-90,90',
                 'longitude' => 'required|numeric|between:-180,180',
                 'fasilitas' => 'nullable|string|max:1000',
+                'jam_buka' => 'required|date_format:H:i',
+                'jam_tutup' => 'required|date_format:H:i',
+                'status' => 'required|in:buka,tutup',
                 'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
                 
                 // Validasi Layanan
@@ -395,6 +398,9 @@ class LaundryController extends Controller
                 'longitude' => $validated['longitude'],
                 'jarak' => round($jarakKm * 1000), // Simpan dalam meter (seperti kontrakan)
                 'fasilitas' => $request->fasilitas,
+                'jam_buka' => $validated['jam_buka'],
+                'jam_tutup' => $validated['jam_tutup'],
+                'status' => $validated['status'],
                 'foto' => $filename,
             ]);
 
@@ -491,6 +497,9 @@ class LaundryController extends Controller
                 'latitude' => 'required|numeric|between:-90,90',
                 'longitude' => 'required|numeric|between:-180,180',
                 'fasilitas' => 'nullable|string|max:1000',
+                'jam_buka' => 'required|date_format:H:i',
+                'jam_tutup' => 'required|date_format:H:i',
+                'status' => 'required|in:buka,tutup',
                 'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
                 'hapus_foto' => 'nullable|in:0,1',
                 
@@ -604,6 +613,9 @@ class LaundryController extends Controller
                 'longitude' => $validated['longitude'],
                 'jarak' => round($jarakKm * 1000), // Simpan dalam meter (seperti kontrakan)
                 'fasilitas' => $request->fasilitas,
+                'jam_buka' => $validated['jam_buka'],
+                'jam_tutup' => $validated['jam_tutup'],
+                'status' => $validated['status'],
                 'foto' => $filename,
             ]);
 

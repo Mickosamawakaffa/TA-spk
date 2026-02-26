@@ -19,6 +19,9 @@ class Laundry extends Model
         'longitude',
         'jarak',
         'fasilitas',
+        'jam_buka',
+        'jam_tutup',
+        'status',
         'foto',
     ];
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../models/kontrakan.dart';
 import '../models/laundry.dart';
 import '../services/kontrakan_service.dart';
@@ -49,6 +50,10 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
+    // Clear image cache agar data terbaru dari server selalu dimuat
+    await DefaultCacheManager().emptyCache();
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
     final kontrakan = await _kontrakanService.getKontrakan();
     final laundry = await _laundryService.getLaundry();
     setState(() {

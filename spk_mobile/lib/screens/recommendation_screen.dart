@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../config/app_config.dart';
 import '../models/kontrakan.dart';
 import '../models/laundry.dart';
@@ -172,6 +173,11 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       _errorMessage = null;
       _noData = false;
     });
+
+    // Clear image cache agar foto terbaru selalu dimuat
+    await DefaultCacheManager().emptyCache();
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
 
     final endpoint = widget.category == 'kontrakan'
         ? '/saw/calculate/kontrakan'
