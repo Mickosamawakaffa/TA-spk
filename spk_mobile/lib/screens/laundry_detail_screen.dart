@@ -30,48 +30,78 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
   }
 
   Future<void> _checkFavorite() async {
-    final result = await _favoriteService.isLaundryFavorite(widget.laundry.id);
-    if (mounted) setState(() => _isFavorite = result);
+    try {
+      final result = await _favoriteService.isLaundryFavorite(widget.laundry.id);
+      if (mounted) setState(() => _isFavorite = result);
+    } catch (e) {
+      debugPrint('Check favorite error: $e');
+    }
   }
 
   Future<void> _toggleFavorite() async {
     setState(() => _isFavLoading = true);
-    final result = await _favoriteService.toggleLaundryFavorite(
-      widget.laundry.id,
-    );
-    if (mounted) {
-      setState(() {
-        _isFavLoading = false;
-        if (result['success'] == true) {
+    try {
+      final result = await _favoriteService.toggleLaundryFavorite(
+        widget.laundry.id,
+      );
+      if (!mounted) return;
+
+      if (result['success'] == true) {
+        setState(() {
           _isFavorite = result['isFavorite'] ?? !_isFavorite;
-        }
-      });
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(
+                  _isFavorite
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Text(result['message'] ?? 'Status favorit diubah'),
+              ],
+            ),
+            backgroundColor: _isFavorite
+                ? const Color(0xFF00897B)
+                : Colors.grey[700],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Gagal mengubah favorit'),
+            backgroundColor: Colors.red[700],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Row(
-            children: [
-              Icon(
-                _isFavorite
-                    ? Icons.favorite_rounded
-                    : Icons.favorite_border_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-              const SizedBox(width: 10),
-              Text(result['message'] ?? 'Status favorit diubah'),
-            ],
-          ),
-          backgroundColor: _isFavorite
-              ? const Color(0xFF00897B)
-              : Colors.grey[700],
+          content: Text('Gagal: $e'),
+          backgroundColor: Colors.red[700],
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           margin: const EdgeInsets.all(16),
-          duration: const Duration(seconds: 2),
         ),
       );
+    } finally {
+      if (mounted) setState(() => _isFavLoading = false);
     }
   }
 
@@ -519,6 +549,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
       final locationService = LocationService();
       final isEnabled = await locationService.isLocationServiceEnabled();
 
+      if (!mounted) return;
       if (!isEnabled) {
         setState(() {
           locationError = 'Layanan lokasi tidak aktif';
@@ -529,6 +560,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
 
       final position = await locationService.getCurrentLocation();
 
+      if (!mounted) return;
       if (position != null) {
         final dist = LocationService.calculateDistance(
           position.latitude,
@@ -550,6 +582,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         locationError = 'Error: ${e.toString()}';
         isLoadingLocation = false;
@@ -700,7 +733,9 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
   }
 
   Future<void> _launchWhatsApp(String phone) async {
-    final url = 'https://wa.me/$phone';
+    final cleaned = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    final formatted = cleaned.startsWith('0') ? '62${cleaned.substring(1)}' : cleaned;
+    final url = 'https://wa.me/$formatted';
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     }

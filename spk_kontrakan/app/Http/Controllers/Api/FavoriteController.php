@@ -11,18 +11,31 @@ use Illuminate\Http\Request;
 class FavoriteController extends Controller
 {
     /**
-     * List favorites user
+     * List favorites user — separated by type
      */
     public function index(Request $request)
     {
-        $favorites = Favorite::with(['favoritable'])
-            ->where('user_id', $request->user()->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $userId = $request->user()->id;
+
+        $kontrakanIds = Favorite::where('user_id', $userId)
+            ->where('type', 'kontrakan')
+            ->pluck('item_id')
+            ->toArray();
+
+        $laundryIds = Favorite::where('user_id', $userId)
+            ->where('type', 'laundry')
+            ->pluck('item_id')
+            ->toArray();
+
+        $kontrakanList = Kontrakan::whereIn('id', $kontrakanIds)->get();
+        $laundryList   = Laundry::whereIn('id', $laundryIds)->get();
 
         return response()->json([
             'success' => true,
-            'data' => $favorites
+            'data' => [
+                'kontrakan' => $kontrakanList,
+                'laundry'   => $laundryList,
+            ],
         ], 200);
     }
 
@@ -41,8 +54,8 @@ class FavoriteController extends Controller
         }
 
         $favorite = Favorite::where('user_id', $request->user()->id)
-            ->where('favoritable_type', Kontrakan::class)
-            ->where('favoritable_id', $id)
+            ->where('type', 'kontrakan')
+            ->where('item_id', $id)
             ->first();
 
         if ($favorite) {
@@ -56,17 +69,16 @@ class FavoriteController extends Controller
             ], 200);
         } else {
             // Add to favorites
-            $favorite = Favorite::create([
+            Favorite::create([
                 'user_id' => $request->user()->id,
-                'favoritable_type' => Kontrakan::class,
-                'favoritable_id' => $id,
+                'type'    => 'kontrakan',
+                'item_id' => $id,
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Kontrakan ditambahkan ke favorit',
                 'is_favorited' => true,
-                'data' => $favorite
             ], 201);
         }
     }
@@ -86,8 +98,8 @@ class FavoriteController extends Controller
         }
 
         $favorite = Favorite::where('user_id', $request->user()->id)
-            ->where('favoritable_type', Laundry::class)
-            ->where('favoritable_id', $id)
+            ->where('type', 'laundry')
+            ->where('item_id', $id)
             ->first();
 
         if ($favorite) {
@@ -101,17 +113,16 @@ class FavoriteController extends Controller
             ], 200);
         } else {
             // Add to favorites
-            $favorite = Favorite::create([
+            Favorite::create([
                 'user_id' => $request->user()->id,
-                'favoritable_type' => Laundry::class,
-                'favoritable_id' => $id,
+                'type'    => 'laundry',
+                'item_id' => $id,
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Laundry ditambahkan ke favorit',
                 'is_favorited' => true,
-                'data' => $favorite
             ], 201);
         }
     }

@@ -222,10 +222,7 @@ class SAWController extends Controller
                     }
                     
                     $item->harga_value = $layanan->harga ?? 0;
-                    $item->kecepatan_value = $this->convertToHours(
-                        $layanan->kecepatan ?? 0, 
-                        $layanan->satuan_kecepatan ?? 'jam'
-                    );
+                    $item->kecepatan_value = $layanan->estimasi_selesai ?? 0; // sudah dalam satuan jam
                     
                     // LAUNDRY: Hitung jarak dari LOKASI USER
                     if ($item->latitude && $item->longitude) {
@@ -389,20 +386,4 @@ class SAWController extends Controller
         }
     }
     
-    // Convert kecepatan ke jam
-    private function convertToHours($kecepatan, $satuan)
-    {
-        try {
-            $kecepatan = floatval($kecepatan);
-            
-            if ($satuan == 'hari') {
-                return $kecepatan * 24;
-            }
-            return $kecepatan;
-            
-        } catch (Exception $e) {
-            Log::error('Error convertToHours: ' . $e->getMessage());
-            return 0;
-        }
-    }
 }

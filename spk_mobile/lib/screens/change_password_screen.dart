@@ -29,27 +29,37 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
     setState(() => _isLoading = true);
 
-    final result = await _authService.changePassword(
-      password: _passwordController.text,
-      passwordConfirmation: _confirmController.text,
-    );
-
-    setState(() => _isLoading = false);
-
-    if (!mounted) return;
-
-    if (result['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password berhasil diubah'),
-          backgroundColor: Colors.green,
-        ),
+    try {
+      final result = await _authService.changePassword(
+        password: _passwordController.text,
+        passwordConfirmation: _confirmController.text,
       );
-      Navigator.pop(context);
-    } else {
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      if (result['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password berhasil diubah'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Gagal mengubah password'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result['message'] ?? 'Gagal mengubah password'),
+          content: Text('Terjadi kesalahan: $e'),
           backgroundColor: Colors.red,
         ),
       );

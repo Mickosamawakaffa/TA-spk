@@ -176,20 +176,20 @@ class ExportController extends Controller
             }
             
             // Filter harga
-            if ($request->filled('harga_min')) {
+            if ($request->filled('harga_min') || $request->filled('harga_max')) {
                 $query->whereHas('layanan', function($q) use ($request) {
-                    $q->where('harga', '>=', $request->harga_min);
-                });
-            }
-            if ($request->filled('harga_max')) {
-                $query->whereHas('layanan', function($q) use ($request) {
-                    $q->where('harga', '<=', $request->harga_max);
+                    if ($request->filled('harga_min')) {
+                        $q->where('harga', '>=', $request->harga_min);
+                    }
+                    if ($request->filled('harga_max')) {
+                        $q->where('harga', '<=', $request->harga_max);
+                    }
                 });
             }
             
             // Filter jarak
-            if ($request->filled('jarak')) {
-                $jarakMeter = $request->jarak * 1000;
+            if ($request->filled('jarak_max')) {
+                $jarakMeter = $request->jarak_max * 1000;
                 $query->where('jarak', '<=', $jarakMeter);
             }
             
@@ -254,12 +254,16 @@ class ExportController extends Controller
                 });
             }
             
-            // Filter harga
-            if ($request->filled('harga_min')) {
-                $query->where('harga', '>=', $request->harga_min);
-            }
-            if ($request->filled('harga_max')) {
-                $query->where('harga', '<=', $request->harga_max);
+            // Filter harga (harga ada di tabel layanan_laundry, bukan laundry)
+            if ($request->filled('harga_min') || $request->filled('harga_max')) {
+                $query->whereHas('layanan', function($q) use ($request) {
+                    if ($request->filled('harga_min')) {
+                        $q->where('harga', '>=', $request->harga_min);
+                    }
+                    if ($request->filled('harga_max')) {
+                        $q->where('harga', '<=', $request->harga_max);
+                    }
+                });
             }
             
             $laundry = $query->get();

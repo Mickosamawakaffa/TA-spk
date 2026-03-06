@@ -1,3 +1,5 @@
+import '../config/app_config.dart';
+
 class Kontrakan {
   final int id;
   final String nama;
@@ -108,8 +110,7 @@ class Kontrakan {
       if (foto!.startsWith('http')) {
         return foto!;
       }
-      const String baseUrl = 'http://192.168.18.16:8000';
-      return '$baseUrl/uploads/Kontrakan/$foto';
+      return '${AppConfig.serverUrl}/uploads/Kontrakan/$foto';
     }
     // 2. Fall back to galeri items if foto is not set
     if (galeri.isNotEmpty) {
@@ -121,8 +122,7 @@ class Kontrakan {
         return primary.foto;
       }
       if (primary.foto.isNotEmpty) {
-        const String baseUrl = 'http://192.168.18.16:8000';
-        return '$baseUrl/uploads/Kontrakan/${primary.foto}';
+        return '${AppConfig.serverUrl}/uploads/Kontrakan/${primary.foto}';
       }
     }
     return 'https://via.placeholder.com/300';
@@ -168,7 +168,6 @@ class Galeri {
       return foto;
     }
     // Build full URL from uploads
-    const String baseUrl = 'http://192.168.18.16:8000';
-    return '$baseUrl/uploads/Kontrakan/$foto';
+    return '${AppConfig.serverUrl}/uploads/Kontrakan/$foto';
   }
 }

@@ -30,22 +30,17 @@ class KontrakanService {
     String status = 'tersedia',
   }) async {
     try {
-      var url = '${AppConfig.baseUrl}/kontrakan?status=$status';
+      var uri = Uri.parse('${AppConfig.baseUrl}/kontrakan').replace(
+        queryParameters: {
+          'status': status,
+          if (search != null && search.isNotEmpty) 'search': search,
+          if (hargaMin != null) 'harga_min': hargaMin.toString(),
+          if (hargaMax != null) 'harga_max': hargaMax.toString(),
+          if (jumlahKamar != null) 'jumlah_kamar': jumlahKamar.toString(),
+        },
+      );
 
-      if (search != null && search.isNotEmpty) {
-        url += '&search=$search';
-      }
-      if (hargaMin != null) {
-        url += '&harga_min=$hargaMin';
-      }
-      if (hargaMax != null) {
-        url += '&harga_max=$hargaMax';
-      }
-      if (jumlahKamar != null) {
-        url += '&jumlah_kamar=$jumlahKamar';
-      }
-
-      final response = await http.get(Uri.parse(url), headers: _headers);
+      final response = await http.get(uri, headers: _headers);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

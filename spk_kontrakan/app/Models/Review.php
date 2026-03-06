@@ -34,7 +34,7 @@ class Review extends Model
      */
     public function kontrakan()
     {
-        return $this->belongsTo(Kontrakan::class, 'item_id')->where('type', 'kontrakan');
+        return $this->belongsTo(Kontrakan::class, 'item_id');
     }
 
     /**
@@ -42,7 +42,7 @@ class Review extends Model
      */
     public function laundry()
     {
-        return $this->belongsTo(Laundry::class, 'item_id')->where('type', 'laundry');
+        return $this->belongsTo(Laundry::class, 'item_id');
     }
 
     /**

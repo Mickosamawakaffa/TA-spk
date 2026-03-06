@@ -29,7 +29,7 @@ class DashboardController extends Controller
         
         // ========== DATA TERBARU (No Cache) ==========
         $recentKontrakan = Kontrakan::latest()
-            ->select('id', 'nama', 'alamat', 'harga', 'jarak', 'luas', 'created_at') // Only needed columns
+            ->select('id', 'nama', 'alamat', 'harga', 'jarak', 'jumlah_kamar', 'created_at') // Only needed columns
             ->take(5)
             ->get();
 
@@ -86,15 +86,15 @@ class DashboardController extends Controller
                 ->selectRaw('
                     AVG(harga) as avg_harga,
                     AVG(jarak) as avg_jarak,
-                    AVG(luas) as avg_luas,
+                    AVG(jumlah_kamar) as avg_kamar,
                     MIN(harga) as min_harga,
                     MAX(harga) as max_harga
                 ')
                 ->first();
             
-            // 5. Top Kontrakan by Luas
-            $topKontrakan = Kontrakan::select('nama', 'harga', 'luas', 'jarak')
-                ->orderBy('luas', 'desc')
+            // 5. Top Kontrakan by Harga
+            $topKontrakan = Kontrakan::select('nama', 'harga', 'jumlah_kamar', 'jarak')
+                ->orderBy('harga', 'desc')
                 ->take(5)
                 ->get();
             
@@ -136,7 +136,7 @@ class DashboardController extends Controller
                 ],
                 'avgHargaKontrakan' => $kontrakanStats->avg_harga ?? 0,
                 'avgJarakKontrakan' => $kontrakanStats->avg_jarak ?? 0,
-                'avgLuasKontrakan' => $kontrakanStats->avg_luas ?? 0,
+                'avgKamarKontrakan' => $kontrakanStats->avg_kamar ?? 0,
                 'minHargaKontrakan' => $kontrakanStats->min_harga ?? 0,
                 'maxHargaKontrakan' => $kontrakanStats->max_harga ?? 0,
                 'topKontrakan' => $topKontrakan,

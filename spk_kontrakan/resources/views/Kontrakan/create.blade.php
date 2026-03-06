@@ -416,10 +416,6 @@
                                     </div>
                                     <small class="text-muted">Jumlah kamar tidur yang tersedia</small>
                                 </div>
-                                        <i class="bi bi-info-circle me-1"></i>
-                                        Total kamar mandi (sistem akan otomatis menghitung kenyamanan)
-                                    </small>
-                                </div>
 
                                 <!-- Jarak - AUTO CALCULATED! -->
                                 <div class="col-md-6">

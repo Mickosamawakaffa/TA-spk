@@ -113,7 +113,7 @@
                         <!-- FOTO ADA -->
                         <div class="position-relative" style="height: 400px; overflow: hidden;">
                             <img 
-                                src="{{ asset('uploads/laundry/' . $laundry->foto) }}" 
+                                src="{{ asset('uploads/Laundry/' . $laundry->foto) }}" 
                                 alt="{{ $laundry->nama }}" 
                                 class="w-100 h-100"
                                 style="object-fit: cover; cursor: pointer;"
@@ -232,9 +232,9 @@
                                             <table class="table table-sm table-bordered">
                                                 <thead class="table-light">
                                                     <tr>
-                                                        <th>Jenis Layanan</th>
-                                                        <th>Harga/kg</th>
-                                                        <th>Kecepatan</th>
+                                                        <th>Nama Paket</th>
+                                                        <th>Harga</th>
+                                                        <th>Estimasi Selesai</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -242,7 +242,7 @@
                                                     <tr>
                                                         <td>
                                                             <span class="badge bg-primary">
-                                                                {{ ucfirst($layanan->jenis_layanan) }}
+                                                                {{ $layanan->nama_paket ?? ucfirst($layanan->jenis_layanan ?? '-') }}
                                                             </span>
                                                         </td>
                                                         <td>
@@ -252,7 +252,7 @@
                                                         </td>
                                                         <td>
                                                             <span class="badge bg-warning text-dark">
-                                                                {{ $layanan->kecepatan }} {{ $layanan->satuan_kecepatan }}
+                                                                {{ $layanan->estimasi_selesai ? $layanan->estimasi_selesai . ' jam' : '-' }}
                                                             </span>
                                                         </td>
                                                     </tr>
@@ -318,7 +318,7 @@
                     @endif
                     <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
                         <span class="text-muted">Status</span>
-                        <span class="badge bg-success">Buka</span>
+                        <span class="badge bg-{{ ($laundry->status ?? 'buka') === 'buka' ? 'success' : 'danger' }}">{{ ($laundry->status ?? 'buka') === 'buka' ? 'Buka' : 'Tutup' }}</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="text-muted">Kategori</span>

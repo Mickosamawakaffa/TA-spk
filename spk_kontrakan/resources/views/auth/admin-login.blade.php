@@ -173,7 +173,6 @@
 
         <div class="auth-footer">
             <p>Belum punya akun bisnis? <a href="{{ route('admin.register') }}">Daftar Sebagai Pemilik</a></p>
-            <p><a href="{{ route('admin.portal') }}">← Kembali ke Portal Pemilik</a></p>
         </div>
     </div>
 </div>

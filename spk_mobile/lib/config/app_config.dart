@@ -1,14 +1,27 @@
 class AppConfig {
-  // Base URL - Ganti sesuai environment
-  // Windows Desktop: http://localhost:8000
-  // Android Emulator: http://10.0.2.2:8000
-  // iOS Simulator: http://localhost:8000
-  // Real Device: http://192.168.18.16:8000 (IP komputer Anda)
+  // ============================================================================
+  // 🔧 BASE URL CONFIGURATION - AUTO-DETECTED AT RUNTIME
+  // ============================================================================
+  // URL ini otomatis dideteksi saat app startup via ServerDiscoveryService.
+  // Fallback default: IP terakhir yang berhasil terhubung.
+  //
+  // ✅ Tidak perlu update manual lagi!
+  // ============================================================================
 
-  // CATATAN: Untuk real device, ganti IP sesuai dengan IP komputer Anda
-  // Cek IP dengan: ipconfig (di Windows) atau ifconfig (di Linux/Mac)
-  static const String baseUrl = 'http://192.168.18.16:8000/api';
-  static const String storageUrl = 'http://192.168.18.16:8000/storage';
+  // Default fallback (dipakai jika auto-detect gagal)
+  static const String _defaultServer = 'http://192.168.1.154:8000';
+
+  // Runtime values — diupdate otomatis oleh ServerDiscoveryService
+  static String _serverUrl = _defaultServer;
+
+  static String get serverUrl => _serverUrl;
+  static String get baseUrl => '$_serverUrl/api';
+  static String get storageUrl => '$_serverUrl/storage';
+
+  /// Dipanggil oleh ServerDiscoveryService setelah server ditemukan
+  static void setServerUrl(String url) {
+    _serverUrl = url;
+  }
 
   // Timeouts
   static const Duration connectionTimeout = Duration(seconds: 10);

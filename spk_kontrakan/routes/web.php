@@ -17,35 +17,15 @@ use App\Http\Controllers\BackupController;       // ← BACKUP
 use App\Http\Controllers\BookingController;     // ← BOOKING SYSTEM (ADMIN)
 
 // -------------------------------------------------
-// LANDING PAGE - Redirect ke Admin Portal
+// LANDING PAGE - Langsung ke Login
 // -------------------------------------------------
 Route::get('/', function () {
-    return redirect()->route('admin.portal');
+    return redirect()->route('admin.login');
 })->name('welcome');
-
-// -------------------------------------------------
-// ADMIN PORTAL - Landing page khusus untuk pemilik/admin
-// -------------------------------------------------
-Route::get('/admin-portal', function () {
-    // Hitung statistik real-time
-    $totalAdmins = \App\Models\User::where('role', 'admin')->count();
-    $totalKontrakan = \App\Models\Kontrakan::count();
-    $totalLaundry = \App\Models\Laundry::count();
-    $totalProperti = $totalKontrakan + $totalLaundry;
-    $totalBookings = \App\Models\Booking::where('status', 'confirmed')->count();
-    $avgRating = \App\Models\Review::avg('rating') ?? 4.8;
-    
-    return view('admin-portal', [
-        'totalAdmins' => $totalAdmins,
-        'totalProperti' => $totalProperti,
-        'totalBookings' => $totalBookings,
-        'avgRating' => round($avgRating, 1)
-    ]);
-})->name('admin.portal');
 
 // Shortcut URL - lebih mudah diingat
 Route::get('/pemilik', function () {
-    return redirect()->route('admin.portal');
+    return redirect()->route('admin.login');
 });
 
 // -------------------------------------------------
@@ -85,15 +65,15 @@ Route::middleware('auth')->group(function () {
 
     // ========== 🆕 ACTIVITY LOG ROUTES ==========
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::resource('activity-logs', ActivityLogController::class)->only(['index', 'show']);
         Route::get('/activity-logs/export', [ActivityLogController::class, 'export'])->name('activity-logs.export');
         Route::post('/activity-logs/clear', [ActivityLogController::class, 'clear'])->name('activity-logs.clear');
+        Route::resource('activity-logs', ActivityLogController::class)->only(['index', 'show']);
     });
 
     // ========== 🆕 USER MANAGEMENT ROUTES ==========
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', UserManagementController::class);
-        Route::post('/users/{user}/restore', [UserManagementController::class, 'restore'])->name('users.restore');
+        Route::post('/users/{user}/restore', [UserManagementController::class, 'restore'])->name('users.restore')->withTrashed();
         Route::post('/users/bulk-delete', [UserManagementController::class, 'bulkDelete'])->name('users.bulk-delete');
     });
 
@@ -186,7 +166,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Legacy favorite routes (untuk kompatibilitas)
-    Route::post('/favorite', [FavoriteController::class, 'toggleOld'])->name('favorite.toggle');
+    Route::post('/favorite/{type}/{id}', [FavoriteController::class, 'toggle'])->name('favorite.toggle');
 
     Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 });

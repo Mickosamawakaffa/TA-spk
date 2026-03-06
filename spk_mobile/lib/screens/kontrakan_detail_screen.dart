@@ -7,6 +7,10 @@ import '../services/auth_service.dart';
 import '../services/favorite_service.dart';
 import 'booking_form_screen.dart';
 
+// Koordinat resmi Kampus Polije (Politeknik Negeri Jember)
+const double _polije_lat = -8.1599551;
+const double _polije_lng = 113.7230733;
+
 class KontrakanDetailScreen extends StatefulWidget {
   final Kontrakan kontrakan;
 
@@ -17,11 +21,7 @@ class KontrakanDetailScreen extends StatefulWidget {
 }
 
 class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
-  double? userLat;
-  double? userLng;
-  double? distance;
-  bool isLoadingLocation = false;
-  String? locationError;
+  double? distance;  // jarak dari kampus Polije ke kontrakan ini
   bool _isFavorite = false;
   bool _isFavLoading = false;
   final _favoriteService = FavoriteService();
@@ -30,53 +30,96 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
   void initState() {
     super.initState();
     _checkFavorite();
+    _calcDistanceFromPolije();
+  }
+
+  /// Hitung jarak dari Kampus Polije ke kontrakan ini secara langsung.
+  void _calcDistanceFromPolije() {
+    if (widget.kontrakan.latitude == null || widget.kontrakan.longitude == null) return;
+    final dist = LocationService.calculateDistance(
+      _polije_lat,
+      _polije_lng,
+      widget.kontrakan.latitude!,
+      widget.kontrakan.longitude!,
+    );
+    setState(() => distance = dist);
   }
 
   Future<void> _checkFavorite() async {
-    final result = await _favoriteService.isKontrakanFavorite(
-      widget.kontrakan.id,
-    );
-    if (mounted) setState(() => _isFavorite = result);
+    try {
+      final result = await _favoriteService.isKontrakanFavorite(
+        widget.kontrakan.id,
+      );
+      if (mounted) setState(() => _isFavorite = result);
+    } catch (e) {
+      debugPrint('Check favorite error: $e');
+    }
   }
 
   Future<void> _toggleFavorite() async {
     setState(() => _isFavLoading = true);
-    final result = await _favoriteService.toggleKontrakanFavorite(
-      widget.kontrakan.id,
-    );
-    if (mounted) {
-      setState(() {
-        _isFavLoading = false;
-        if (result['success'] == true) {
+    try {
+      final result = await _favoriteService.toggleKontrakanFavorite(
+        widget.kontrakan.id,
+      );
+      if (!mounted) return;
+
+      if (result['success'] == true) {
+        setState(() {
           _isFavorite = result['isFavorite'] ?? !_isFavorite;
-        }
-      });
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(
+                  _isFavorite
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Text(result['message'] ?? 'Status favorit diubah'),
+              ],
+            ),
+            backgroundColor: _isFavorite
+                ? const Color(0xFF1565C0)
+                : Colors.grey[700],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Gagal mengubah favorit'),
+            backgroundColor: Colors.red[700],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Row(
-            children: [
-              Icon(
-                _isFavorite
-                    ? Icons.favorite_rounded
-                    : Icons.favorite_border_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-              const SizedBox(width: 10),
-              Text(result['message'] ?? 'Status favorit diubah'),
-            ],
-          ),
-          backgroundColor: _isFavorite
-              ? const Color(0xFF1565C0)
-              : Colors.grey[700],
+          content: Text('Gagal: $e'),
+          backgroundColor: Colors.red[700],
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           margin: const EdgeInsets.all(16),
-          duration: const Duration(seconds: 2),
         ),
       );
+    } finally {
+      if (mounted) setState(() => _isFavLoading = false);
     }
   }
 
@@ -423,10 +466,10 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.purple.withValues(alpha: 0.1),
+        color: const Color(0xFF1565C0).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.purple.withValues(alpha: 0.3),
+          color: const Color(0xFF1565C0).withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -434,114 +477,83 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(Icons.location_on, color: Colors.purple, size: 24),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Deteksi Lokasi Saya',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-              if (isLoadingLocation)
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
-                  ),
+              const Icon(Icons.school_rounded, color: Color(0xFF1565C0), size: 22),
+              const SizedBox(width: 10),
+              const Text(
+                'Jarak dari Kampus Polije',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1565C0),
                 ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          if (distance != null) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 20),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Jarak dari Lokasi Saya',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                      Text(
-                        distance! < 1
-                            ? '${(distance! * 1000).toStringAsFixed(0)} m'
-                            : '${distance!.toStringAsFixed(2)} km',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ] else if (locationError != null) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.error, color: Colors.red, size: 20),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      locationError!,
-                      style: const TextStyle(fontSize: 13, color: Colors.red),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          const SizedBox(height: 12),
-          SizedBox(
+          Container(
             width: double.infinity,
-            height: 44,
-            child: ElevatedButton.icon(
-              onPressed: isLoadingLocation ? null : _detectLocation,
-              icon: Icon(
-                isLoadingLocation ? Icons.hourglass_bottom : Icons.my_location,
-                size: 20,
-              ),
-              label: Text(
-                isLoadingLocation ? 'Mendeteksi...' : 'Deteksi Lokasi Saya',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: Colors.grey,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: const Color(0xFF1565C0).withValues(alpha: 0.15),
               ),
             ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1565C0).withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.directions_walk_rounded,
+                    color: Color(0xFF1565C0),
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Politeknik Negeri Jember',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      distance == null
+                          ? '-'
+                          : distance! < 1
+                              ? '${(distance! * 1000).toStringAsFixed(0)} meter'
+                              : '${distance!.toStringAsFixed(2)} km',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1565C0),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.location_pin, size: 13, color: Colors.grey[500]),
+              const SizedBox(width: 4),
+              Text(
+                'Jl. Mastrip No.164, Sumbersari, Jember',
+                style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+              ),
+            ],
           ),
         ],
       ),
@@ -577,51 +589,4 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
     }
   }
 
-  Future<void> _detectLocation() async {
-    setState(() {
-      isLoadingLocation = true;
-      locationError = null;
-    });
-
-    try {
-      final locationService = LocationService();
-      final isEnabled = await locationService.isLocationServiceEnabled();
-
-      if (!isEnabled) {
-        setState(() {
-          locationError = 'Layanan lokasi tidak aktif';
-          isLoadingLocation = false;
-        });
-        return;
-      }
-
-      final position = await locationService.getCurrentLocation();
-
-      if (position != null) {
-        final dist = LocationService.calculateDistance(
-          position.latitude,
-          position.longitude,
-          widget.kontrakan.latitude!,
-          widget.kontrakan.longitude!,
-        );
-
-        setState(() {
-          userLat = position.latitude;
-          userLng = position.longitude;
-          distance = dist;
-          isLoadingLocation = false;
-        });
-      } else {
-        setState(() {
-          locationError = 'Gagal mendapatkan lokasi Anda';
-          isLoadingLocation = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        locationError = 'Error: ${e.toString()}';
-        isLoadingLocation = false;
-      });
-    }
-  }
 }

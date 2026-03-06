@@ -1036,7 +1036,6 @@
                         <h6 class="mb-0 fw-bold" style="color: var(--text-primary);">Rekomendasi Terbaik</h6>
                     </div>
                 </div>
-                </div>
                 <div class="card-body text-center p-3 p-md-4">
                     @if(count($hasil) > 0)
                         @if(isset($hasil[0]['foto']) && $hasil[0]['foto'])

@@ -567,7 +567,7 @@
                         @endif
                     @else
                         @if($item->foto)
-                            <img src="{{ asset('uploads/laundry/' . $item->foto) }}" alt="{{ $item->nama }}">
+                            <img src="{{ asset('uploads/Laundry/' . $item->foto) }}" alt="{{ $item->nama }}">
                         @else
                             <img src="https://via.placeholder.com/400x200/4facfe/ffffff?text={{ urlencode($item->nama) }}" alt="{{ $item->nama }}">
                         @endif

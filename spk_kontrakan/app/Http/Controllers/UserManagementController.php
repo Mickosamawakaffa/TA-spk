@@ -33,7 +33,7 @@ class UserManagementController extends Controller
             if ($request->status === 'active') {
                 $query->whereNull('deleted_at');
             } else {
-                $query->whereNotNull('deleted_at');
+                $query->onlyTrashed();
             }
         }
 
@@ -91,15 +91,17 @@ class UserManagementController extends Controller
 
         $oldValues = $user->toArray();
 
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
-        }
-
-        $user->update([
+        $updateData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
-        ]);
+        ];
+
+        if ($request->filled('password')) {
+            $updateData['password'] = Hash::make($request->password);
+        }
+
+        $user->update($updateData);
 
         ActivityLog::log('update', "Memperbarui user: {$user->name}", 'User', $user->id, $oldValues, $user->toArray());
 

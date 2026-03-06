@@ -97,4 +97,28 @@ class User extends Authenticatable
     {
         return $this->hasMany(ActivityLog::class);
     }
+
+    /**
+     * Relationship ke Booking
+     */
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    /**
+     * Relationship ke Review
+     */
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    /**
+     * Relationship ke Favorite
+     */
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class);
+    }
 }

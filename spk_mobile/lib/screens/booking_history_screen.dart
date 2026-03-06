@@ -38,16 +38,32 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
 
   Future<void> _loadBookings() async {
     setState(() => _isLoading = true);
-    final bookings = await _bookingService.getBookingHistory();
-    setState(() {
-      _activeBookings = bookings
-          .where((b) => b.status == 'confirmed' || b.status == 'pending')
-          .toList();
-      _pastBookings = bookings
-          .where((b) => b.status == 'completed' || b.status == 'cancelled')
-          .toList();
-      _isLoading = false;
-    });
+    try {
+      final bookings = await _bookingService.getBookingHistory();
+      if (!mounted) return;
+      setState(() {
+        _activeBookings = bookings
+            .where((b) => b.status == 'confirmed' || b.status == 'pending')
+            .toList();
+        _pastBookings = bookings
+            .where((b) => b.status == 'completed' || b.status == 'cancelled')
+            .toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Load bookings error: $e');
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Gagal memuat riwayat booking'),
+          backgroundColor: Colors.red[700],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+    }
   }
 
   Future<void> _cancelBooking(int bookingId) async {
@@ -91,8 +107,9 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
       ),
     );
     if (confirm != true) return;
-    final result = await _bookingService.cancelBooking(bookingId);
-    if (mounted) {
+    try {
+      final result = await _bookingService.cancelBooking(bookingId);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -119,6 +136,17 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
         ),
       );
       if (result['success'] == true) _loadBookings();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal membatalkan booking: $e'),
+          backgroundColor: const Color(0xFFC62828),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
     }
   }
 
@@ -216,12 +244,14 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
     );
     if (picked == null) return;
 
+    if (!mounted) return;
     setState(() => _uploadingBookingId = booking.id);
-    final result = await _bookingService.uploadPaymentProof(
-      booking.id,
-      File(picked.path),
-    );
-    if (mounted) {
+    try {
+      final result = await _bookingService.uploadPaymentProof(
+        booking.id,
+        File(picked.path),
+      );
+      if (!mounted) return;
       setState(() => _uploadingBookingId = null);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -250,6 +280,18 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
         ),
       );
       if (result['success'] == true) _loadBookings();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _uploadingBookingId = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal upload bukti pembayaran: $e'),
+          backgroundColor: const Color(0xFFC62828),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
     }
   }
 

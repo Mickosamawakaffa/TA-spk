@@ -25,6 +25,14 @@ class AdminAuthController extends Controller
 
         // FIXED: Hapus guard('admin'), pakai default Auth
         if (Auth::attempt($credentials)) {
+            // Cek role - hanya admin dan super_admin yang boleh login
+            $user = Auth::user();
+            if (!in_array($user->role, ['admin', 'super_admin'])) {
+                Auth::logout();
+                $request->session()->invalidate();
+                return back()->with('error', 'Akses ditolak. Halaman ini khusus untuk pemilik bisnis.');
+            }
+
             $request->session()->regenerate();
             return redirect()->intended(route('dashboard'));
         }

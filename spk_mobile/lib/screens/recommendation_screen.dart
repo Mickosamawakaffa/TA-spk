@@ -3,10 +3,11 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../config/app_config.dart';
 import '../models/kontrakan.dart';
 import '../models/laundry.dart';
+import '../models/user.dart';
+import '../services/auth_service.dart';
 import '../widgets/kontrakan_card.dart';
 import '../widgets/laundry_card.dart';
 
@@ -28,6 +29,10 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   bool _noData =
       false; // true = memang tidak ada data, false = filter terlalu ketat
 
+  // User info
+  final _authService = AuthService();
+  User? _currentUser;
+
   // Bobot values (percentage, total must = 100)
   // Default: profil mahasiswa
   int _bobotHarga = 50;
@@ -38,8 +43,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   // Jenis layanan selection for laundry
   String _selectedJenisLayanan = 'reguler';
 
-  // Location values
-  String _referensiJarak = 'kampus';
+  // Location values untuk referensi jarak (deteksi lokasi user)
   double? _userLatitude;
   double? _userLongitude;
   bool _isDetectingLocation = false;
@@ -48,12 +52,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       widget.category == 'kontrakan' ? 'Jumlah Kamar' : 'Kecepatan Layanan';
   String get _kriteria4Label =>
       widget.category == 'kontrakan' ? 'Fasilitas' : 'Variasi Layanan';
-  // ignore: unused_element
-  String get _kriteria3Key =>
-      widget.category == 'kontrakan' ? 'jumlah_kamar' : 'kecepatan';
-  // ignore: unused_element
-  String get _kriteria4Key =>
-      widget.category == 'kontrakan' ? 'fasilitas' : 'layanan';
 
   int get _totalBobot =>
       _bobotHarga + _bobotJarak + _bobotKriteria3 + _bobotKriteria4;
@@ -70,6 +68,33 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     _bobotJarak = 20;
     _bobotKriteria3 = 15;
     _bobotKriteria4 = 15;
+
+    // Load user info
+    _loadUser();
+
+    // Auto-detect lokasi untuk laundry
+    if (widget.category == 'laundry') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _detectUserLocation();
+      });
+    }
+  }
+
+  Future<void> _loadUser() async {
+    try {
+      // Use cached user first (no API call needed)
+      if (_authService.currentUser != null) {
+        if (!mounted) return;
+        setState(() => _currentUser = _authService.currentUser);
+        return;
+      }
+      // Fallback: load from SharedPreferences via API
+      await _authService.loadToken();
+      if (!mounted) return;
+      setState(() => _currentUser = _authService.currentUser);
+    } catch (e) {
+      debugPrint('Load user error: $e');
+    }
   }
 
   /// Auto-balance: when one bobot changes, redistribute the remaining
@@ -123,17 +148,15 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         bobots[otherIdx[i]] = newOther[i];
       }
 
-      // Final safety check: if sum != 100 due to clamping, adjust the largest
+      // Final safety: force total == 100 by adjusting the largest other bobot
+      // without snapping to 5 (exact correction takes priority over pretty numbers)
       int total = bobots.reduce((a, b) => a + b);
       if (total != 100) {
         int diff = 100 - total;
         int adjustIdx = otherIdx.reduce(
           (a, b) => bobots[a] >= bobots[b] ? a : b,
         );
-        int adjusted = (bobots[adjustIdx] + diff).clamp(10, 70);
-        // Snap to nearest multiple of 5
-        adjusted = ((adjusted / 5).round() * 5).clamp(10, 70);
-        bobots[adjustIdx] = adjusted;
+        bobots[adjustIdx] = (bobots[adjustIdx] + diff).clamp(5, 75);
       }
 
       _bobotHarga = bobots[0];
@@ -168,16 +191,30 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       return;
     }
 
+    // Validate location for laundry
+    if (widget.category == 'laundry' && _userLatitude == null) {
+      // Auto-detect location first, then re-calculate
+      await _detectUserLocation();
+      if (!mounted) return;
+      // If still no location after detection attempt, warn and stop
+      if (_userLatitude == null || _userLongitude == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Lokasi belum terdeteksi. Aktifkan GPS dan coba lagi.',
+            ),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
       _noData = false;
     });
-
-    // Clear image cache agar foto terbaru selalu dimuat
-    await DefaultCacheManager().emptyCache();
-    PaintingBinding.instance.imageCache.clear();
-    PaintingBinding.instance.imageCache.clearLiveImages();
 
     final endpoint = widget.category == 'kontrakan'
         ? '/saw/calculate/kontrakan'
@@ -197,11 +234,11 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         bodyParams['jenis_layanan'] = _selectedJenisLayanan;
       }
 
-      if (widget.category == 'laundry' && _referensiJarak == 'user') {
-        if (_userLatitude != null && _userLongitude != null) {
-          bodyParams['user_lat'] = _userLatitude;
-          bodyParams['user_lng'] = _userLongitude;
-        }
+      if (widget.category == 'laundry' &&
+          _userLatitude != null &&
+          _userLongitude != null) {
+        bodyParams['user_lat'] = _userLatitude;
+        bodyParams['user_lng'] = _userLongitude;
       }
 
       final response = await http
@@ -214,6 +251,8 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
             body: json.encode(bodyParams),
           )
           .timeout(const Duration(seconds: 15));
+
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -245,35 +284,37 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     } catch (e) {
       debugPrint('SAW API Error: $e');
       debugPrint('URL: ${AppConfig.baseUrl}$endpoint');
+      if (!mounted) return;
       setState(() {
         _errorMessage =
             'Tidak dapat terhubung ke server (${AppConfig.baseUrl}). Periksa koneksi internet Anda dan coba lagi.\n\nDetail: $e';
         _hasCalculated = true;
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   Future<void> _detectUserLocation() async {
+    // Guard: prevent re-entrant / duplicate calls
+    if (_isDetectingLocation) return;
+
     setState(() => _isDetectingLocation = true);
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Aktifkan GPS Anda terlebih dahulu'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        setState(() {
-          _referensiJarak = 'kampus';
-          _isDetectingLocation = false;
-        });
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Aktifkan GPS Anda terlebih dahulu'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() => _isDetectingLocation = false);
         return;
       }
 
@@ -281,71 +322,62 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Izin lokasi ditolak'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-          setState(() {
-            _referensiJarak = 'kampus';
-            _isDetectingLocation = false;
-          });
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Izin lokasi ditolak'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          setState(() => _isDetectingLocation = false);
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Izin lokasi ditolak permanen. Ubah di pengaturan.',
-              ),
-              backgroundColor: Colors.red,
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Izin lokasi ditolak permanen. Ubah di pengaturan.',
             ),
-          );
-        }
-        setState(() {
-          _referensiJarak = 'kampus';
-          _isDetectingLocation = false;
-        });
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() => _isDetectingLocation = false);
         return;
       }
 
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
+      ).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => throw TimeoutException('Deteksi lokasi timeout'),
       );
+
+      if (!mounted) return;
       setState(() {
         _userLatitude = position.latitude;
         _userLongitude = position.longitude;
         _isDetectingLocation = false;
       });
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Lokasi berhasil dideteksi!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lokasi berhasil dideteksi!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal mendeteksi lokasi: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      setState(() {
-        _referensiJarak = 'kampus';
-        _isDetectingLocation = false;
-      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mendeteksi lokasi: ${e.toString().replaceAll('Exception: ', '')}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() => _isDetectingLocation = false);
     }
   }
 
@@ -390,6 +422,8 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildUserInfoCard(),
+          const SizedBox(height: 16),
           _buildMethodInfoCard(),
           const SizedBox(height: 16),
           if (widget.category == 'laundry') ...[
@@ -409,12 +443,151 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     );
   }
 
+  Widget _buildUserInfoCard() {
+    final name = _currentUser?.name ?? '';
+    final email = _currentUser?.email ?? '';
+    final initials = name.isEmpty
+        ? 'U'
+        : name.trim().split(' ').length >= 2
+            ? '${name.trim().split(' ')[0][0]}${name.trim().split(' ')[1][0]}'.toUpperCase()
+            : name.trim()[0].toUpperCase();
+
+    final hour = DateTime.now().hour;
+    final greeting = hour < 11
+        ? 'Selamat Pagi'
+        : hour < 15
+            ? 'Selamat Siang'
+            : hour < 18
+                ? 'Selamat Sore'
+                : 'Selamat Malam';
+
+    final categoryLabel = widget.category == 'kontrakan' ? 'kontrakan' : 'laundry';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [_categoryColor, _categoryColor.withValues(alpha: 0.7)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: _categoryColor.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                initials,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          // Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$greeting,',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade500,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  name.isEmpty ? 'Pengguna' : name,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1A1A2E),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (email.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    email,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade400,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          // Category badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: _categoryColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  widget.category == 'kontrakan'
+                      ? Icons.home_work_rounded
+                      : Icons.local_laundry_service_rounded,
+                  size: 14,
+                  color: _categoryColor,
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  categoryLabel,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: _categoryColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMethodInfoCard() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [_categoryColor, _categoryColor.withOpacity(0.8)],
+          colors: [_categoryColor, _categoryColor.withValues(alpha: 0.8)],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
@@ -902,158 +1075,114 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
             children: [
               Icon(Icons.my_location, color: _categoryColor, size: 20),
               const SizedBox(width: 8),
-              Text(
-                'Referensi Jarak',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
+              Expanded(
+                child: Text(
+                  'Lokasi Saya',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
                 ),
               ),
+              if (_userLatitude != null && !_isDetectingLocation)
+                InkWell(
+                  onTap: _detectUserLocation,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.refresh,
+                      size: 18,
+                      color: _categoryColor,
+                    ),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
-            'Tentukan titik referensi untuk perhitungan jarak',
+            'Jarak dihitung dari lokasi Anda saat ini',
             style: TextStyle(fontSize: 12, color: Colors.grey[500]),
           ),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[200]!),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _referensiJarak,
-                isExpanded: true,
-                icon: Icon(Icons.arrow_drop_down, color: _categoryColor),
-                items: [
-                  DropdownMenuItem(
-                    value: 'kampus',
-                    child: Row(
-                      children: [
-                        Icon(Icons.school, size: 18, color: _categoryColor),
-                        const SizedBox(width: 10),
-                        const Text('Dari Kampus Polije'),
-                      ],
-                    ),
+          if (_isDetectingLocation)
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Row(
+                children: [
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                  DropdownMenuItem(
-                    value: 'user',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.location_on,
-                          size: 18,
-                          color: Colors.green[700],
-                        ),
-                        const SizedBox(width: 10),
-                        const Text('Dari Lokasi Saya'),
-                      ],
-                    ),
+                  SizedBox(width: 10),
+                  Text(
+                    'Mendeteksi lokasi...',
+                    style: TextStyle(fontSize: 12),
                   ),
                 ],
-                onChanged: (val) {
-                  setState(() {
-                    _referensiJarak = val!;
-                  });
-                  if (val == 'user' && _userLatitude == null)
-                    _detectUserLocation();
-                },
               ),
-            ),
-          ),
-          if (_referensiJarak == 'user') ...[
-            const SizedBox(height: 10),
-            if (_isDetectingLocation)
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Row(
-                  children: [
-                    SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    SizedBox(width: 10),
-                    Text(
-                      'Mendeteksi lokasi...',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
-              )
-            else if (_userLatitude != null && _userLongitude != null)
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.green[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green[200]!),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.check_circle,
-                      size: 16,
-                      color: Colors.green,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Lokasi: ${_userLatitude!.toStringAsFixed(6)}, ${_userLongitude!.toStringAsFixed(6)}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.green[700],
-                        ),
-                      ),
-                    ),
-                    InkWell(
-                      onTap: _detectUserLocation,
-                      child: Icon(
-                        Icons.refresh,
-                        size: 16,
+            )
+          else if (_userLatitude != null && _userLongitude != null)
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green[200]!),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle,
+                    size: 16,
+                    color: Colors.green,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Lokasi terdeteksi: ${_userLatitude!.toStringAsFixed(6)}, ${_userLongitude!.toStringAsFixed(6)}',
+                      style: TextStyle(
+                        fontSize: 11,
                         color: Colors.green[700],
                       ),
                     ),
-                  ],
-                ),
-              )
-            else
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.orange[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.warning, size: 16, color: Colors.orange),
-                    const SizedBox(width: 8),
-                    const Expanded(
-                      child: Text(
-                        'Lokasi belum terdeteksi',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: _detectUserLocation,
-                      child: const Text(
-                        'Deteksi',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-          ],
+            )
+          else
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.warning, size: 16, color: Colors.orange),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Lokasi belum terdeteksi',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _detectUserLocation,
+                    child: const Text(
+                      'Deteksi',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
@@ -1123,7 +1252,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       children: [
         _buildBobotSummary(),
         if (widget.category == 'laundry' &&
-            _referensiJarak == 'user' &&
             _userLatitude != null)
           Container(
             width: double.infinity,

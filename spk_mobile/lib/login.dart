@@ -210,24 +210,34 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    final result = await _authService.login(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
-
-    setState(() => _isLoading = false);
-
-    if (!mounted) return;
-
-    if (result['success']) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ImprovedHomeScreen()),
+    try {
+      final result = await _authService.login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
       );
-    } else {
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      if (result['success']) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ImprovedHomeScreen()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Login gagal'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result['message'] ?? 'Login gagal'),
+          content: Text('Terjadi kesalahan: $e'),
           backgroundColor: Colors.red,
         ),
       );

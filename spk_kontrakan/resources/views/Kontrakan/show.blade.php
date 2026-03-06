@@ -568,21 +568,6 @@
                             </div>
                         </div>
 
-                        <!-- Luas -->
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-start">
-                                <div class="bg-warning bg-opacity-10 rounded p-3 me-3">
-                                    <i class="bi bi-rulers text-warning fs-4"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <small class="text-muted d-block mb-1">Luas Bangunan</small>
-                                    <h5 class="mb-0 fw-semibold text-warning">
-                                        {{ $kontrakan->luas }} m²
-                                    </h5>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- Jumlah Kamar Tidur -->
                         <div class="col-md-6">
                             <div class="d-flex align-items-start">
@@ -728,8 +713,8 @@
                     <strong>Rp {{ number_format($kontrakan->harga / 12, 0, ',', '.') }}</strong>
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
-                    <span class="text-muted">Harga/m²</span>
-                    <strong>Rp {{ number_format($kontrakan->harga / $kontrakan->jumlah_kamar, 0, ',', '.') }}</strong>
+                    <span class="text-muted">Harga/Kamar</span>
+                    <strong>Rp {{ number_format($kontrakan->jumlah_kamar > 0 ? $kontrakan->harga / $kontrakan->jumlah_kamar : 0, 0, ',', '.') }}</strong>
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
                     <span class="text-muted">Status</span>

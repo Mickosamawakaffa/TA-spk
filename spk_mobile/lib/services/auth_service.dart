@@ -220,6 +220,9 @@ class AuthService {
     required String password,
     required String passwordConfirmation,
   }) async {
+    if (_currentUser == null || _token == null) {
+      return {'success': false, 'message': 'Silakan login ulang'};
+    }
     try {
       final response = await http.put(
         Uri.parse('${AppConfig.baseUrl}/profile/update'),
@@ -229,8 +232,8 @@ class AuthService {
           'Authorization': 'Bearer $_token',
         },
         body: jsonEncode({
-          'name': _currentUser?.name ?? '',
-          'email': _currentUser?.email ?? '',
+          'name': _currentUser!.name,
+          'email': _currentUser!.email,
           'password': password,
           'password_confirmation': passwordConfirmation,
         }),

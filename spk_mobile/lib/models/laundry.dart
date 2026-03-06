@@ -1,3 +1,5 @@
+import '../config/app_config.dart';
+
 class Laundry {
   final int id;
   final String nama;
@@ -127,8 +129,7 @@ class Laundry {
       if (foto!.startsWith('http')) {
         return foto!;
       }
-      const String baseUrl = 'http://192.168.18.16:8000';
-      return '$baseUrl/uploads/Laundry/$foto';
+      return '${AppConfig.serverUrl}/uploads/Laundry/$foto';
     }
     // 2. Fall back to galeri items if foto is not set
     if (galeri.isNotEmpty) {
@@ -140,8 +141,7 @@ class Laundry {
         return primary.foto;
       }
       if (primary.foto.isNotEmpty) {
-        const String baseUrl = 'http://192.168.18.16:8000';
-        return '$baseUrl/uploads/Laundry/${primary.foto}';
+        return '${AppConfig.serverUrl}/uploads/Laundry/${primary.foto}';
       }
     }
     return 'https://via.placeholder.com/300';
@@ -209,7 +209,6 @@ class GaleriLaundry {
       return foto;
     }
     // Build full URL from uploads
-    const String baseUrl = 'http://192.168.18.16:8000';
-    return '$baseUrl/uploads/Laundry/$foto';
+    return '${AppConfig.serverUrl}/uploads/Laundry/$foto';
   }
 }

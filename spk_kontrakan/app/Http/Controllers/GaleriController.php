@@ -106,6 +106,11 @@ class GaleriController extends Controller
     {
         $galeri = Galeri::findOrFail($id);
 
+        // Pastikan galeri ini memang bertipe kontrakan
+        if ($galeri->type !== 'kontrakan') {
+            return back()->with('error', 'Foto ini bukan milik kontrakan');
+        }
+
         // Reset semua foto di kontrakan yang sama jadi bukan primary
         Galeri::where('type', 'kontrakan')
               ->where('item_id', $galeri->item_id)
@@ -123,6 +128,11 @@ class GaleriController extends Controller
     public function setPrimaryLaundry($id)
     {
         $galeri = Galeri::findOrFail($id);
+
+        // Pastikan galeri ini memang bertipe laundry
+        if ($galeri->type !== 'laundry') {
+            return back()->with('error', 'Foto ini bukan milik laundry');
+        }
 
         // Reset semua foto di laundry yang sama jadi bukan primary
         Galeri::where('type', 'laundry')

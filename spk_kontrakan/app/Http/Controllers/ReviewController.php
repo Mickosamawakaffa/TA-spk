@@ -149,8 +149,8 @@ class ReviewController extends Controller
     {
         $review = Review::findOrFail($id);
 
-        // Cek apakah user adalah pemilik review atau admin
-        if ($review->user_id !== Auth::id() && Auth::user()->role !== 'admin') {
+        // Cek apakah user adalah pemilik review atau admin/super_admin
+        if ($review->user_id !== Auth::id() && !in_array(Auth::user()->role, ['admin', 'super_admin'])) {
             return back()->with('error', 'Anda tidak memiliki akses untuk menghapus review ini');
         }
 

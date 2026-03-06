@@ -112,7 +112,7 @@ class KriteriaController extends Controller
             'tipe' => 'required|in:Benefit,Cost',
         ]);
 
-        Kriteria::create($request->all());
+        Kriteria::create($request->only(['tipe_bisnis', 'nama_kriteria', 'bobot', 'tipe']));
         
         // Redirect dengan parameter filter
         return redirect()
@@ -139,7 +139,7 @@ class KriteriaController extends Controller
             'tipe' => 'required|in:Benefit,Cost',
         ]);
 
-        $kriterium->update($request->all());
+        $kriterium->update($request->only(['tipe_bisnis', 'nama_kriteria', 'bobot', 'tipe']));
         
         // Redirect dengan parameter filter
         return redirect()

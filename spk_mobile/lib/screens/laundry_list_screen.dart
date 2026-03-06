@@ -33,36 +33,52 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
 
   Future<void> _loadLaundry() async {
     setState(() => _isLoading = true);
-    final list = await _laundryService.getLaundry();
-    setState(() {
-      _laundryList = list;
-      _filteredList = list;
-      _isLoading = false;
-    });
+    try {
+      final list = await _laundryService.getLaundry();
+      if (!mounted) return;
+      setState(() {
+        _laundryList = list;
+        _filteredList = List.from(list);
+        _applySortInPlace(_sortBy); // apply current sort
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Load laundry error: $e');
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
   }
 
   void _filterList(String query) {
     setState(() {
       if (query.isEmpty) {
-        _filteredList = _laundryList;
+        _filteredList = List.from(_laundryList);
       } else {
         _filteredList = _laundryList.where((laundry) {
           return laundry.nama.toLowerCase().contains(query.toLowerCase()) ||
                  laundry.alamat.toLowerCase().contains(query.toLowerCase());
         }).toList();
       }
+      _applySortInPlace(_sortBy);
     });
   }
 
   void _sortList(String sortBy) {
     setState(() {
-      _sortBy = sortBy;
-      if (sortBy == 'rating') {
-        _filteredList.sort((a, b) => b.rating.compareTo(a.rating));
-      } else if (sortBy == 'harga') {
-        _filteredList.sort((a, b) => a.hargaKiloan.compareTo(b.hargaKiloan));
-      }
+      _applySortInPlace(sortBy);
     });
+  }
+
+  /// Internal sort helper — call within setState only
+  void _applySortInPlace(String sortBy) {
+    _sortBy = sortBy;
+    if (sortBy == 'rating') {
+      _filteredList.sort((a, b) => b.rating.compareTo(a.rating));
+    } else if (sortBy == 'harga') {
+      _filteredList.sort((a, b) => a.hargaKiloan.compareTo(b.hargaKiloan));
+    } else if (sortBy == 'jarak') {
+      _filteredList.sort((a, b) => a.jarakKampus.compareTo(b.jarakKampus));
+    }
   }
 
   @override
@@ -187,7 +203,7 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
                       ],
                     ),
                     Text(
-                      'Urut: ${_sortBy == "rating" ? "Rating" : "Harga"}',
+                      'Urut: ${_sortBy == "rating" ? "Rating" : _sortBy == "harga" ? "Harga" : "Jarak"}',
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey[600],

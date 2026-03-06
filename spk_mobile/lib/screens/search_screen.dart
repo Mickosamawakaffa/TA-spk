@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../models/kontrakan.dart';
 import '../models/laundry.dart';
 import '../services/kontrakan_service.dart';
@@ -50,20 +49,22 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    // Clear image cache agar data terbaru dari server selalu dimuat
-    await DefaultCacheManager().emptyCache();
-    PaintingBinding.instance.imageCache.clear();
-    PaintingBinding.instance.imageCache.clearLiveImages();
-    final kontrakan = await _kontrakanService.getKontrakan();
-    final laundry = await _laundryService.getLaundry();
-    setState(() {
-      _allKontrakan = kontrakan;
-      _filteredKontrakan = kontrakan;
-      _allLaundry = laundry;
-      _filteredLaundry = laundry;
-      _isLoading = false;
-    });
-    _loadFavoriteIds();
+    try {
+      final kontrakan = await _kontrakanService.getKontrakan();
+      final laundry = await _laundryService.getLaundry();
+      if (!mounted) return;
+      setState(() {
+        _allKontrakan = kontrakan;
+        _filteredKontrakan = kontrakan;
+        _allLaundry = laundry;
+        _filteredLaundry = laundry;
+        _isLoading = false;
+      });
+      _loadFavoriteIds();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _loadFavoriteIds() async {
@@ -84,38 +85,48 @@ class _SearchScreenState extends State<SearchScreen> {
   Future<void> _toggleKontrakanFav(int id) async {
     final wasFav = _favKontrakanIds.contains(id);
     setState(() {
-      if (wasFav)
-        _favKontrakanIds.remove(id);
-      else
-        _favKontrakanIds.add(id);
+      if (wasFav) _favKontrakanIds.remove(id); else _favKontrakanIds.add(id);
     });
-    final result = await _favoriteService.toggleKontrakanFavorite(id);
-    if (result['success'] != true && mounted) {
-      setState(() {
-        if (wasFav)
-          _favKontrakanIds.add(id);
-        else
-          _favKontrakanIds.remove(id);
-      });
+    try {
+      final result = await _favoriteService.toggleKontrakanFavorite(id);
+      if (result['success'] != true && mounted) {
+        setState(() {
+          if (wasFav) _favKontrakanIds.add(id); else _favKontrakanIds.remove(id);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'] ?? 'Gagal'), backgroundColor: Colors.red.shade600),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          if (wasFav) _favKontrakanIds.add(id); else _favKontrakanIds.remove(id);
+        });
+      }
     }
   }
 
   Future<void> _toggleLaundryFav(int id) async {
     final wasFav = _favLaundryIds.contains(id);
     setState(() {
-      if (wasFav)
-        _favLaundryIds.remove(id);
-      else
-        _favLaundryIds.add(id);
+      if (wasFav) _favLaundryIds.remove(id); else _favLaundryIds.add(id);
     });
-    final result = await _favoriteService.toggleLaundryFavorite(id);
-    if (result['success'] != true && mounted) {
-      setState(() {
-        if (wasFav)
-          _favLaundryIds.add(id);
-        else
-          _favLaundryIds.remove(id);
-      });
+    try {
+      final result = await _favoriteService.toggleLaundryFavorite(id);
+      if (result['success'] != true && mounted) {
+        setState(() {
+          if (wasFav) _favLaundryIds.add(id); else _favLaundryIds.remove(id);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'] ?? 'Gagal'), backgroundColor: Colors.red.shade600),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          if (wasFav) _favLaundryIds.add(id); else _favLaundryIds.remove(id);
+        });
+      }
     }
   }
 
@@ -194,10 +205,9 @@ class _SearchScreenState extends State<SearchScreen> {
       }).toList();
     }
 
-    // Filter by price
+    // Filter by price (laundry hargaKiloan is per-kg, no multiplication needed)
     filtered = filtered.where((l) {
-      final harga = l.hargaKiloan * 10; // Approximate for 10kg
-      return harga >= _priceRange.start && harga <= _priceRange.end;
+      return l.hargaKiloan >= _priceRange.start && l.hargaKiloan <= _priceRange.end;
     }).toList();
 
     setState(() => _filteredLaundry = filtered);
@@ -280,8 +290,10 @@ class _SearchScreenState extends State<SearchScreen> {
                       children: [
                         Expanded(
                           child: GestureDetector(
-                            onTap: () =>
-                                setState(() => _selectedCategory = 'Kontrakan'),
+                            onTap: () {
+                                setState(() => _selectedCategory = 'Kontrakan');
+                                _applyFilters();
+                            },
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
                               padding: const EdgeInsets.symmetric(vertical: 10),
@@ -329,8 +341,10 @@ class _SearchScreenState extends State<SearchScreen> {
                         const SizedBox(width: 4),
                         Expanded(
                           child: GestureDetector(
-                            onTap: () =>
-                                setState(() => _selectedCategory = 'Laundry'),
+                            onTap: () {
+                                setState(() => _selectedCategory = 'Laundry');
+                                _applyLaundryFilters();
+                            },
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
                               padding: const EdgeInsets.symmetric(vertical: 10),

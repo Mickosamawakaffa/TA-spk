@@ -146,13 +146,13 @@ class ActivityLog extends Model
     // Dashboard Statistics
     public static function getSummaryStats($userId = null)
     {
-        $query = $userId ? self::where('user_id', $userId) : self::query();
+        $baseQuery = $userId ? self::where('user_id', $userId) : self::query();
         
         return [
-            'total_actions' => $query->count(),
-            'today_actions' => $query->whereDate('created_at', today())->count(),
-            'this_week_actions' => $query->where('created_at', '>=', now()->startOfWeek())->count(),
-            'this_month_actions' => $query->whereMonth('created_at', now()->month)->count(),
+            'total_actions' => (clone $baseQuery)->count(),
+            'today_actions' => (clone $baseQuery)->whereDate('created_at', today())->count(),
+            'this_week_actions' => (clone $baseQuery)->where('created_at', '>=', now()->startOfWeek())->count(),
+            'this_month_actions' => (clone $baseQuery)->whereMonth('created_at', now()->month)->count(),
             'most_common_action' => self::select('action')
                 ->groupBy('action')
                 ->orderByRaw('count(*) desc')
@@ -162,7 +162,7 @@ class ActivityLog extends Model
                 ->groupBy('action')
                 ->orderByRaw('count(*) desc')
                 ->pluck('count', 'action'),
-            'recent_activity' => $query->with('user')
+            'recent_activity' => (clone $baseQuery)->with('user')
                 ->latest()
                 ->limit(10)
                 ->get()

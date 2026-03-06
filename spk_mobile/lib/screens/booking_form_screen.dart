@@ -72,7 +72,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       },
     );
 
-    if (picked != null) {
+    if (picked != null && mounted) {
       setState(() => _tanggalMulai = picked);
     }
   }
@@ -118,15 +118,25 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
     if (source == null) return;
 
-    final picked = await _imagePicker.pickImage(
-      source: source,
-      maxWidth: 1920,
-      maxHeight: 1920,
-      imageQuality: 85,
-    );
+    try {
+      final picked = await _imagePicker.pickImage(
+        source: source,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
+      );
 
-    if (picked != null) {
-      setState(() => _paymentProofImage = File(picked.path));
+      if (picked != null && mounted) {
+        setState(() => _paymentProofImage = File(picked.path));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memilih gambar: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -218,25 +228,25 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       ),
     );
 
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
 
     setState(() => _isSubmitting = true);
 
-    final result = await _bookingService.createBooking(
-      kontrakanId: widget.kontrakan.id,
-      tanggalMulai: _tanggalMulai!,
-      durasiBulan: _durasiBulan,
-      catatan: _catatanController.text.isNotEmpty
-          ? _catatanController.text
-          : null,
-      paymentProof: _paymentProofImage,
-    );
+    try {
+      final result = await _bookingService.createBooking(
+        kontrakanId: widget.kontrakan.id,
+        tanggalMulai: _tanggalMulai!,
+        durasiBulan: _durasiBulan,
+        catatan: _catatanController.text.isNotEmpty
+            ? _catatanController.text
+            : null,
+        paymentProof: _paymentProofImage,
+      );
 
-    setState(() => _isSubmitting = false);
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
 
-    if (!mounted) return;
-
-    if (result['success'] == true) {
+      if (result['success'] == true) {
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -300,6 +310,16 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['message'] ?? 'Gagal membuat booking'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
           backgroundColor: Colors.red,
         ),
       );

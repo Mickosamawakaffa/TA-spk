@@ -42,13 +42,16 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
     _loadData();
   }
 
-  Future<void> _loadData() async {
+  Future<void> _loadData({bool clearCache = false}) async {
     setState(() => _isLoading = true);
-    // Clear image cache agar foto terbaru dari server selalu dimuat
-    await DefaultCacheManager().emptyCache();
-    PaintingBinding.instance.imageCache.clear();
-    PaintingBinding.instance.imageCache.clearLiveImages();
+    // Clear image cache hanya saat user eksplisit refresh (pull-to-refresh)
+    if (clearCache) {
+      await DefaultCacheManager().emptyCache();
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+    }
     await Future.wait([_loadKontrakan(), _loadLaundry(), _loadFavoriteIds()]);
+    if (!mounted) return;
     setState(() => _isLoading = false);
   }
 
@@ -56,6 +59,7 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
     try {
       if (!_authService.isAuthenticated) return;
       final ids = await _favoriteService.getFavoriteIds();
+      if (!mounted) return;
       setState(() {
         _favKontrakanIds = (ids['kontrakan'] ?? []).toSet();
         _favLaundryIds = (ids['laundry'] ?? []).toSet();
@@ -66,6 +70,14 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
   }
 
   Future<void> _toggleKontrakanFav(int id) async {
+    if (!_authService.isAuthenticated) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Silakan login terlebih dahulu'), backgroundColor: Colors.orange),
+        );
+      }
+      return;
+    }
     final wasFav = _favKontrakanIds.contains(id);
     setState(() {
       if (wasFav) {
@@ -74,19 +86,44 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
         _favKontrakanIds.add(id);
       }
     });
-    final result = await _favoriteService.toggleKontrakanFavorite(id);
-    if (result['success'] != true && mounted) {
-      setState(() {
-        if (wasFav) {
-          _favKontrakanIds.add(id);
-        } else {
-          _favKontrakanIds.remove(id);
-        }
-      });
+    try {
+      final result = await _favoriteService.toggleKontrakanFavorite(id);
+      if (result['success'] != true && mounted) {
+        setState(() {
+          if (wasFav) {
+            _favKontrakanIds.add(id);
+          } else {
+            _favKontrakanIds.remove(id);
+          }
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Gagal mengubah favorit'),
+            backgroundColor: Colors.red.shade600,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          if (wasFav) _favKontrakanIds.add(id); else _favKontrakanIds.remove(id);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red.shade600),
+        );
+      }
     }
   }
 
   Future<void> _toggleLaundryFav(int id) async {
+    if (!_authService.isAuthenticated) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Silakan login terlebih dahulu'), backgroundColor: Colors.orange),
+        );
+      }
+      return;
+    }
     final wasFav = _favLaundryIds.contains(id);
     setState(() {
       if (wasFav) {
@@ -95,21 +132,39 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
         _favLaundryIds.add(id);
       }
     });
-    final result = await _favoriteService.toggleLaundryFavorite(id);
-    if (result['success'] != true && mounted) {
-      setState(() {
-        if (wasFav) {
-          _favLaundryIds.add(id);
-        } else {
-          _favLaundryIds.remove(id);
-        }
-      });
+    try {
+      final result = await _favoriteService.toggleLaundryFavorite(id);
+      if (result['success'] != true && mounted) {
+        setState(() {
+          if (wasFav) {
+            _favLaundryIds.add(id);
+          } else {
+            _favLaundryIds.remove(id);
+          }
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Gagal mengubah favorit'),
+            backgroundColor: Colors.red.shade600,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          if (wasFav) _favLaundryIds.add(id); else _favLaundryIds.remove(id);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red.shade600),
+        );
+      }
     }
   }
 
   Future<void> _loadKontrakan() async {
     try {
       final list = await _kontrakanService.getKontrakan();
+      if (!mounted) return;
       setState(() => _kontrakanList = list.take(6).toList());
     } catch (e) {
       // Error loading kontrakan silently
@@ -119,6 +174,7 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
   Future<void> _loadLaundry() async {
     try {
       final list = await _laundryService.getLaundry();
+      if (!mounted) return;
       setState(() => _laundryList = list.take(6).toList());
     } catch (e) {
       // Error loading laundry silently
@@ -154,7 +210,7 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
   // ────────────── HOME CONTENT ──────────────
   Widget _buildHomeContent() {
     return RefreshIndicator(
-      onRefresh: _loadData,
+      onRefresh: () => _loadData(clearCache: true),
       child: CustomScrollView(
         slivers: [
           // ── Gradient Header ──
@@ -709,63 +765,6 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                 color: Colors.grey[600],
                 height: 1.4,
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ────────────── SERVICE TILE ──────────────
-  Widget _buildServiceTile({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required Color bgColor,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.12)),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                  height: 1.3,
-                ),
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 14,
-              color: color.withOpacity(0.5),
             ),
           ],
         ),

@@ -54,6 +54,21 @@
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+            /* Shared color variables for views */
+            --primary-color: #667eea;
+            --primary-color-rgb: 102, 126, 234;
+            --secondary-color: #764ba2;
+            --secondary-color-rgb: 118, 75, 162;
+            --info-color: #17a2b8;
+            --info-color-rgb: 23, 162, 184;
+            --success-color: #28a745;
+            --success-color-rgb: 40, 167, 69;
+            --warning-color: #ffc107;
+            --warning-color-rgb: 255, 193, 7;
+            --danger-color: #dc3545;
+            --danger-color-rgb: 220, 53, 69;
+            --text-muted: #6c757d;
         }
 
         * {

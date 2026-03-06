@@ -36,15 +36,14 @@ class LaundryController extends Controller
         }
         
         // ========== FILTER: RANGE HARGA (Min & Max dengan Slider) ==========
-        if ($request->filled('harga_min')) {
+        if ($request->filled('harga_min') || $request->filled('harga_max')) {
             $query->whereHas('layanan', function($q) use ($request) {
-                $q->where('harga', '>=', $request->harga_min);
-            });
-        }
-        
-        if ($request->filled('harga_max')) {
-            $query->whereHas('layanan', function($q) use ($request) {
-                $q->where('harga', '<=', $request->harga_max);
+                if ($request->filled('harga_min')) {
+                    $q->where('harga', '>=', $request->harga_min);
+                }
+                if ($request->filled('harga_max')) {
+                    $q->where('harga', '<=', $request->harga_max);
+                }
             });
         }
         

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'login.dart';
-import 'screens/mobile_home_screen.dart';
+import 'screens/improved_home_screen.dart';
 import 'services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -11,6 +12,7 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -35,6 +37,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
+          // Header
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(8, 0, 16, 24),
@@ -53,15 +56,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               bottom: false,
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
                   ),
-                  const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
@@ -103,25 +104,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
           ),
+
+          // Form
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     _buildTextField(
                       label: 'Nama',
                       controller: _nameController,
                       prefixIcon: Icons.person_outline,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'Nama tidak boleh kosong';
+                        return null;
+                      },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 18),
                     _buildTextField(
                       label: 'Email',
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: Icons.email_outlined,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'Email tidak boleh kosong';
+                        if (!v.contains('@')) return 'Email tidak valid';
+                        return null;
+                      },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 18),
                     _buildTextField(
                       label: 'Password',
                       controller: _passwordController,
@@ -134,14 +148,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               : Icons.visibility_off_outlined,
                           color: const Color(0xFF1565C0),
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'Password tidak boleh kosong';
+                        if (v.length < 6) return 'Password minimal 6 karakter';
+                        return null;
+                      },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 18),
                     _buildTextField(
                       label: 'Konfirmasi Password',
                       controller: _confirmPasswordController,
@@ -154,48 +169,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               : Icons.visibility_off_outlined,
                           color: const Color(0xFF1565C0),
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _obscureConfirmPassword = !_obscureConfirmPassword;
-                          });
-                        },
+                        onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                       ),
+                      validator: (v) {
+                        if (v != _passwordController.text) return 'Password tidak cocok';
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 28),
+
+                    // Tombol Daftar
                     SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton(
+                      child: _buildActionButton(
+                        label: 'DAFTAR',
                         onPressed: _isLoading ? null : _handleRegister,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1565C0),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  valueColor:
-                                      AlwaysStoppedAnimation<Color>(Colors.white),
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text(
-                                'DAFTAR',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
                       ),
                     ),
+
+                    const SizedBox(height: 24),
+
+                    // Info card
+                    _buildInfoCard(),
+
                     const SizedBox(height: 20),
+
+                    // Link ke login
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -206,9 +205,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         GestureDetector(
                           onTap: () => Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => const LoginScreen(),
-                            ),
+                            MaterialPageRoute(builder: (_) => const LoginScreen()),
                           ),
                           child: const Text(
                             'Masuk',
@@ -226,9 +223,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
             ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildTextField({
@@ -238,6 +236,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     bool obscureText = false,
     IconData? prefixIcon,
     Widget? suffixIcon,
+    String? Function(String?)? validator,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,10 +250,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        TextField(
+        TextFormField(
           controller: controller,
           keyboardType: keyboardType,
           obscureText: obscureText,
+          validator: validator,
           decoration: InputDecoration(
             prefixIcon: prefixIcon != null
                 ? Icon(prefixIcon, color: const Color(0xFF1565C0), size: 20)
@@ -274,6 +274,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               borderRadius: BorderRadius.circular(14),
               borderSide: const BorderSide(color: Color(0xFF1565C0), width: 1.5),
             ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFFEF5350)),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFFEF5350), width: 1.5),
+            ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
           ),
         ),
@@ -281,107 +289,187 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  Widget _buildActionButton({
+    required String label,
+    required VoidCallback? onPressed,
+  }) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF1565C0),
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        elevation: 0,
+        disabledBackgroundColor: Colors.grey[300],
+        shadowColor: const Color(0xFF1565C0).withOpacity(0.3),
+      ),
+      child: _isLoading
+          ? const SpinKitThreeBounce(color: Colors.white, size: 20)
+          : Text(
+              label,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+              ),
+            ),
+    );
+  }
+
+  Widget _buildInfoCard() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F8FC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1565C0).withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.school_rounded, color: Color(0xFF1565C0), size: 22),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Untuk Mahasiswa',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1A1A2E),
+                      ),
+                    ),
+                    Text(
+                      'Politeknik Negeri Jember',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF1565C0),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildInfoItem(Icons.home_rounded, 'Temukan Kontrakan Terbaik',
+              'Rekomendasi kontrakan terdekat dari kampus'),
+          const SizedBox(height: 10),
+          _buildInfoItem(Icons.local_laundry_service_rounded, 'Cari Laundry Terpercaya',
+              'Temukan laundry dengan kualitas terbaik'),
+          const SizedBox(height: 10),
+          _buildInfoItem(Icons.analytics_rounded, 'Metode SAW',
+              'Rekomendasi berdasarkan preferensi Anda'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoItem(IconData icon, String title, String description) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: const Color(0xFF1565C0).withOpacity(0.6), size: 18),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E))),
+              const SizedBox(height: 2),
+              Text(description,
+                  style: TextStyle(fontSize: 12, color: Colors.grey[500], height: 1.3)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Future<void> _handleRegister() async {
-    final name = _nameController.text.trim();
-    final email = _emailController.text.trim();
-    final password = _passwordController.text;
-    final confirmPassword = _confirmPasswordController.text;
+    if (!_formKey.currentState!.validate()) return;
 
-    if (name.isEmpty) {
-      _showError('Nama tidak boleh kosong');
-      return;
-    }
-    if (email.isEmpty) {
-      _showError('Email tidak boleh kosong');
-      return;
-    }
-    if (password.isEmpty) {
-      _showError('Password tidak boleh kosong');
-      return;
-    }
-    if (password.length < 6) {
-      _showError('Password minimal 6 karakter');
-      return;
-    }
-    if (password != confirmPassword) {
-      _showError('Password tidak cocok');
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final result = await _authService.register(
-        name: name,
-        email: email,
-        password: password,
-        passwordConfirmation: confirmPassword,
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        passwordConfirmation: _confirmPasswordController.text,
       );
 
       if (!mounted) return;
 
       if (result['success'] == true) {
-        _showSuccess('Registrasi berhasil! Selamat datang!');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                SizedBox(width: 10),
+                Text('Registrasi berhasil! Selamat datang!'),
+              ],
+            ),
+            backgroundColor: const Color(0xFF2E7D32),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 2),
+          ),
+        );
         await Future.delayed(const Duration(seconds: 1));
         if (mounted) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const MobileHomeScreen()),
+            MaterialPageRoute(builder: (_) => const ImprovedHomeScreen()),
           );
         }
       } else {
-        final message = result['message'] ?? 'Registrasi gagal';
-        _showError(message);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+                Expanded(child: Text(result['message'] ?? 'Registrasi gagal')),
+              ],
+            ),
+            backgroundColor: const Color(0xFFC62828),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 3),
+          ),
+        );
       }
     } catch (e) {
-      _showError('Error: $e');
-    } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: const Color(0xFFC62828),
+          ),
+        );
       }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
-            const SizedBox(width: 10),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: const Color(0xFFC62828),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
-
-  void _showSuccess(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-            const SizedBox(width: 10),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: const Color(0xFF2E7D32),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 2),
-      ),
-    );
   }
 }
 

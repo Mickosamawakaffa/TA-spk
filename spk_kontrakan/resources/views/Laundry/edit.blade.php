@@ -512,22 +512,41 @@
 
                                                 <div class="col-md-6">
                                                     <label class="form-label fw-semibold">
-                                                        Kecepatan <span class="text-danger">*</span>
+                                                        Nama Paket <span class="text-danger">*</span>
                                                     </label>
-                                                    <div class="input-group">
-                                                        <input 
-                                                            type="number" 
-                                                            name="layanan[0][kecepatan]" 
-                                                            class="form-control" 
-                                                            placeholder="24"
-                                                            min="1"
-                                                            required
-                                                        >
-                                                        <select name="layanan[0][satuan_kecepatan]" class="form-select" style="max-width: 100px;">
-                                                            <option value="jam">Jam</option>
-                                                            <option value="hari">Hari</option>
-                                                        </select>
-                                                    </div>
+                                                    <input 
+                                                        type="text" 
+                                                        name="layanan[0][nama_paket]" 
+                                                        class="form-control" 
+                                                        placeholder="Paket Reguler"
+                                                        required
+                                                    >
+                                                </div>
+
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">
+                                                        Estimasi Selesai (Jam) <span class="text-danger">*</span>
+                                                    </label>
+                                                    <input 
+                                                        type="number" 
+                                                        name="layanan[0][estimasi_selesai]" 
+                                                        class="form-control" 
+                                                        placeholder="24"
+                                                        min="1"
+                                                        required
+                                                    >
+                                                </div>
+
+                                                <div class="col-md-12">
+                                                    <label class="form-label fw-semibold">
+                                                        Deskripsi <span class="text-muted">(Opsional)</span>
+                                                    </label>
+                                                    <textarea 
+                                                        name="layanan[0][deskripsi]" 
+                                                        class="form-control" 
+                                                        rows="2"
+                                                        placeholder="Deskripsi singkat paket ini..."
+                                                    ></textarea>
                                                 </div>
                                             </div>
                                         </div>

@@ -39,30 +39,40 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     setState(() => _isLoading = true);
 
-    final result = await _authService.updateProfile(
-      name: _nameController.text.trim(),
-      email: _emailController.text.trim(),
-      phone: _phoneController.text.trim().isEmpty
-          ? null
-          : _phoneController.text.trim(),
-    );
-
-    setState(() => _isLoading = false);
-
-    if (!mounted) return;
-
-    if (result['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profil berhasil diperbarui'),
-          backgroundColor: Colors.green,
-        ),
+    try {
+      final result = await _authService.updateProfile(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        phone: _phoneController.text.trim().isEmpty
+            ? null
+            : _phoneController.text.trim(),
       );
-      Navigator.pop(context, true);
-    } else {
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      if (result['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profil berhasil diperbarui'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context, true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Gagal memperbarui profil'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result['message'] ?? 'Gagal memperbarui profil'),
+          content: Text('Terjadi kesalahan: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -109,7 +119,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       radius: 45,
                       backgroundColor: Colors.white,
                       child: Text(
-                        widget.user.name.substring(0, 1).toUpperCase(),
+                        widget.user.name.isNotEmpty
+                            ? widget.user.name.substring(0, 1).toUpperCase()
+                            : 'U',
                         style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,

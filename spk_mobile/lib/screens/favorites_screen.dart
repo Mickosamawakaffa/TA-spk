@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../models/kontrakan.dart';
 import '../models/laundry.dart';
 import '../services/favorite_service.dart';
@@ -36,23 +36,46 @@ class _FavoritesScreenState extends State<FavoritesScreen>
     super.dispose();
   }
 
+  String? _errorMessage;
+
   Future<void> _loadFavorites() async {
-    setState(() => _isLoading = true);
-    // Clear image cache agar foto terbaru selalu dimuat
-    await DefaultCacheManager().emptyCache();
-    PaintingBinding.instance.imageCache.clear();
-    PaintingBinding.instance.imageCache.clearLiveImages();
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
     try {
       final result = await _favoriteService.getFavoritesWithModels();
+      if (!mounted) return;
+
+      if (result['success'] == true) {
+        setState(() {
+          _kontrakanFavorites = result['kontrakan'] is List<Kontrakan>
+              ? result['kontrakan'] as List<Kontrakan>
+              : <Kontrakan>[];
+          _laundryFavorites = result['laundry'] is List<Laundry>
+              ? result['laundry'] as List<Laundry>
+              : <Laundry>[];
+          _isLoading = false;
+        });
+        debugPrint('[FAV_SCREEN] Loaded ${_kontrakanFavorites.length} kontrakan, ${_laundryFavorites.length} laundry');
+      } else {
+        setState(() {
+          _kontrakanFavorites = [];
+          _laundryFavorites = [];
+          _errorMessage = result['message']?.toString() ?? 'Gagal memuat favorit';
+          _isLoading = false;
+        });
+        debugPrint('[FAV_SCREEN] ❌ Load failed: $_errorMessage');
+      }
+    } catch (e) {
+      debugPrint('[FAV_SCREEN] ❌ Exception: $e');
       if (mounted) {
         setState(() {
-          _kontrakanFavorites = (result['kontrakan'] as List<Kontrakan>?) ?? [];
-          _laundryFavorites = (result['laundry'] as List<Laundry>?) ?? [];
+          _errorMessage = 'Terjadi kesalahan: $e';
           _isLoading = false;
         });
       }
-    } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -93,15 +116,18 @@ class _FavoritesScreenState extends State<FavoritesScreen>
       ),
     );
     if (confirm != true) return;
+    if (!mounted) return;
 
-    Map<String, dynamic> result;
-    if (type == 'kontrakan') {
-      result = await _favoriteService.toggleKontrakanFavorite(itemId);
-    } else {
-      result = await _favoriteService.toggleLaundryFavorite(itemId);
-    }
+    try {
+      Map<String, dynamic> result;
+      if (type == 'kontrakan') {
+        result = await _favoriteService.toggleKontrakanFavorite(itemId);
+      } else {
+        result = await _favoriteService.toggleLaundryFavorite(itemId);
+      }
 
-    if (mounted && result['success'] == true) {
+      if (!mounted) return;
+      if (result['success'] == true) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -123,7 +149,19 @@ class _FavoritesScreenState extends State<FavoritesScreen>
           margin: const EdgeInsets.all(16),
         ),
       );
-      _loadFavorites();
+        _loadFavorites();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Gagal menghapus favorit'),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
     }
   }
 
@@ -262,10 +300,45 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                         color: Color(0xFF1565C0),
                       ),
                     )
-                  : TabBarView(
-                      controller: _tabController,
-                      children: [_buildKontrakanList(), _buildLaundryList()],
-                    ),
+                  : _errorMessage != null
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.error_outline_rounded,
+                                    size: 56, color: Colors.red.shade300),
+                                const SizedBox(height: 16),
+                                Text(
+                                  _errorMessage!,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                ElevatedButton.icon(
+                                  onPressed: _loadFavorites,
+                                  icon: const Icon(Icons.refresh_rounded),
+                                  label: const Text('Coba Lagi'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF1565C0),
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : TabBarView(
+                          controller: _tabController,
+                          children: [_buildKontrakanList(), _buildLaundryList()],
+                        ),
             ),
           ],
         ),

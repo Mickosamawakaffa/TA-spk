@@ -223,7 +223,7 @@ class KontrakanController extends Controller
             'jarak' => $request->jarak,
             'fasilitas' => $request->fasilitas,
             'jumlah_kamar' => $request->jumlah_kamar,
-            'luas' => $request->luas ?? 0, // Default 0 jika tidak diisi
+            'bathroom_count' => $request->bathroom_count ?? 1,
             'foto' => $filename,
         ]);
 
@@ -333,7 +333,7 @@ class KontrakanController extends Controller
             'jarak' => $request->jarak,
             'fasilitas' => $request->fasilitas,
             'jumlah_kamar' => $request->jumlah_kamar,
-            'luas' => $request->luas ?? $kontrakan->luas ?? 0, // Gunakan nilai lama jika tidak diisi
+            'bathroom_count' => $request->bathroom_count ?? $kontrakan->bathroom_count ?? 1,
             'foto' => $filename,
         ]);
 

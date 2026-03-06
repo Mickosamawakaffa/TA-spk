@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'login.dart';
 import 'screens/improved_home_screen.dart';
 import 'services/auth_service.dart';
+import 'services/server_discovery_service.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -110,6 +111,7 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<double> _scaleAnim;
+  String _statusText = 'Memulai aplikasi...';
 
   @override
   void initState() {
@@ -135,8 +137,16 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _checkAuth() async {
+    // 🔍 Auto-detect server IP
+    await ServerDiscoveryService.discover(
+      onStatus: (status) {
+        if (mounted) setState(() => _statusText = status);
+      },
+    );
+
+    if (mounted) setState(() => _statusText = 'Memeriksa sesi...');
     await _authService.loadToken();
-    await Future.delayed(const Duration(milliseconds: 1600));
+    await Future.delayed(const Duration(milliseconds: 400));
 
     if (!mounted) return;
 
@@ -226,6 +236,14 @@ class _SplashScreenState extends State<SplashScreen>
                       valueColor: AlwaysStoppedAnimation<Color>(
                         Colors.white.withOpacity(0.9),
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    _statusText,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white.withOpacity(0.7),
                     ),
                   ),
                 ],

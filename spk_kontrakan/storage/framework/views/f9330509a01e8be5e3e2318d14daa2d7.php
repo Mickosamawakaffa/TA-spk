@@ -174,7 +174,6 @@
 
         <div class="auth-footer">
             <p>Belum punya akun bisnis? <a href="<?php echo e(route('admin.register')); ?>">Daftar Sebagai Pemilik</a></p>
-            <p><a href="<?php echo e(route('admin.portal')); ?>">← Kembali ke Portal Pemilik</a></p>
         </div>
     </div>
 </div>

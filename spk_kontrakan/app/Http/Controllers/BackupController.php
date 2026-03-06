@@ -54,11 +54,11 @@ class BackupController extends Controller
             $timestamp = now()->format('Y-m-d-H-i-s');
             $backupFile = $this->backupPath . "/backup_{$timestamp}.sql";
 
-            // Get database credentials
-            $database = env('DB_DATABASE');
-            $username = env('DB_USERNAME');
-            $password = env('DB_PASSWORD');
-            $host = env('DB_HOST');
+            // Get database credentials (use config() instead of env() for config:cache compatibility)
+            $database = config('database.connections.mysql.database');
+            $username = config('database.connections.mysql.username');
+            $password = config('database.connections.mysql.password');
+            $host = config('database.connections.mysql.host');
 
             // Create SQL dump (Windows MySQL)
             $command = sprintf(
@@ -98,6 +98,8 @@ class BackupController extends Controller
 
     public function download($backup)
     {
+        // Sanitize: prevent path traversal
+        $backup = basename($backup);
         $backupPath = $this->backupPath . '/' . $backup;
 
         if (!File::exists($backupPath)) {
@@ -110,6 +112,8 @@ class BackupController extends Controller
     public function delete($backup)
     {
         try {
+            // Sanitize: prevent path traversal
+            $backup = basename($backup);
             $backupPath = $this->backupPath . '/' . $backup;
 
             if (!File::exists($backupPath)) {
@@ -127,6 +131,8 @@ class BackupController extends Controller
     public function restore(Request $request, $backup)
     {
         try {
+            // Sanitize: prevent path traversal
+            $backup = basename($backup);
             $backupPath = $this->backupPath . '/' . $backup;
 
             if (!File::exists($backupPath)) {
@@ -154,11 +160,11 @@ class BackupController extends Controller
                 $sqlFile = $backupPath;
             }
 
-            // Restore database
-            $database = env('DB_DATABASE');
-            $username = env('DB_USERNAME');
-            $password = env('DB_PASSWORD');
-            $host = env('DB_HOST');
+            // Restore database (use config() instead of env() for config:cache compatibility)
+            $database = config('database.connections.mysql.database');
+            $username = config('database.connections.mysql.username');
+            $password = config('database.connections.mysql.password');
+            $host = config('database.connections.mysql.host');
 
             $command = sprintf(
                 'mysql --user=%s --password=%s --host=%s %s < "%s"',
