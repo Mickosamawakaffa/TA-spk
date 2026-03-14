@@ -51,6 +51,32 @@ class User extends Authenticatable
     }
 
     /**
+     * Append role_label dan user_type ke JSON response
+     */
+    protected $appends = ['role_label', 'user_type'];
+
+    /**
+     * Get role label accessor
+     */
+    public function getRoleLabelAttribute(): string
+    {
+        return match($this->role) {
+            'super_admin' => 'Super Admin',
+            'admin' => 'Admin',
+            'user' => 'Mahasiswa',
+            default => $this->role,
+        };
+    }
+
+    /**
+     * Get user type accessor (untuk kompatibilitas API)
+     */
+    public function getUserTypeAttribute(): string
+    {
+        return $this->role === 'user' ? 'mahasiswa' : $this->role;
+    }
+
+    /**
      * Helper function untuk cek apakah user adalah Super Admin
      *
      * @return bool
@@ -71,13 +97,38 @@ class User extends Authenticatable
     }
 
     /**
-     * Helper function untuk cek apakah user adalah User biasa
+     * Helper function untuk cek apakah user adalah Mahasiswa (User biasa)
      *
      * @return bool
      */
     public function isUser()
     {
         return $this->role === 'user';
+    }
+
+    /**
+     * Helper function untuk cek apakah user adalah Mahasiswa
+     *
+     * @return bool
+     */
+    public function isMahasiswa()
+    {
+        return $this->role === 'user';
+    }
+
+    /**
+     * Get role label yang user-friendly
+     *
+     * @return string
+     */
+    public function getRoleLabel()
+    {
+        return match($this->role) {
+            'super_admin' => 'Super Admin',
+            'admin' => 'Admin',
+            'user' => 'Mahasiswa',
+            default => $this->role,
+        };
     }
 
     /**

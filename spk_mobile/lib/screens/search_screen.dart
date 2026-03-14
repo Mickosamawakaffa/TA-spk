@@ -85,22 +85,34 @@ class _SearchScreenState extends State<SearchScreen> {
   Future<void> _toggleKontrakanFav(int id) async {
     final wasFav = _favKontrakanIds.contains(id);
     setState(() {
-      if (wasFav) _favKontrakanIds.remove(id); else _favKontrakanIds.add(id);
+      if (wasFav)
+        _favKontrakanIds.remove(id);
+      else
+        _favKontrakanIds.add(id);
     });
     try {
       final result = await _favoriteService.toggleKontrakanFavorite(id);
       if (result['success'] != true && mounted) {
         setState(() {
-          if (wasFav) _favKontrakanIds.add(id); else _favKontrakanIds.remove(id);
+          if (wasFav)
+            _favKontrakanIds.add(id);
+          else
+            _favKontrakanIds.remove(id);
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Gagal'), backgroundColor: Colors.red.shade600),
+          SnackBar(
+            content: Text(result['message'] ?? 'Gagal'),
+            backgroundColor: Colors.red.shade600,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          if (wasFav) _favKontrakanIds.add(id); else _favKontrakanIds.remove(id);
+          if (wasFav)
+            _favKontrakanIds.add(id);
+          else
+            _favKontrakanIds.remove(id);
         });
       }
     }
@@ -109,22 +121,34 @@ class _SearchScreenState extends State<SearchScreen> {
   Future<void> _toggleLaundryFav(int id) async {
     final wasFav = _favLaundryIds.contains(id);
     setState(() {
-      if (wasFav) _favLaundryIds.remove(id); else _favLaundryIds.add(id);
+      if (wasFav)
+        _favLaundryIds.remove(id);
+      else
+        _favLaundryIds.add(id);
     });
     try {
       final result = await _favoriteService.toggleLaundryFavorite(id);
       if (result['success'] != true && mounted) {
         setState(() {
-          if (wasFav) _favLaundryIds.add(id); else _favLaundryIds.remove(id);
+          if (wasFav)
+            _favLaundryIds.add(id);
+          else
+            _favLaundryIds.remove(id);
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Gagal'), backgroundColor: Colors.red.shade600),
+          SnackBar(
+            content: Text(result['message'] ?? 'Gagal'),
+            backgroundColor: Colors.red.shade600,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          if (wasFav) _favLaundryIds.add(id); else _favLaundryIds.remove(id);
+          if (wasFav)
+            _favLaundryIds.add(id);
+          else
+            _favLaundryIds.remove(id);
         });
       }
     }
@@ -207,7 +231,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
     // Filter by price (laundry hargaKiloan is per-kg, no multiplication needed)
     filtered = filtered.where((l) {
-      return l.hargaKiloan >= _priceRange.start && l.hargaKiloan <= _priceRange.end;
+      return l.hargaKiloan >= _priceRange.start &&
+          l.hargaKiloan <= _priceRange.end;
     }).toList();
 
     setState(() => _filteredLaundry = filtered);
@@ -291,8 +316,8 @@ class _SearchScreenState extends State<SearchScreen> {
                         Expanded(
                           child: GestureDetector(
                             onTap: () {
-                                setState(() => _selectedCategory = 'Kontrakan');
-                                _applyFilters();
+                              setState(() => _selectedCategory = 'Kontrakan');
+                              _applyFilters();
                             },
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
@@ -342,8 +367,8 @@ class _SearchScreenState extends State<SearchScreen> {
                         Expanded(
                           child: GestureDetector(
                             onTap: () {
-                                setState(() => _selectedCategory = 'Laundry');
-                                _applyLaundryFilters();
+                              setState(() => _selectedCategory = 'Laundry');
+                              _applyLaundryFilters();
                             },
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),

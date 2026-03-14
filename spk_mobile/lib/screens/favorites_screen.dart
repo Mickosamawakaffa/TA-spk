@@ -58,12 +58,15 @@ class _FavoritesScreenState extends State<FavoritesScreen>
               : <Laundry>[];
           _isLoading = false;
         });
-        debugPrint('[FAV_SCREEN] Loaded ${_kontrakanFavorites.length} kontrakan, ${_laundryFavorites.length} laundry');
+        debugPrint(
+          '[FAV_SCREEN] Loaded ${_kontrakanFavorites.length} kontrakan, ${_laundryFavorites.length} laundry',
+        );
       } else {
         setState(() {
           _kontrakanFavorites = [];
           _laundryFavorites = [];
-          _errorMessage = result['message']?.toString() ?? 'Gagal memuat favorit';
+          _errorMessage =
+              result['message']?.toString() ?? 'Gagal memuat favorit';
           _isLoading = false;
         });
         debugPrint('[FAV_SCREEN] ❌ Load failed: $_errorMessage');
@@ -128,27 +131,27 @@ class _FavoritesScreenState extends State<FavoritesScreen>
 
       if (!mounted) return;
       if (result['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(
-                Icons.check_circle_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-              const SizedBox(width: 10),
-              Text(result['message'] ?? 'Dihapus dari favorit'),
-            ],
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(
+                  Icons.check_circle_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Text(result['message'] ?? 'Dihapus dari favorit'),
+              ],
+            ),
+            backgroundColor: const Color(0xFF2E7D32),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
           ),
-          backgroundColor: const Color(0xFF2E7D32),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          margin: const EdgeInsets.all(16),
-        ),
-      );
+        );
         _loadFavorites();
       }
     } catch (e) {
@@ -158,7 +161,9 @@ class _FavoritesScreenState extends State<FavoritesScreen>
           content: const Text('Gagal menghapus favorit'),
           backgroundColor: Colors.red.shade600,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -301,44 +306,47 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                       ),
                     )
                   : _errorMessage != null
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(32),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.error_outline_rounded,
-                                    size: 56, color: Colors.red.shade300),
-                                const SizedBox(height: 16),
-                                Text(
-                                  _errorMessage!,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                ElevatedButton.icon(
-                                  onPressed: _loadFavorites,
-                                  icon: const Icon(Icons.refresh_rounded),
-                                  label: const Text('Coba Lagi'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF1565C0),
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline_rounded,
+                              size: 56,
+                              color: Colors.red.shade300,
                             ),
-                          ),
-                        )
-                      : TabBarView(
-                          controller: _tabController,
-                          children: [_buildKontrakanList(), _buildLaundryList()],
+                            const SizedBox(height: 16),
+                            Text(
+                              _errorMessage!,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            ElevatedButton.icon(
+                              onPressed: _loadFavorites,
+                              icon: const Icon(Icons.refresh_rounded),
+                              label: const Text('Coba Lagi'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF1565C0),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
+                      ),
+                    )
+                  : TabBarView(
+                      controller: _tabController,
+                      children: [_buildKontrakanList(), _buildLaundryList()],
+                    ),
             ),
           ],
         ),

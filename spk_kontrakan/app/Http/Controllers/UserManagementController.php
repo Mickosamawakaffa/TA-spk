@@ -53,7 +53,7 @@ class UserManagementController extends Controller
             'name' => 'required|string|min:3|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:admin,super_admin',
+            'role' => 'required|in:admin,super_admin,user',
         ], [
             'name.required' => 'Nama harus diisi',
             'email.required' => 'Email harus diisi',
@@ -85,7 +85,7 @@ class UserManagementController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|min:3|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'role' => 'required|in:admin,super_admin',
+            'role' => 'required|in:admin,super_admin,user',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
 

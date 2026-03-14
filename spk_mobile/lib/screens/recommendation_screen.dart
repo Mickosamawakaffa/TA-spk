@@ -338,9 +338,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              'Izin lokasi ditolak permanen. Ubah di pengaturan.',
-            ),
+            content: Text('Izin lokasi ditolak permanen. Ubah di pengaturan.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -348,12 +346,13 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         return;
       }
 
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      ).timeout(
-        const Duration(seconds: 15),
-        onTimeout: () => throw TimeoutException('Deteksi lokasi timeout'),
-      );
+      Position position =
+          await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high,
+          ).timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw TimeoutException('Deteksi lokasi timeout'),
+          );
 
       if (!mounted) return;
       setState(() {
@@ -373,7 +372,9 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal mendeteksi lokasi: ${e.toString().replaceAll('Exception: ', '')}'),
+          content: Text(
+            'Gagal mendeteksi lokasi: ${e.toString().replaceAll('Exception: ', '')}',
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -449,19 +450,22 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     final initials = name.isEmpty
         ? 'U'
         : name.trim().split(' ').length >= 2
-            ? '${name.trim().split(' ')[0][0]}${name.trim().split(' ')[1][0]}'.toUpperCase()
-            : name.trim()[0].toUpperCase();
+        ? '${name.trim().split(' ')[0][0]}${name.trim().split(' ')[1][0]}'
+              .toUpperCase()
+        : name.trim()[0].toUpperCase();
 
     final hour = DateTime.now().hour;
     final greeting = hour < 11
         ? 'Selamat Pagi'
         : hour < 15
-            ? 'Selamat Siang'
-            : hour < 18
-                ? 'Selamat Sore'
-                : 'Selamat Malam';
+        ? 'Selamat Siang'
+        : hour < 18
+        ? 'Selamat Sore'
+        : 'Selamat Malam';
 
-    final categoryLabel = widget.category == 'kontrakan' ? 'kontrakan' : 'laundry';
+    final categoryLabel = widget.category == 'kontrakan'
+        ? 'kontrakan'
+        : 'laundry';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -537,10 +541,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                   const SizedBox(height: 2),
                   Text(
                     email,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade400,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1091,11 +1092,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
                     padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.refresh,
-                      size: 18,
-                      color: _categoryColor,
-                    ),
+                    child: Icon(Icons.refresh, size: 18, color: _categoryColor),
                   ),
                 ),
             ],
@@ -1121,10 +1118,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                   SizedBox(width: 10),
-                  Text(
-                    'Mendeteksi lokasi...',
-                    style: TextStyle(fontSize: 12),
-                  ),
+                  Text('Mendeteksi lokasi...', style: TextStyle(fontSize: 12)),
                 ],
               ),
             )
@@ -1138,19 +1132,12 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.check_circle,
-                    size: 16,
-                    color: Colors.green,
-                  ),
+                  const Icon(Icons.check_circle, size: 16, color: Colors.green),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Lokasi terdeteksi: ${_userLatitude!.toStringAsFixed(6)}, ${_userLongitude!.toStringAsFixed(6)}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.green[700],
-                      ),
+                      style: TextStyle(fontSize: 11, color: Colors.green[700]),
                     ),
                   ),
                 ],
@@ -1251,8 +1238,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     return Column(
       children: [
         _buildBobotSummary(),
-        if (widget.category == 'laundry' &&
-            _userLatitude != null)
+        if (widget.category == 'laundry' && _userLatitude != null)
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

@@ -182,6 +182,19 @@ class Booking extends Model
                      ->where('end_date', '>=', $today);
     }
 
+    /**
+     * Scope: Booking yang siap untuk auto-verify
+     * (pembayaran sudah, belum checked_in, check-in date sudah tiba)
+     */
+    public function scopeReadyForAutoVerify(Builder $query): Builder
+    {
+        $today = now()->toDateString();
+        return $query->where('payment_status', self::PAYMENT_PAID)
+                     ->whereIn('status', [self::STATUS_PENDING, self::STATUS_CONFIRMED])
+                     ->where('start_date', '<=', $today)
+                     ->whereNull('checked_in_at');
+    }
+
     // ========== HELPERS ==========
 
     /**

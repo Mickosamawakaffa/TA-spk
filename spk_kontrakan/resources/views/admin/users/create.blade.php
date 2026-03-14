@@ -67,15 +67,16 @@
                             </label>
                             <select class="form-select @error('role') is-invalid @enderror" id="role" name="role">
                                 <option value="">-- Pilih Role --</option>
-                                <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                                 <option value="super_admin" {{ old('role') == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                                <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                                <option value="user" {{ old('role') == 'user' ? 'selected' : '' }}>Mahasiswa</option>
                             </select>
                             @error('role')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                             <small class="text-muted d-block mt-2">
                                 <i class="bi bi-info-circle me-1"></i>
-                                Super Admin memiliki akses penuh ke semua fitur sistem
+                                <strong>Super Admin:</strong> Akses penuh ke semua fitur | <strong>Admin:</strong> Kelola konten | <strong>Mahasiswa:</strong> User umum aplikasi mobile
                             </small>
                         </div>
 

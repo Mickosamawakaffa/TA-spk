@@ -509,7 +509,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             _buildStatItem(
               icon: Icons.verified_user_rounded,
               color: const Color(0xFF1565C0),
-              value: _currentUser?.role == 'admin' ? 'Admin' : 'User',
+              value: _currentUser?.getRoleLabel() ?? 'Mahasiswa',
               label: 'Status',
             ),
           ],

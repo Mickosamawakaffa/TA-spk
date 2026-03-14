@@ -31,7 +31,9 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
 
   Future<void> _checkFavorite() async {
     try {
-      final result = await _favoriteService.isLaundryFavorite(widget.laundry.id);
+      final result = await _favoriteService.isLaundryFavorite(
+        widget.laundry.id,
+      );
       if (mounted) setState(() => _isFavorite = result);
     } catch (e) {
       debugPrint('Check favorite error: $e');
@@ -82,7 +84,9 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
             content: Text(result['message'] ?? 'Gagal mengubah favorit'),
             backgroundColor: Colors.red[700],
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             margin: const EdgeInsets.all(16),
           ),
         );
@@ -734,7 +738,9 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
 
   Future<void> _launchWhatsApp(String phone) async {
     final cleaned = phone.replaceAll(RegExp(r'[^0-9]'), '');
-    final formatted = cleaned.startsWith('0') ? '62${cleaned.substring(1)}' : cleaned;
+    final formatted = cleaned.startsWith('0')
+        ? '62${cleaned.substring(1)}'
+        : cleaned;
     final url = 'https://wa.me/$formatted';
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);

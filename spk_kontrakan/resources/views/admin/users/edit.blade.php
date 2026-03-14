@@ -67,12 +67,17 @@
                                 <i class="bi bi-shield me-2"></i>Role
                             </label>
                             <select class="form-select @error('role') is-invalid @enderror" id="role" name="role">
-                                <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
                                 <option value="super_admin" {{ old('role', $user->role) == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                                <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
+                                <option value="user" {{ old('role', $user->role) == 'user' ? 'selected' : '' }}>Mahasiswa</option>
                             </select>
                             @error('role')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
+                            <small class="text-muted d-block mt-2">
+                                <i class="bi bi-info-circle me-1"></i>
+                                <strong>Super Admin:</strong> Akses penuh | <strong>Admin:</strong> Kelola konten | <strong>Mahasiswa:</strong> User aplikasi mobile
+                            </small>
                         </div>
 
                         <div class="alert alert-info border-0 rounded-3 mb-4">

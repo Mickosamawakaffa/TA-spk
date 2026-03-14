@@ -73,7 +73,10 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
     if (!_authService.isAuthenticated) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Silakan login terlebih dahulu'), backgroundColor: Colors.orange),
+          const SnackBar(
+            content: Text('Silakan login terlebih dahulu'),
+            backgroundColor: Colors.orange,
+          ),
         );
       }
       return;
@@ -106,10 +109,16 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          if (wasFav) _favKontrakanIds.add(id); else _favKontrakanIds.remove(id);
+          if (wasFav)
+            _favKontrakanIds.add(id);
+          else
+            _favKontrakanIds.remove(id);
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red.shade600),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red.shade600,
+          ),
         );
       }
     }
@@ -119,7 +128,10 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
     if (!_authService.isAuthenticated) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Silakan login terlebih dahulu'), backgroundColor: Colors.orange),
+          const SnackBar(
+            content: Text('Silakan login terlebih dahulu'),
+            backgroundColor: Colors.orange,
+          ),
         );
       }
       return;
@@ -152,10 +164,16 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          if (wasFav) _favLaundryIds.add(id); else _favLaundryIds.remove(id);
+          if (wasFav)
+            _favLaundryIds.add(id);
+          else
+            _favLaundryIds.remove(id);
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red.shade600),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red.shade600,
+          ),
         );
       }
     }
