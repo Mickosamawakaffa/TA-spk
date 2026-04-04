@@ -200,7 +200,7 @@ class LaundryController extends Controller
                 'harga_min' => 'nullable|numeric|min:0',
                 'harga_max' => 'nullable|numeric|min:0|gte:harga_min',
                 'jarak' => 'nullable|in:dekat,sedang,jauh',
-                'jenis_layanan' => 'nullable|in:express,reguler,kilat',
+                'jenis_layanan' => 'nullable|in:express,reguler',
             ]);
             
             $query = Laundry::with('layanan');
@@ -308,7 +308,7 @@ class LaundryController extends Controller
                 
                 // Validasi Layanan
                 'layanan' => 'required|array|min:1',
-                'layanan.*.jenis_layanan' => 'required|in:express,reguler,kilat',
+                'layanan.*.jenis_layanan' => 'required|in:express,reguler',
                 'layanan.*.nama_paket' => 'required|string|max:255',
                 'layanan.*.harga' => 'required|numeric|min:0',
                 'layanan.*.estimasi_selesai' => 'required|numeric|min:1',
@@ -327,7 +327,7 @@ class LaundryController extends Controller
                 'layanan.required' => 'Minimal harus ada 1 jenis layanan',
                 'layanan.min' => 'Minimal harus ada 1 jenis layanan',
                 'layanan.*.jenis_layanan.required' => 'Jenis layanan harus dipilih',
-                'layanan.*.jenis_layanan.in' => 'Jenis layanan harus express, reguler, atau kilat',
+                'layanan.*.jenis_layanan.in' => 'Jenis layanan harus express atau reguler',
                 'layanan.*.nama_paket.required' => 'Nama paket harus diisi',
                 'layanan.*.harga.required' => 'Harga layanan harus diisi',
                 'layanan.*.harga.min' => 'Harga tidak boleh negatif',
@@ -504,7 +504,7 @@ class LaundryController extends Controller
                 
                 // Validasi Layanan
                 'layanan' => 'required|array|min:1',
-                'layanan.*.jenis_layanan' => 'required|in:express,reguler,kilat',
+                'layanan.*.jenis_layanan' => 'required|in:express,reguler',
                 'layanan.*.nama_paket' => 'required|string|max:255',
                 'layanan.*.harga' => 'required|numeric|min:0',
                 'layanan.*.estimasi_selesai' => 'required|numeric|min:1',
@@ -519,7 +519,7 @@ class LaundryController extends Controller
                 'layanan.required' => 'Minimal harus ada 1 jenis layanan',
                 'layanan.min' => 'Minimal harus ada 1 jenis layanan',
                 'layanan.*.jenis_layanan.required' => 'Jenis layanan harus dipilih',
-                'layanan.*.jenis_layanan.in' => 'Jenis layanan harus express, reguler, atau kilat',
+                'layanan.*.jenis_layanan.in' => 'Jenis layanan harus express atau reguler',
                 'layanan.*.nama_paket.required' => 'Nama paket harus diisi',
                 'layanan.*.harga.required' => 'Harga layanan harus diisi',
                 'layanan.*.harga.min' => 'Harga tidak boleh negatif',

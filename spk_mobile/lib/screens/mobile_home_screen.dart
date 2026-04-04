@@ -83,7 +83,7 @@ class _MobileHomeScreenState extends State<MobileHomeScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Text(
-                              'SPK Kontrakan',
+                              'Kontrak Kampus',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,

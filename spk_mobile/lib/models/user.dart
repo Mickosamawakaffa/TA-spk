@@ -39,7 +39,7 @@ class User {
     if (roleLabel != null && roleLabel!.isNotEmpty) {
       return roleLabel!;
     }
-    
+
     switch (role) {
       case 'super_admin':
         return 'Super Admin';

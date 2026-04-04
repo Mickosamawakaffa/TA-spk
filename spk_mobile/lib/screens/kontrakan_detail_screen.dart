@@ -21,7 +21,7 @@ class KontrakanDetailScreen extends StatefulWidget {
 }
 
 class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
-  double? distance;  // jarak dari kampus Polije ke kontrakan ini
+  double? distance; // jarak dari kampus Polije ke kontrakan ini
   bool _isFavorite = false;
   bool _isFavLoading = false;
   final _favoriteService = FavoriteService();
@@ -35,7 +35,8 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
 
   /// Hitung jarak dari Kampus Polije ke kontrakan ini secara langsung.
   void _calcDistanceFromPolije() {
-    if (widget.kontrakan.latitude == null || widget.kontrakan.longitude == null) return;
+    if (widget.kontrakan.latitude == null || widget.kontrakan.longitude == null)
+      return;
     final dist = LocationService.calculateDistance(
       _polije_lat,
       _polije_lng,
@@ -100,7 +101,9 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
             content: Text(result['message'] ?? 'Gagal mengubah favorit'),
             backgroundColor: Colors.red[700],
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             margin: const EdgeInsets.all(16),
           ),
         );
@@ -226,7 +229,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                           ),
                         ),
                         Text(
-                          ' /bulan',
+                          ' /tahun',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -478,7 +481,11 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.school_rounded, color: Color(0xFF1565C0), size: 22),
+              const Icon(
+                Icons.school_rounded,
+                color: Color(0xFF1565C0),
+                size: 22,
+              ),
               const SizedBox(width: 10),
               const Text(
                 'Jarak dari Kampus Polije',
@@ -521,18 +528,15 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                   children: [
                     const Text(
                       'Politeknik Negeri Jember',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       distance == null
                           ? '-'
                           : distance! < 1
-                              ? '${(distance! * 1000).toStringAsFixed(0)} meter'
-                              : '${distance!.toStringAsFixed(2)} km',
+                          ? '${(distance! * 1000).toStringAsFixed(0)} meter'
+                          : '${distance!.toStringAsFixed(2)} km',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
@@ -588,5 +592,4 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
       }
     }
   }
-
 }

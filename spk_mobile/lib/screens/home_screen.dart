@@ -845,7 +845,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        'Rp ${_formatPrice(kontrakan.harga)}/bln',
+                        'Rp ${_formatPrice(kontrakan.harga)}/thn',
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,

@@ -393,7 +393,6 @@
                                                         <option value="">-- Pilih Jenis --</option>
                                                         <option value="reguler" {{ $layanan->jenis_layanan == 'reguler' ? 'selected' : '' }}>🕐 Reguler (Normal)</option>
                                                         <option value="express" {{ $layanan->jenis_layanan == 'express' ? 'selected' : '' }}>⚡ Express (Cepat)</option>
-                                                        <option value="kilat" {{ $layanan->jenis_layanan == 'kilat' ? 'selected' : '' }}>🚀 Kilat (Super Cepat)</option>
                                                     </select>
                                                 </div>
 
@@ -488,7 +487,6 @@
                                                         <option value="">-- Pilih Jenis --</option>
                                                         <option value="reguler">🕐 Reguler (Normal)</option>
                                                         <option value="express">⚡ Express (Cepat)</option>
-                                                        <option value="kilat">🚀 Kilat (Super Cepat)</option>
                                                     </select>
                                                 </div>
 
@@ -755,7 +753,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             <option value="">-- Pilih Jenis --</option>
                             <option value="reguler">🕐 Reguler (Normal)</option>
                             <option value="express">⚡ Express (Cepat)</option>
-                            <option value="kilat">🚀 Kilat (Super Cepat)</option>
                         </select>
                     </div>
 

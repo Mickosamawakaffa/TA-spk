@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../models/kontrakan.dart';
 import '../services/booking_service.dart';
 import '../services/auth_service.dart';
+import 'improved_home_screen.dart';
 
 class BookingFormScreen extends StatefulWidget {
   final Kontrakan kontrakan;
@@ -23,7 +24,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   final _imagePicker = ImagePicker();
 
   DateTime? _tanggalMulai;
-  int _durasiBulan = 1;
+  int _durasiBulan = 6;
   bool _isSubmitting = false;
   File? _paymentProofImage;
 
@@ -33,7 +34,11 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     decimalDigits: 0,
   );
 
-  double get _totalBiaya => widget.kontrakan.harga * _durasiBulan;
+  // Harga kontrakan disimpan sebagai harga tahunan, jadi total disesuaikan
+  // proporsional terhadap durasi sewa (6 bulan atau 12 bulan).
+  double get _totalBiaya => widget.kontrakan.harga * (_durasiBulan / 12);
+
+  String get _durasiLabel => _durasiBulan == 12 ? '1 tahun' : '6 bulan';
 
   @override
   void initState() {
@@ -194,7 +199,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
               intl.DateFormat('dd MMMM yyyy', 'id_ID').format(_tanggalMulai!),
             ),
             const SizedBox(height: 8),
-            _buildConfirmRow('Durasi', '$_durasiBulan bulan'),
+            _buildConfirmRow('Durasi', _durasiLabel),
             const SizedBox(height: 8),
             _buildConfirmRow(
               'Total Biaya',
@@ -290,7 +295,13 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.pop(ctx); // Close dialog
-                  Navigator.pop(context, true); // Go back to detail with result
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ImprovedHomeScreen(),
+                    ),
+                    (route) => false,
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF667eea),
@@ -413,7 +424,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      '${widget.kontrakan.formattedHarga}/bulan',
+                      '${widget.kontrakan.formattedHarga}/tahun',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -490,7 +501,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                   _buildFormCard(
                     icon: Icons.access_time,
                     title: 'Durasi Sewa',
-                    subtitle: 'Tentukan berapa bulan Anda ingin menyewa',
+                    subtitle: 'Pilih durasi 6 bulan atau 1 tahun',
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
@@ -513,12 +524,16 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                             color: Colors.black87,
                             fontWeight: FontWeight.w600,
                           ),
-                          items: List.generate(12, (i) => i + 1).map((bulan) {
-                            return DropdownMenuItem<int>(
-                              value: bulan,
-                              child: Text('$bulan bulan'),
-                            );
-                          }).toList(),
+                          items: const [
+                            DropdownMenuItem<int>(
+                              value: 6,
+                              child: Text('6 bulan'),
+                            ),
+                            DropdownMenuItem<int>(
+                              value: 12,
+                              child: Text('1 tahun'),
+                            ),
+                          ],
                           onChanged: (val) =>
                               setState(() => _durasiBulan = val!),
                         ),
@@ -669,11 +684,11 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                         ),
                         const SizedBox(height: 12),
                         _buildBiayaRow(
-                          'Harga per bulan',
+                          'Harga per tahun',
                           widget.kontrakan.formattedHarga,
                         ),
                         const SizedBox(height: 6),
-                        _buildBiayaRow('Durasi sewa', '$_durasiBulan bulan'),
+                        _buildBiayaRow('Durasi sewa', _durasiLabel),
                         const Divider(height: 20),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,

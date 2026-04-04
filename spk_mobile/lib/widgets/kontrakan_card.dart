@@ -191,7 +191,7 @@ class KontrakanCard extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              '/bln',
+                              '/thn',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[500],

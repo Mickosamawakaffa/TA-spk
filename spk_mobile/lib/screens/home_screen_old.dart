@@ -509,7 +509,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    kontrakan.formattedHarga + '/bln',
+                    kontrakan.formattedHarga + '/thn',
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,

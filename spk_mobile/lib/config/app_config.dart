@@ -9,7 +9,7 @@ class AppConfig {
   // ============================================================================
 
   // Default fallback (dipakai jika auto-detect gagal)
-  static const String _defaultServer = 'http://192.168.1.154:8000';
+  static const String _defaultServer = 'http://192.168.18.16:8000';
 
   // Runtime values — diupdate otomatis oleh ServerDiscoveryService
   static String _serverUrl = _defaultServer;

@@ -11,6 +11,7 @@ class Laundry {
   final String jamBuka;
   final String jamTutup;
   final double hargaPerKg;
+  final double hargaKiloan;
   final int waktuProses; // dalam jam
   final String? deskripsi;
   final String? fotoUtama;
@@ -31,6 +32,7 @@ class Laundry {
     required this.jamBuka,
     required this.jamTutup,
     required this.hargaPerKg,
+    required this.hargaKiloan,
     required this.waktuProses,
     this.deskripsi,
     this.fotoUtama,
@@ -53,34 +55,54 @@ class Laundry {
 
     // Get harga from layanan if harga_per_kg is not set directly
     double harga = 0;
+    double hargaKiloan = 0;
+
     if (json['harga_per_kg'] != null) {
       harga = double.tryParse(json['harga_per_kg'].toString()) ?? 0;
-    } else if (json['layanan'] != null &&
+    }
+
+    if (json['harga_kiloan'] != null) {
+      hargaKiloan = double.tryParse(json['harga_kiloan'].toString()) ?? 0;
+    }
+
+    if ((harga == 0 || hargaKiloan == 0) &&
+        json['layanan'] != null &&
         (json['layanan'] as List).isNotEmpty) {
       final layananList = json['layanan'] as List;
-      harga =
-          double.tryParse(layananList.first['harga']?.toString() ?? '0') ?? 0;
+      harga = harga > 0
+          ? harga
+          : double.tryParse(layananList.first['harga']?.toString() ?? '0') ?? 0;
+      for (final item in layananList) {
+        final jenis = item['jenis_layanan']?.toString().toLowerCase();
+        final itemHarga =
+            double.tryParse(item['harga']?.toString() ?? '0') ?? 0;
+        if (jenis == 'kiloan') {
+          hargaKiloan = itemHarga;
+        }
+      }
     }
 
     // Get foto from API and build gallery list
     final List<GaleriLaundry> galleryList = [];
-    
+
     // Parse galeri array if exists
     if (json['galeri'] != null && (json['galeri'] as List).isNotEmpty) {
       galleryList.addAll(
-        (json['galeri'] as List).map((g) => GaleriLaundry.fromJson(g)).toList()
+        (json['galeri'] as List).map((g) => GaleriLaundry.fromJson(g)).toList(),
       );
     }
-    
+
     // If gallery is empty but foto field exists, create a galeri item from it
-    if (galleryList.isEmpty && json['foto'] != null && json['foto'].toString().isNotEmpty) {
+    if (galleryList.isEmpty &&
+        json['foto'] != null &&
+        json['foto'].toString().isNotEmpty) {
       galleryList.add(
         GaleriLaundry(
           id: json['id'] ?? 0,
           foto: json['foto'].toString(),
           isPrimary: true,
           urutan: 0,
-        )
+        ),
       );
     }
 
@@ -99,6 +121,7 @@ class Laundry {
       jamBuka: _parseTime(json['jam_buka'], '08:00'),
       jamTutup: _parseTime(json['jam_tutup'], '20:00'),
       hargaPerKg: harga,
+      hargaKiloan: hargaKiloan,
       waktuProses: json['waktu_proses'] ?? 24,
       deskripsi: json['deskripsi'],
       fotoUtama: json['foto_utama'],
@@ -149,13 +172,23 @@ class Laundry {
 
   // Format harga dengan Rupiah
   String get formattedHarga {
-    return 'Rp ${hargaPerKg.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}';
+    return 'Rp ${_formatRupiah(hargaPerKg)}';
   }
 
-  // Legacy getters for backward compatibility
-  String get formattedHargaKiloan => formattedHarga;
-  String get formattedHargaSatuan => formattedHarga;
-  double get hargaKiloan => hargaPerKg;
+  String _formatRupiah(double value) {
+    return value
+        .toStringAsFixed(0)
+        .replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]}.',
+        );
+  }
+
+  String get formattedHargaKiloan {
+    final value = hargaKiloan > 0 ? hargaKiloan : hargaPerKg;
+    return 'Rp ${_formatRupiah(value)}';
+  }
+
   double get jarak => jarakKampus; // alias for jarak field
   double get rating => avgRating ?? 0.0;
   String get estimasiSelesai => '$waktuProses jam';

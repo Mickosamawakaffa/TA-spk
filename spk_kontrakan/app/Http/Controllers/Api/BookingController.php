@@ -95,8 +95,8 @@ class BookingController extends Controller
         $startDate = Carbon::parse($request->tanggal_mulai);
         $endDate = $startDate->copy()->addMonths((int)$request->durasi_bulan);
 
-        // Calculate total biaya
-        $amount = $kontrakan->harga * (int)$request->durasi_bulan;
+        // Calculate total biaya from annual price pro-rated to monthly duration
+        $amount = $kontrakan->harga * ((int)$request->durasi_bulan / 12);
 
         $bookingData = [
             'user_id' => $request->user()->id,
@@ -211,7 +211,7 @@ class BookingController extends Controller
         // Create new booking untuk perpanjangan
         $startDate = Carbon::parse($booking->end_date);
         $endDate = $startDate->copy()->addMonths($request->durasi_bulan);
-        $amount = $booking->kontrakan->harga * $request->durasi_bulan;
+        $amount = $booking->kontrakan->harga * ($request->durasi_bulan / 12);
 
         $newBooking = Booking::create([
             'user_id' => $request->user()->id,

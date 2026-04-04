@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SPK Rekomendasi Kontrakan & Laundry',
+      title: 'Kontrak Kampus',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: _primary,
@@ -71,7 +71,10 @@ class MyApp extends StatelessWidget {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: const Color(0xFFF7F8FC),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
@@ -120,9 +123,10 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    _fadeAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOut),
-    );
+    _fadeAnim = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _scaleAnim = Tween<double>(begin: 0.7, end: 1).animate(
       CurvedAnimation(parent: _animController, curve: Curves.elasticOut),
     );
@@ -174,11 +178,7 @@ class _SplashScreenState extends State<SplashScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1565C0),
-              Color(0xFF0D47A1),
-              Color(0xFF1A237E),
-            ],
+            colors: [Color(0xFF1565C0), Color(0xFF0D47A1), Color(0xFF1A237E)],
           ),
         ),
         child: Center(
@@ -210,7 +210,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   const SizedBox(height: 32),
                   const Text(
-                    'SPK Rekomendasi',
+                    'Kontrak Kampus',
                     style: TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.w800,
@@ -220,7 +220,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Kontrakan & Laundry Terbaik untuk Mahasiswa',
+                    'Rekomendasi Kontrakan & Laundry untuk Mahasiswa',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.white.withOpacity(0.8),

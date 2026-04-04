@@ -385,8 +385,8 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   @override
   Widget build(BuildContext context) {
     final categoryTitle = widget.category == 'kontrakan'
-        ? 'SPK Rekomendasi Kontrakan'
-        : 'SPK Rekomendasi Laundry';
+        ? 'Kontrak Kampus - Rekomendasi Kontrakan'
+        : 'Kontrak Kampus - Rekomendasi Laundry';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -659,12 +659,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         'label': 'Express',
         'icon': Icons.flash_on,
         'desc': 'Layanan cepat dengan waktu lebih singkat',
-      },
-      {
-        'value': 'kilat',
-        'label': 'Kilat',
-        'icon': Icons.bolt,
-        'desc': 'Layanan tercepat, selesai dalam hitungan jam',
       },
     ];
 
@@ -1390,8 +1384,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         return 'Reguler';
       case 'express':
         return 'Express';
-      case 'kilat':
-        return 'Kilat';
       default:
         return key;
     }
@@ -1704,7 +1696,11 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
             padding: const EdgeInsets.all(8),
             child: widget.category == 'kontrakan'
                 ? KontrakanCard(kontrakan: Kontrakan.fromJson(itemData))
-                : LaundryCard(laundry: Laundry.fromJson(itemData)),
+                : LaundryCard(
+                    laundry: Laundry.fromJson(itemData),
+                    userLatitude: _userLatitude,
+                    userLongitude: _userLongitude,
+                  ),
           ),
         ],
       ),

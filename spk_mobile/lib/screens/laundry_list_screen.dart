@@ -449,37 +449,6 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.purple.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Satuan',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            laundry.formattedHargaSatuan,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.purple,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -496,7 +465,7 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
                     Icon(Icons.schedule, size: 16, color: Colors.orange[700]),
                     const SizedBox(width: 6),
                     Text(
-                      'Selesai dalam ${laundry.estimasiSelesai} jam',
+                      'Selesai dalam ${laundry.estimasiSelesai}',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,

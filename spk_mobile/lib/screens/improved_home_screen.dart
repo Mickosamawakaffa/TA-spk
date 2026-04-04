@@ -281,7 +281,7 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'SPK Rekomendasi',
+                                    'Kontrak Kampus',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 22,
@@ -1088,7 +1088,7 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                               ),
                             ),
                             Text(
-                              '/bln',
+                              '/thn',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,

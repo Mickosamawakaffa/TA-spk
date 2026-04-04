@@ -491,7 +491,7 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                           ),
                         ),
                         Text(
-                          '/bln',
+                          '/thn',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,

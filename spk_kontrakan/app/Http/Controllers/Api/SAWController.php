@@ -167,7 +167,7 @@ class SAWController extends Controller
     public function calculateLaundry(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'jenis_layanan' => 'nullable|string|in:reguler,express,kilat',
+            'jenis_layanan' => 'nullable|string|in:reguler,express',
             'harga_min' => 'nullable|numeric',
             'harga_max' => 'nullable|numeric',
             'jarak_max' => 'nullable|numeric',
@@ -220,7 +220,8 @@ class SAWController extends Controller
         // Filter by jenis_layanan if provided
         if ($jenisLayanan) {
             $query->whereHas('layanan', function($q) use ($jenisLayanan) {
-                $q->where('jenis_layanan', $jenisLayanan);
+                $values = $this->mapJenisLayananQueryValues($jenisLayanan);
+                $q->whereIn('jenis_layanan', $values);
             });
         }
 
@@ -464,12 +465,25 @@ class SAWController extends Controller
     /**
      * Helper: Get nilai laundry berdasarkan nama kriteria
      */
+    private function mapJenisLayananQueryValues($jenisLayanan)
+    {
+        $map = [
+            'reguler' => ['reguler', 'kiloan'],
+            'express' => ['express', 'satuan'],
+        ];
+
+        return $map[$jenisLayanan] ?? [$jenisLayanan];
+    }
+
     private function getNilaiLaundry($item, $field, $jenisLayanan = null)
     {
         // Filter layanan by jenis if specified
-        $layananCollection = $jenisLayanan 
-            ? $item->layanan->where('jenis_layanan', $jenisLayanan)
-            : $item->layanan;
+        if ($jenisLayanan) {
+            $filterValues = $this->mapJenisLayananQueryValues($jenisLayanan);
+            $layananCollection = $item->layanan->whereIn('jenis_layanan', $filterValues);
+        } else {
+            $layananCollection = $item->layanan;
+        }
 
         switch ($field) {
             case 'harga':

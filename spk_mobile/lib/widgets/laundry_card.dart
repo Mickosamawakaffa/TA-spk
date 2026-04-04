@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/laundry.dart';
 import '../screens/laundry_detail_screen.dart';
+import '../services/location_service.dart';
 
 class LaundryCard extends StatelessWidget {
   final Laundry laundry;
   final int? ranking;
   final double? skor;
   final bool showRanking;
+  final double? userLatitude;
+  final double? userLongitude;
 
   const LaundryCard({
     super.key,
@@ -15,6 +18,8 @@ class LaundryCard extends StatelessWidget {
     this.ranking,
     this.skor,
     this.showRanking = false,
+    this.userLatitude,
+    this.userLongitude,
   });
 
   @override
@@ -243,7 +248,7 @@ class LaundryCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${laundry.jarakKampus.toStringAsFixed(1)} km dari kampus',
+                        _distanceText(),
                         style: const TextStyle(
                           fontSize: 11,
                           color: Colors.grey,
@@ -302,6 +307,26 @@ class LaundryCard extends StatelessWidget {
     if (ranking == 2) return Colors.grey[400]!;
     if (ranking == 3) return Colors.brown[300]!;
     return const Color(0xFF00897B);
+  }
+
+  String _distanceText() {
+    if (userLatitude != null &&
+        userLongitude != null &&
+        laundry.latitude != null &&
+        laundry.longitude != null) {
+      final distance = LocationService.calculateDistance(
+        userLatitude!,
+        userLongitude!,
+        laundry.latitude!,
+        laundry.longitude!,
+      );
+      if (distance < 1) {
+        return '${(distance * 1000).toStringAsFixed(0)} m dari lokasi Anda';
+      }
+      return '${distance.toStringAsFixed(1)} km dari lokasi Anda';
+    }
+
+    return '${laundry.jarakKampus.toStringAsFixed(1)} km dari kampus';
   }
 
   IconData _getRankingIcon(int ranking) {

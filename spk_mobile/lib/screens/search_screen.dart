@@ -850,7 +850,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      '${kontrakan.formattedHarga}/bln',
+                      '${kontrakan.formattedHarga}/thn',
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,

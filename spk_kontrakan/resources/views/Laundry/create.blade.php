@@ -398,7 +398,6 @@
                                                     <option value="">-- Pilih Jenis --</option>
                                                     <option value="reguler">🕐 Reguler (Normal)</option>
                                                     <option value="express">⚡ Express (Cepat)</option>
-                                                    <option value="kilat">🚀 Kilat (Super Cepat)</option>
                                                 </select>
                                             </div>
 
@@ -546,7 +545,7 @@
                                 <li>Koordinat akan terisi otomatis saat klik peta</li>
                                 <li>Reguler: Layanan normal dengan harga standar</li>
                                 <li>Express: Layanan cepat dengan harga lebih tinggi</li>
-                                <li>Kilat: Layanan super cepat dengan harga premium</li>
+                                <li>Express: Layanan cepat dengan waktu penyelesaian lebih singkat.</li>
                             </ul>
                         </div>
                     </div>
@@ -722,7 +721,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             <option value="">-- Pilih Jenis --</option>
                             <option value="reguler">🕐 Reguler (Normal)</option>
                             <option value="express">⚡ Express (Cepat)</option>
-                            <option value="kilat">🚀 Kilat (Super Cepat)</option>
                         </select>
                     </div>
 

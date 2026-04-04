@@ -14,14 +14,13 @@ class ServerDiscoveryService {
   static const int _port = 8000;
   static const String _cacheKey = 'discovered_server_url';
   static const Duration _probeTimeout = Duration(seconds: 2);
+  static const int _scanBatchSize = 24;
 
   // ─── PUBLIC ENTRY POINT ─────────────────────────────────────────────────────
 
   /// Temukan server dan update [AppConfig] secara otomatis.
   /// Kembalikan `true` jika server ditemukan, `false` jika tidak.
-  static Future<bool> discover({
-    void Function(String status)? onStatus,
-  }) async {
+  static Future<bool> discover({void Function(String status)? onStatus}) async {
     onStatus?.call('Mencari server...');
 
     // 1. Coba cache terlebih dahulu
@@ -73,12 +72,12 @@ class ServerDiscoveryService {
     try {
       final response = await http
           .get(
-            Uri.parse('$serverUrl/api'),
+            Uri.parse('$serverUrl/api/health'),
             headers: {'Accept': 'application/json'},
           )
           .timeout(_probeTimeout);
-      // Respons 4xx/5xx tetap berarti server bisa dijangkau
-      return response.statusCode > 0;
+      // Pastikan benar-benar backend API aplikasi ini.
+      return response.statusCode == 200;
     } catch (_) {
       return false;
     }
@@ -110,27 +109,33 @@ class ServerDiscoveryService {
     List<String> subnets, {
     void Function(String)? onStatus,
   }) async {
-    final completer = Completer<String?>();
-    int remaining = subnets.length * 254;
+    if (subnets.isEmpty) return null;
 
-    if (remaining == 0) return null;
-
+    // Scan host secara bertahap untuk menghindari "socket flood" di device.
     for (final subnet in subnets) {
-      for (int i = 1; i <= 254; i++) {
-        final url = 'http://$subnet.$i:$_port';
-        _isAlive(url).then((alive) {
-          if (alive && !completer.isCompleted) {
-            completer.complete(url);
+      onStatus?.call('Memindai subnet $subnet.x ...');
+
+      for (int start = 1; start <= 254; start += _scanBatchSize) {
+        final end = (start + _scanBatchSize - 1) > 254
+            ? 254
+            : (start + _scanBatchSize - 1);
+
+        final futures = <Future<String?>>[];
+        for (int i = start; i <= end; i++) {
+          final url = 'http://$subnet.$i:$_port';
+          futures.add(_isAlive(url).then((alive) => alive ? url : null));
+        }
+
+        final results = await Future.wait(futures);
+        for (final found in results) {
+          if (found != null) {
+            return found;
           }
-          remaining--;
-          if (remaining <= 0 && !completer.isCompleted) {
-            completer.complete(null);
-          }
-        });
+        }
       }
     }
 
-    return completer.future;
+    return null;
   }
 
   static Future<String?> _getCachedUrl() async {

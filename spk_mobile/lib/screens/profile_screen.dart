@@ -72,7 +72,8 @@ class _ProfileScreenState extends State<ProfileScreen>
       final bookings = await _bookingService.getBookingHistory();
       if (!mounted) return;
       setState(() {
-        _totalFavorites = (favResult['kontrakan']?.length ?? 0) +
+        _totalFavorites =
+            (favResult['kontrakan']?.length ?? 0) +
             (favResult['laundry']?.length ?? 0);
         _totalBookings = bookings.length;
       });
@@ -105,7 +106,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       'September',
       'Oktober',
       'November',
-      'Desember'
+      'Desember',
     ];
     return '${months[date.month]} ${date.year}';
   }
@@ -116,7 +117,8 @@ class _ProfileScreenState extends State<ProfileScreen>
       backgroundColor: const Color(0xFFF5F6FA),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF1565C0)))
+              child: CircularProgressIndicator(color: Color(0xFF1565C0)),
+            )
           : RefreshIndicator(
               onRefresh: _loadAll,
               color: const Color(0xFF1565C0),
@@ -156,8 +158,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 final result = await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => EditProfileScreen(
-                                        user: _currentUser!),
+                                    builder: (_) =>
+                                        EditProfileScreen(user: _currentUser!),
                                   ),
                                 );
                                 if (result == true) _loadAll();
@@ -185,7 +187,9 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                           // --- Aktivitas ---
                           _buildSectionTitle(
-                              'Aktivitas', Icons.timeline_rounded),
+                            'Aktivitas',
+                            Icons.timeline_rounded,
+                          ),
                           const SizedBox(height: 10),
                           _buildMenuCard([
                             _buildMenuItem(
@@ -225,7 +229,9 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                           // --- Lainnya ---
                           _buildSectionTitle(
-                              'Lainnya', Icons.more_horiz_rounded),
+                            'Lainnya',
+                            Icons.more_horiz_rounded,
+                          ),
                           const SizedBox(height: 10),
                           _buildMenuCard([
                             _buildMenuItem(
@@ -318,8 +324,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   // Title bar
                   const Row(
                     children: [
-                      Icon(Icons.person_rounded,
-                          color: Colors.white, size: 24),
+                      Icon(Icons.person_rounded, color: Colors.white, size: 24),
                       SizedBox(width: 10),
                       Text(
                         'Profil Saya',
@@ -355,10 +360,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           decoration: const BoxDecoration(
                             shape: BoxShape.circle,
                             gradient: LinearGradient(
-                              colors: [
-                                Colors.white,
-                                Color(0xFFBBDEFB),
-                              ],
+                              colors: [Colors.white, Color(0xFFBBDEFB)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -412,7 +414,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                             const SizedBox(height: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(20),
@@ -420,18 +424,20 @@ class _ProfileScreenState extends State<ProfileScreen>
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.calendar_month_rounded,
-                                      size: 13,
-                                      color: Colors.white
-                                          .withValues(alpha: 0.85)),
+                                  Icon(
+                                    Icons.calendar_month_rounded,
+                                    size: 13,
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                  ),
                                   const SizedBox(width: 5),
                                   Text(
                                     'Bergabung ${_getMemberSince(_currentUser?.createdAt)}',
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.white
-                                          .withValues(alpha: 0.9),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -454,8 +460,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _headerInfoRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon,
-            size: 14, color: Colors.white.withValues(alpha: 0.75)),
+        Icon(icon, size: 14, color: Colors.white.withValues(alpha: 0.75)),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
@@ -559,11 +564,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildStatDivider() {
-    return Container(
-      width: 1,
-      height: 45,
-      color: Colors.grey.shade200,
-    );
+    return Container(width: 1, height: 45, color: Colors.grey.shade200);
   }
 
   // ==================== SECTION TITLE ====================
@@ -681,8 +682,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                   color: Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.chevron_right_rounded,
-                    color: Colors.grey.shade400, size: 20),
+                child: Icon(
+                  Icons.chevron_right_rounded,
+                  color: Colors.grey.shade400,
+                  size: 20,
+                ),
               ),
             ],
           ),
@@ -709,8 +713,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.logout_rounded,
-                  color: Colors.red.shade600, size: 20),
+              Icon(Icons.logout_rounded, color: Colors.red.shade600, size: 20),
               const SizedBox(width: 10),
               Text(
                 'Keluar dari Akun',
@@ -749,19 +752,21 @@ class _ProfileScreenState extends State<ProfileScreen>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color:
-                        const Color(0xFF1565C0).withValues(alpha: 0.3),
+                    color: const Color(0xFF1565C0).withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: const Icon(Icons.home_work_rounded,
-                  color: Colors.white, size: 40),
+              child: const Icon(
+                Icons.home_work_rounded,
+                color: Colors.white,
+                size: 40,
+              ),
             ),
             const SizedBox(height: 20),
             const Text(
-              'SPK Kontrakan & Laundry',
+              'Kontrak Kampus',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
@@ -771,8 +776,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
             const SizedBox(height: 6),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
                 color: const Color(0xFF1565C0).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
@@ -805,14 +809,15 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               child: Column(
                 children: [
-                  _aboutDetailRow(
-                      Icons.code_rounded, 'Developer', 'Tim TA'),
+                  _aboutDetailRow(Icons.code_rounded, 'Developer', 'Tim TA'),
+                  const SizedBox(height: 10),
+                  _aboutDetailRow(Icons.school_rounded, 'Institusi', 'Polije'),
                   const SizedBox(height: 10),
                   _aboutDetailRow(
-                      Icons.school_rounded, 'Institusi', 'Polije'),
-                  const SizedBox(height: 10),
-                  _aboutDetailRow(
-                      Icons.calendar_today_rounded, 'Tahun', '2025'),
+                    Icons.calendar_today_rounded,
+                    'Tahun',
+                    '2025',
+                  ),
                 ],
               ),
             ),
@@ -882,8 +887,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                 color: Colors.red.shade50,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.logout_rounded,
-                  color: Colors.red.shade600, size: 32),
+              child: Icon(
+                Icons.logout_rounded,
+                color: Colors.red.shade600,
+                size: 32,
+              ),
             ),
             const SizedBox(height: 20),
             const Text(
@@ -920,8 +928,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('Batal',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  child: const Text(
+                    'Batal',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -937,8 +947,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('Keluar',
-                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  child: const Text(
+                    'Keluar',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
             ],
