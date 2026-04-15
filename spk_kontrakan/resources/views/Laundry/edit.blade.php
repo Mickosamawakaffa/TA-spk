@@ -296,7 +296,7 @@
                                 <div class="d-flex">
                                     <i class="bi bi-info-circle me-2 mt-1"></i>
                                     <div>
-                                        <strong>Tips:</strong> Klik pada peta untuk memperbarui lokasi, atau gunakan tombol "Deteksi Lokasi Saya" untuk mendapatkan koordinat otomatis.
+                                        <strong>Tips:</strong> Klik pada peta, ketik manual latitude/longitude, atau gunakan tombol "Deteksi Lokasi Saya" untuk mendapatkan koordinat otomatis.
                                     </div>
                                 </div>
                             </div>
@@ -319,7 +319,6 @@
                                             placeholder="-6.966667"
                                             value="{{ old('latitude', $laundry->latitude) }}"
                                             required
-                                            readonly
                                         >
                                     </div>
                                 </div>
@@ -341,7 +340,6 @@
                                             placeholder="110.416664"
                                             value="{{ old('longitude', $laundry->longitude) }}"
                                             required
-                                            readonly
                                         >
                                     </div>
                                 </div>
@@ -391,8 +389,8 @@
                                                     </label>
                                                     <select name="layanan[{{ $index }}][jenis_layanan]" class="form-select" required>
                                                         <option value="">-- Pilih Jenis --</option>
-                                                        <option value="reguler" {{ $layanan->jenis_layanan == 'reguler' ? 'selected' : '' }}>🕐 Reguler (Normal)</option>
-                                                        <option value="express" {{ $layanan->jenis_layanan == 'express' ? 'selected' : '' }}>⚡ Express (Cepat)</option>
+                                                        <option value="harian" {{ in_array($layanan->jenis_layanan, ['harian', 'reguler', 'kiloan']) ? 'selected' : '' }}>🕐 Harian</option>
+                                                        <option value="jam" {{ in_array($layanan->jenis_layanan, ['jam', 'express', 'kilat', 'satuan']) ? 'selected' : '' }}>⚡ Jam</option>
                                                     </select>
                                                 </div>
 
@@ -404,7 +402,7 @@
                                                         type="text" 
                                                         name="layanan[{{ $index }}][nama_paket]" 
                                                         class="form-control" 
-                                                        placeholder="Paket Reguler"
+                                                        placeholder="Paket Harian"
                                                         value="{{ $layanan->nama_paket }}"
                                                         required
                                                     >
@@ -429,18 +427,32 @@
                                                 </div>
 
                                                 <div class="col-md-6">
+                                                    @php
+                                                        $estimasiValue = (float) $layanan->estimasi_selesai;
+                                                        $estimasiSatuan = 'jam';
+                                                        if ($estimasiValue >= 24 && fmod($estimasiValue, 24) == 0.0) {
+                                                            $estimasiSatuan = 'harian';
+                                                            $estimasiValue = $estimasiValue / 24;
+                                                        }
+                                                    @endphp
                                                     <label class="form-label fw-semibold">
-                                                        Estimasi Selesai (Jam) <span class="text-danger">*</span>
+                                                        Estimasi Selesai <span class="text-danger">*</span>
                                                     </label>
-                                                    <input 
-                                                        type="number" 
-                                                        name="layanan[{{ $index }}][estimasi_selesai]" 
-                                                        class="form-control" 
-                                                        placeholder="24"
-                                                        value="{{ $layanan->estimasi_selesai }}"
-                                                        min="1"
-                                                        required
-                                                    >
+                                                    <div class="input-group">
+                                                        <input 
+                                                            type="number" 
+                                                            name="layanan[{{ $index }}][estimasi_selesai]" 
+                                                            class="form-control" 
+                                                            placeholder="1"
+                                                            value="{{ rtrim(rtrim(number_format($estimasiValue, 2, '.', ''), '0'), '.') }}"
+                                                            min="1"
+                                                            required
+                                                        >
+                                                        <select name="layanan[{{ $index }}][estimasi_satuan]" class="form-select" style="max-width: 140px;" required>
+                                                            <option value="jam" {{ $estimasiSatuan == 'jam' ? 'selected' : '' }}>Jam</option>
+                                                            <option value="harian" {{ $estimasiSatuan == 'harian' ? 'selected' : '' }}>Harian</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
 
                                                 <div class="col-md-12">
@@ -485,8 +497,8 @@
                                                     </label>
                                                     <select name="layanan[0][jenis_layanan]" class="form-select" required>
                                                         <option value="">-- Pilih Jenis --</option>
-                                                        <option value="reguler">🕐 Reguler (Normal)</option>
-                                                        <option value="express">⚡ Express (Cepat)</option>
+                                                        <option value="harian">🕐 Harian</option>
+                                                        <option value="jam">⚡ Jam</option>
                                                     </select>
                                                 </div>
 
@@ -516,23 +528,29 @@
                                                         type="text" 
                                                         name="layanan[0][nama_paket]" 
                                                         class="form-control" 
-                                                        placeholder="Paket Reguler"
+                                                        placeholder="Paket Harian"
                                                         required
                                                     >
                                                 </div>
 
                                                 <div class="col-md-6">
                                                     <label class="form-label fw-semibold">
-                                                        Estimasi Selesai (Jam) <span class="text-danger">*</span>
+                                                        Estimasi Selesai <span class="text-danger">*</span>
                                                     </label>
-                                                    <input 
-                                                        type="number" 
-                                                        name="layanan[0][estimasi_selesai]" 
-                                                        class="form-control" 
-                                                        placeholder="24"
-                                                        min="1"
-                                                        required
-                                                    >
+                                                    <div class="input-group">
+                                                        <input 
+                                                            type="number" 
+                                                            name="layanan[0][estimasi_selesai]" 
+                                                            class="form-control" 
+                                                            placeholder="1"
+                                                            min="1"
+                                                            required
+                                                        >
+                                                        <select name="layanan[0][estimasi_satuan]" class="form-select" style="max-width: 140px;" required>
+                                                            <option value="jam" selected>Jam</option>
+                                                            <option value="harian">Harian</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
 
                                                 <div class="col-md-12">
@@ -751,8 +769,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         </label>
                         <select name="layanan[${layananCount}][jenis_layanan]" class="form-select" required>
                             <option value="">-- Pilih Jenis --</option>
-                            <option value="reguler">🕐 Reguler (Normal)</option>
-                            <option value="express">⚡ Express (Cepat)</option>
+                            <option value="harian">🕐 Harian</option>
+                            <option value="jam">⚡ Jam</option>
                         </select>
                     </div>
 
@@ -764,7 +782,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             type="text" 
                             name="layanan[${layananCount}][nama_paket]" 
                             class="form-control" 
-                            placeholder="Paket Reguler"
+                            placeholder="Paket Harian"
                             required
                         >
                     </div>
@@ -788,16 +806,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">
-                            Estimasi Selesai (Jam) <span class="text-danger">*</span>
+                            Estimasi Selesai <span class="text-danger">*</span>
                         </label>
-                        <input 
-                            type="number" 
-                            name="layanan[${layananCount}][estimasi_selesai]" 
-                            class="form-control" 
-                            placeholder="24"
-                            min="1"
-                            required
-                        >
+                        <div class="input-group">
+                            <input 
+                                type="number" 
+                                name="layanan[${layananCount}][estimasi_selesai]" 
+                                class="form-control" 
+                                placeholder="1"
+                                min="1"
+                                required
+                            >
+                            <select name="layanan[${layananCount}][estimasi_satuan]" class="form-select" style="max-width: 140px;" required>
+                                <option value="jam" selected>Jam</option>
+                                <option value="harian">Harian</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="col-md-12">
@@ -1014,6 +1038,32 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Browser Anda tidak mendukung Geolocation.');
         }
     });
+
+    // Sinkronkan marker saat koordinat diubah manual
+    const latInput = document.getElementById('latitude');
+    const lngInput = document.getElementById('longitude');
+
+    function handleManualCoordinateInput() {
+        const lat = parseFloat(latInput.value);
+        const lng = parseFloat(lngInput.value);
+
+        if (Number.isNaN(lat) || Number.isNaN(lng)) {
+            return;
+        }
+
+        if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+            return;
+        }
+
+        marker.setLatLng([lat, lng]);
+        map.setView([lat, lng], map.getZoom());
+        updateJarakKampus(lat, lng);
+    }
+
+    latInput.addEventListener('change', handleManualCoordinateInput);
+    lngInput.addEventListener('change', handleManualCoordinateInput);
+    latInput.addEventListener('blur', handleManualCoordinateInput);
+    lngInput.addEventListener('blur', handleManualCoordinateInput);
 });
 
 // Modal functions

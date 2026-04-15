@@ -377,6 +377,72 @@ class BookingController extends Controller
     }
 
     /**
+     * Hapus booking secara massal (terpilih / semua data sesuai filter)
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'action' => 'required|in:selected,all',
+            'booking_ids' => 'nullable|array',
+            'booking_ids.*' => 'integer|exists:bookings,id',
+            'status' => 'nullable|string',
+            'kontrakan_id' => 'nullable|integer|exists:kontrakans,id',
+        ]);
+
+        $query = Booking::query();
+
+        if ($request->action === 'selected') {
+            $ids = $request->input('booking_ids', []);
+
+            if (empty($ids)) {
+                return back()->with('error', 'Pilih minimal 1 booking yang ingin dihapus.');
+            }
+
+            $query->whereIn('id', $ids);
+        } else {
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            if ($request->filled('kontrakan_id')) {
+                $query->where('kontrakan_id', $request->kontrakan_id);
+            }
+        }
+
+        $bookings = $query->get();
+
+        if ($bookings->isEmpty()) {
+            return back()->with('error', 'Tidak ada data booking yang bisa dihapus.');
+        }
+
+        $isSuperAdmin = auth()->user()->role === 'super_admin';
+        $deletedCount = 0;
+        $skippedCount = 0;
+
+        foreach ($bookings as $booking) {
+            $canDelete = $isSuperAdmin || in_array($booking->status, [Booking::STATUS_PENDING, Booking::STATUS_CANCELLED]);
+
+            if (!$canDelete) {
+                $skippedCount++;
+                continue;
+            }
+
+            $booking->delete();
+            $deletedCount++;
+        }
+
+        if ($deletedCount === 0) {
+            return back()->with('error', 'Tidak ada booking yang dihapus. Admin biasa hanya boleh menghapus status pending/dibatalkan.');
+        }
+
+        if ($skippedCount > 0) {
+            return back()->with('success', "Berhasil hapus {$deletedCount} booking. {$skippedCount} booking dilewati karena tidak memiliki izin hapus.");
+        }
+
+        return back()->with('success', "Berhasil hapus {$deletedCount} booking.");
+    }
+
+    /**
      * API: Cek ketersediaan kontrakan
      */
     public function checkAvailability(Request $request)

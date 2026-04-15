@@ -37,6 +37,11 @@ class ReviewService {
 
       final data = jsonDecode(response.body);
 
+      if (response.statusCode == 401) {
+        await _authService.handleUnauthorized(response.statusCode);
+        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+      }
+
       if (response.statusCode == 201 && data['success'] == true) {
         return {
           'success': true,
@@ -72,6 +77,11 @@ class ReviewService {
       );
 
       final data = jsonDecode(response.body);
+
+      if (response.statusCode == 401) {
+        await _authService.handleUnauthorized(response.statusCode);
+        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+      }
 
       if (response.statusCode == 201 && data['success'] == true) {
         return {
@@ -109,6 +119,11 @@ class ReviewService {
 
       final data = jsonDecode(response.body);
 
+      if (response.statusCode == 401) {
+        await _authService.handleUnauthorized(response.statusCode);
+        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+      }
+
       if (response.statusCode == 200 && data['success'] == true) {
         return {
           'success': true,
@@ -136,6 +151,11 @@ class ReviewService {
       );
 
       final data = jsonDecode(response.body);
+
+      if (response.statusCode == 401) {
+        await _authService.handleUnauthorized(response.statusCode);
+        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+      }
 
       if (response.statusCode == 200 && data['success'] == true) {
         return {

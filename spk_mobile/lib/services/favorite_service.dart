@@ -50,6 +50,7 @@ class FavoriteService {
       debugPrint('[FAV] GET Body: ${response.body.length > 300 ? response.body.substring(0, 300) : response.body}');
 
       if (response.statusCode == 401) {
+        await _authService.handleUnauthorized(response.statusCode);
         debugPrint('[FAV] ❌ 401 Unauthorized — token expired/invalid');
         return {'success': false, 'message': 'Sesi expired, silakan login ulang', 'kontrakan': [], 'laundry': []};
       }
@@ -185,6 +186,7 @@ class FavoriteService {
       debugPrint('[FAV] Toggle kontrakan → ${response.statusCode}: ${response.body}');
 
       if (response.statusCode == 401) {
+        await _authService.handleUnauthorized(response.statusCode);
         return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
       }
 
@@ -226,6 +228,7 @@ class FavoriteService {
       debugPrint('[FAV] Toggle laundry → ${response.statusCode}: ${response.body}');
 
       if (response.statusCode == 401) {
+        await _authService.handleUnauthorized(response.statusCode);
         return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
       }
 
@@ -265,6 +268,11 @@ class FavoriteService {
           .timeout(AppConfig.connectionTimeout);
 
       final data = jsonDecode(response.body);
+
+      if (response.statusCode == 401) {
+        await _authService.handleUnauthorized(response.statusCode);
+        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+      }
 
       if (response.statusCode == 200 && data['success'] == true) {
         return {

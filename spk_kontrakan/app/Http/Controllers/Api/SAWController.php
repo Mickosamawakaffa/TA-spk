@@ -167,7 +167,7 @@ class SAWController extends Controller
     public function calculateLaundry(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'jenis_layanan' => 'nullable|string|in:reguler,express',
+            'jenis_layanan' => 'nullable|string|in:harian,jam,reguler,express,kiloan,satuan,kilat',
             'harga_min' => 'nullable|numeric',
             'harga_max' => 'nullable|numeric',
             'jarak_max' => 'nullable|numeric',
@@ -468,8 +468,12 @@ class SAWController extends Controller
     private function mapJenisLayananQueryValues($jenisLayanan)
     {
         $map = [
-            'reguler' => ['reguler', 'kiloan'],
-            'express' => ['express', 'satuan'],
+            // New canonical labels for mobile
+            'harian' => ['harian', 'reguler', 'kiloan'],
+            'jam' => ['jam', 'express', 'satuan', 'kilat'],
+            // Backward compatibility for old clients/data
+            'reguler' => ['harian', 'reguler', 'kiloan'],
+            'express' => ['jam', 'express', 'satuan', 'kilat'],
         ];
 
         return $map[$jenisLayanan] ?? [$jenisLayanan];

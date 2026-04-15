@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Daftar Laundry'); ?>
 
 <?php $__env->startSection('content'); ?>

@@ -94,6 +94,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [BookingController::class, 'index'])->name('index');
         Route::get('/create', [BookingController::class, 'create'])->name('create');
         Route::post('/', [BookingController::class, 'store'])->name('store');
+        Route::post('/bulk-destroy', [BookingController::class, 'bulkDestroy'])->name('bulk-destroy');
         Route::get('/{booking}', [BookingController::class, 'show'])->name('show');
         Route::get('/{booking}/edit', [BookingController::class, 'edit'])->name('edit');
         Route::put('/{booking}', [BookingController::class, 'update'])->name('update');

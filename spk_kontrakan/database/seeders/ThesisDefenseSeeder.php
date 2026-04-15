@@ -370,7 +370,7 @@ class ThesisDefenseSeeder extends Seeder
     {
         $services = [
             [
-                'jenis_layanan' => 'kiloan',
+                'jenis_layanan' => 'harian',
                 'nama_paket' => 'Cuci Biasa',
                 'harga' => 5000,
                 'estimasi_selesai' => 48,
@@ -378,7 +378,7 @@ class ThesisDefenseSeeder extends Seeder
                 'status' => 'aktif'
             ],
             [
-                'jenis_layanan' => 'kiloan',
+                'jenis_layanan' => 'harian',
                 'nama_paket' => 'Cuci Setrika',
                 'harga' => 8000,
                 'estimasi_selesai' => 24,
@@ -386,7 +386,7 @@ class ThesisDefenseSeeder extends Seeder
                 'status' => 'aktif'
             ],
             [
-                'jenis_layanan' => 'kiloan',
+                'jenis_layanan' => 'jam',
                 'nama_paket' => 'Cuci Express',
                 'harga' => 12000,
                 'estimasi_selesai' => 4,
@@ -394,7 +394,7 @@ class ThesisDefenseSeeder extends Seeder
                 'status' => 'aktif'
             ],
             [
-                'jenis_layanan' => 'satuan',
+                'jenis_layanan' => 'jam',
                 'nama_paket' => 'Setrika Saja',
                 'harga' => 3000,
                 'estimasi_selesai' => 12,

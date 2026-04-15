@@ -178,9 +178,10 @@ class SAWController extends Controller
             }
             
             $data = Laundry::with('layanan')->get();
+            $jenisValues = $this->mapLaundryJenisLayananValues($jenisLayanan);
             
-            return $data->filter(function($laundry) use ($jenisLayanan) {
-                return $laundry->layanan->where('jenis_layanan', $jenisLayanan)->isNotEmpty();
+            return $data->filter(function($laundry) use ($jenisValues) {
+                return $laundry->layanan->whereIn('jenis_layanan', $jenisValues)->isNotEmpty();
             });
             
         } catch (Exception $e) {
@@ -192,7 +193,9 @@ class SAWController extends Controller
     // Proses data dengan hitung fasilitas/jarak
     private function processData($data, $tipe, $jenisLayanan, $refLat, $refLng)
     {
-        return $data->map(function($item) use ($tipe, $jenisLayanan, $refLat, $refLng) {
+        $jenisValues = $this->mapLaundryJenisLayananValues($jenisLayanan);
+
+        return $data->map(function($item) use ($tipe, $jenisValues, $refLat, $refLng) {
             try {
                 if ($tipe == 'kontrakan') {
                     $item->jumlah_fasilitas = $item->fasilitas ? count(explode(',', $item->fasilitas)) : 0;
@@ -215,7 +218,7 @@ class SAWController extends Controller
                     
                 } else {
                     // LAUNDRY
-                    $layanan = $item->layanan->where('jenis_layanan', $jenisLayanan)->first();
+                    $layanan = $item->layanan->whereIn('jenis_layanan', $jenisValues)->first();
                     
                     if (!$layanan) {
                         return null;
@@ -248,6 +251,21 @@ class SAWController extends Controller
                 return null;
             }
         })->filter();
+    }
+
+    // Mapping jenis layanan baru ke nilai lama agar kompatibel dengan data existing.
+    private function mapLaundryJenisLayananValues($jenisLayanan)
+    {
+        $map = [
+            'harian' => ['harian', 'reguler', 'kiloan'],
+            'jam' => ['jam', 'express', 'kilat', 'satuan'],
+            // Backward compatibility
+            'reguler' => ['harian', 'reguler', 'kiloan'],
+            'express' => ['jam', 'express', 'kilat', 'satuan'],
+            'kilat' => ['jam', 'express', 'kilat', 'satuan'],
+        ];
+
+        return $map[$jenisLayanan] ?? [$jenisLayanan];
     }
     
     // Hitung max/min untuk setiap kriteria

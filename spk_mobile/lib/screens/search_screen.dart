@@ -250,7 +250,11 @@ class _SearchScreenState extends State<SearchScreen> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
+                  colors: [
+                    Color(0xFF1565C0),
+                    Color(0xFF0D47A1),
+                    Color(0xFF0A2E73),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -276,20 +280,36 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                       ),
                       const SizedBox(width: 14),
-                      const Text(
-                        'Cari & Jelajahi',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          letterSpacing: 0.3,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Cari & Jelajahi',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                            Text(
+                              'Temukan kontrakan dan laundry lebih cepat',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white.withOpacity(0.85),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const Spacer(),
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.2),
+                          ),
                         ),
                         child: IconButton(
                           icon: const Icon(
@@ -314,104 +334,30 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: GestureDetector(
+                          child: _buildCategorySegment(
+                            label: 'Kontrakan',
+                            icon: Icons.home_work_rounded,
+                            selected: _selectedCategory == 'Kontrakan',
+                            activeColor: const Color(0xFF1565C0),
+                            count: _filteredKontrakan.length,
                             onTap: () {
                               setState(() => _selectedCategory = 'Kontrakan');
                               _applyFilters();
                             },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: _selectedCategory == 'Kontrakan'
-                                    ? Colors.white
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(11),
-                                boxShadow: _selectedCategory == 'Kontrakan'
-                                    ? [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.08),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ]
-                                    : null,
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.home_work_rounded,
-                                    color: _selectedCategory == 'Kontrakan'
-                                        ? const Color(0xFF1565C0)
-                                        : Colors.white.withOpacity(0.85),
-                                    size: 18,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Kontrakan',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: _selectedCategory == 'Kontrakan'
-                                          ? const Color(0xFF1565C0)
-                                          : Colors.white.withOpacity(0.85),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
                           ),
                         ),
                         const SizedBox(width: 4),
                         Expanded(
-                          child: GestureDetector(
+                          child: _buildCategorySegment(
+                            label: 'Laundry',
+                            icon: Icons.local_laundry_service_rounded,
+                            selected: _selectedCategory == 'Laundry',
+                            activeColor: const Color(0xFF00897B),
+                            count: _filteredLaundry.length,
                             onTap: () {
                               setState(() => _selectedCategory = 'Laundry');
                               _applyLaundryFilters();
                             },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: _selectedCategory == 'Laundry'
-                                    ? Colors.white
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(11),
-                                boxShadow: _selectedCategory == 'Laundry'
-                                    ? [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.08),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ]
-                                    : null,
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.local_laundry_service_rounded,
-                                    color: _selectedCategory == 'Laundry'
-                                        ? const Color(0xFF00897B)
-                                        : Colors.white.withOpacity(0.85),
-                                    size: 18,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Laundry',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: _selectedCategory == 'Laundry'
-                                          ? const Color(0xFF00897B)
-                                          : Colors.white.withOpacity(0.85),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
                           ),
                         ),
                       ],
@@ -482,27 +428,72 @@ class _SearchScreenState extends State<SearchScreen> {
 
             // Results Count
             if (!_isLoading)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                color: Colors.white,
-                child: Row(
-                  children: [
-                    Icon(Icons.filter_list, size: 18, color: Colors.grey[600]),
-                    const SizedBox(width: 8),
-                    Text(
-                      _selectedCategory == 'Kontrakan'
-                          ? 'Ditemukan ${_filteredKontrakan.length} kontrakan'
-                          : 'Ditemukan ${_filteredLaundry.length} laundry',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[700],
-                        fontWeight: FontWeight.w600,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFEAF0F6)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(7),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1565C0).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(9),
+                        ),
+                        child: const Icon(
+                          Icons.filter_alt_rounded,
+                          size: 16,
+                          color: Color(0xFF1565C0),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _selectedCategory == 'Kontrakan'
+                              ? 'Ditemukan ${_filteredKontrakan.length} kontrakan'
+                              : 'Ditemukan ${_filteredLaundry.length} laundry',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5FB),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          _selectedFilter,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF4B5A70),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
@@ -638,6 +629,62 @@ class _SearchScreenState extends State<SearchScreen> {
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
             fontSize: 14,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategorySegment({
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required Color activeColor,
+    required int count,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        decoration: BoxDecoration(
+          color: selected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(11),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: selected ? activeColor : Colors.white.withOpacity(0.85),
+              size: 18,
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                '$label ($count)',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                  color: selected
+                      ? activeColor
+                      : Colors.white.withOpacity(0.85),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -901,20 +948,43 @@ class _SearchScreenState extends State<SearchScreen> {
                     topLeft: Radius.circular(16),
                     bottomLeft: Radius.circular(16),
                   ),
-                  child: Container(
+                  child: CachedNetworkImage(
+                    imageUrl: laundry.primaryPhoto,
                     width: 120,
                     height: 140,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Colors.cyan[400]!, Colors.cyan[600]!],
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      width: 120,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Colors.cyan[400]!, Colors.cyan[600]!],
+                        ),
+                      ),
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                    child: const Icon(
-                      Icons.local_laundry_service,
-                      size: 50,
-                      color: Colors.white,
+                    errorWidget: (context, url, error) => Container(
+                      width: 120,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Colors.cyan[400]!, Colors.cyan[600]!],
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.local_laundry_service,
+                        size: 50,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

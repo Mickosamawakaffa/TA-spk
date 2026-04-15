@@ -18,6 +18,7 @@ class _FavoritesScreenState extends State<FavoritesScreen>
     with SingleTickerProviderStateMixin {
   final _favoriteService = FavoriteService();
   late TabController _tabController;
+  int _currentTabIndex = 0;
 
   List<Kontrakan> _kontrakanFavorites = [];
   List<Laundry> _laundryFavorites = [];
@@ -27,11 +28,20 @@ class _FavoritesScreenState extends State<FavoritesScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(_handleTabChange);
     _loadFavorites();
+  }
+
+  void _handleTabChange() {
+    if (!mounted) return;
+    if (_currentTabIndex != _tabController.index) {
+      setState(() => _currentTabIndex = _tabController.index);
+    }
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
     super.dispose();
   }
@@ -242,56 +252,7 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                       borderRadius: BorderRadius.circular(14),
                     ),
                     padding: const EdgeInsets.all(4),
-                    child: TabBar(
-                      controller: _tabController,
-                      indicator: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(11),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      dividerColor: Colors.transparent,
-                      labelColor: const Color(0xFF1565C0),
-                      unselectedLabelColor: Colors.white.withOpacity(0.85),
-                      labelStyle: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                      ),
-                      unselectedLabelStyle: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
-                      ),
-                      tabs: [
-                        Tab(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.home_work_rounded, size: 18),
-                              const SizedBox(width: 6),
-                              Text('Kontrakan (${_kontrakanFavorites.length})'),
-                            ],
-                          ),
-                        ),
-                        Tab(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.local_laundry_service_rounded,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 6),
-                              Text('Laundry (${_laundryFavorites.length})'),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                    child: _buildSegmentedTabs(),
                   ),
                 ],
               ),
@@ -782,6 +743,92 @@ class _FavoritesScreenState extends State<FavoritesScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSegmentedTabs() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildSegmentItem(
+            index: 0,
+            icon: Icons.home_work_rounded,
+            label: 'Kontrakan',
+            count: _kontrakanFavorites.length,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildSegmentItem(
+            index: 1,
+            icon: Icons.local_laundry_service_rounded,
+            label: 'Laundry',
+            count: _laundryFavorites.length,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSegmentItem({
+    required int index,
+    required IconData icon,
+    required String label,
+    required int count,
+  }) {
+    final selected = _currentTabIndex == index;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(11),
+      onTap: () {
+        _tabController.animateTo(index);
+        setState(() => _currentTabIndex = index);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(11),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 17,
+              color: selected
+                  ? const Color(0xFF1565C0)
+                  : Colors.white.withOpacity(0.9),
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                '$label ($count)',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  fontSize: 13,
+                  color: selected
+                      ? const Color(0xFF1565C0)
+                      : Colors.white.withOpacity(0.9),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

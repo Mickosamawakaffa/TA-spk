@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -31,10 +32,13 @@ class BackupController extends Controller
             $files = File::files($this->backupPath);
             
             foreach ($files as $file) {
+                $modifiedAt = Carbon::createFromTimestamp($file->getMTime(), config('app.timezone'));
+
                 $backups[] = [
                     'name' => $file->getFilename(),
                     'size' => $file->getSize(),
-                    'date' => $file->getMTime(),
+                    'date' => $modifiedAt->timestamp,
+                    'date_display' => $modifiedAt->format('d M Y H:i'),
                     'path' => $file->getRealPath(),
                 ];
             }

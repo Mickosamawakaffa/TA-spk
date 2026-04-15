@@ -62,9 +62,6 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Hapus token lama untuk device ini (limit token bloat)
-        $user->tokens()->where('name', 'mobile-app-token')->delete();
-
         $token = $user->createToken('mobile-app-token')->plainTextToken;
 
         return response()->json([

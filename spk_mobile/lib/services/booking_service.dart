@@ -29,6 +29,11 @@ class BookingService {
         headers: _headers,
       );
 
+      if (response.statusCode == 401) {
+        await _authService.handleUnauthorized(response.statusCode);
+        return [];
+      }
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
@@ -83,6 +88,11 @@ class BookingService {
       final response = await http.Response.fromStream(streamedResponse);
       final data = jsonDecode(response.body);
 
+      if (response.statusCode == 401) {
+        await _authService.handleUnauthorized(response.statusCode);
+        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+      }
+
       if (response.statusCode == 201 && data['success'] == true) {
         return {
           'success': true,
@@ -111,6 +121,11 @@ class BookingService {
 
       final data = jsonDecode(response.body);
 
+      if (response.statusCode == 401) {
+        await _authService.handleUnauthorized(response.statusCode);
+        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+      }
+
       if (response.statusCode == 200 && data['success'] == true) {
         return {'success': true, 'message': data['message']};
       } else {
@@ -131,6 +146,11 @@ class BookingService {
         Uri.parse('${AppConfig.baseUrl}/bookings/$id'),
         headers: _headers,
       );
+
+      if (response.statusCode == 401) {
+        await _authService.handleUnauthorized(response.statusCode);
+        return null;
+      }
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -172,6 +192,11 @@ class BookingService {
       );
       final response = await http.Response.fromStream(streamedResponse);
       final data = jsonDecode(response.body);
+
+      if (response.statusCode == 401) {
+        await _authService.handleUnauthorized(response.statusCode);
+        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+      }
 
       if (response.statusCode == 200 && data['success'] == true) {
         return {

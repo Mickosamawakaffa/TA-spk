@@ -200,7 +200,7 @@ class LaundryController extends Controller
                 'harga_min' => 'nullable|numeric|min:0',
                 'harga_max' => 'nullable|numeric|min:0|gte:harga_min',
                 'jarak' => 'nullable|in:dekat,sedang,jauh',
-                'jenis_layanan' => 'nullable|in:express,reguler',
+                'jenis_layanan' => 'nullable|in:jam,harian',
             ]);
             
             $query = Laundry::with('layanan');
@@ -308,10 +308,11 @@ class LaundryController extends Controller
                 
                 // Validasi Layanan
                 'layanan' => 'required|array|min:1',
-                'layanan.*.jenis_layanan' => 'required|in:express,reguler',
+                'layanan.*.jenis_layanan' => 'required|in:jam,harian',
                 'layanan.*.nama_paket' => 'required|string|max:255',
                 'layanan.*.harga' => 'required|numeric|min:0',
                 'layanan.*.estimasi_selesai' => 'required|numeric|min:1',
+                'layanan.*.estimasi_satuan' => 'required|in:jam,harian',
                 'layanan.*.deskripsi' => 'nullable|string|max:1000',
                 'layanan.*.status' => 'required|in:aktif,nonaktif',
             ], [
@@ -327,12 +328,14 @@ class LaundryController extends Controller
                 'layanan.required' => 'Minimal harus ada 1 jenis layanan',
                 'layanan.min' => 'Minimal harus ada 1 jenis layanan',
                 'layanan.*.jenis_layanan.required' => 'Jenis layanan harus dipilih',
-                'layanan.*.jenis_layanan.in' => 'Jenis layanan harus express atau reguler',
+                'layanan.*.jenis_layanan.in' => 'Jenis layanan harus jam atau harian',
                 'layanan.*.nama_paket.required' => 'Nama paket harus diisi',
                 'layanan.*.harga.required' => 'Harga layanan harus diisi',
                 'layanan.*.harga.min' => 'Harga tidak boleh negatif',
-                'layanan.*.estimasi_selesai.required' => 'Estimasi waktu selesai harus diisi (jam)',
-                'layanan.*.estimasi_selesai.min' => 'Estimasi minimal 1 jam',
+                'layanan.*.estimasi_selesai.required' => 'Estimasi waktu selesai harus diisi',
+                'layanan.*.estimasi_selesai.min' => 'Estimasi minimal 1',
+                'layanan.*.estimasi_satuan.required' => 'Satuan estimasi harus dipilih',
+                'layanan.*.estimasi_satuan.in' => 'Satuan estimasi harus jam atau harian',
                 'layanan.*.status.required' => 'Status layanan harus dipilih',
                 'layanan.*.status.in' => 'Status harus aktif atau nonaktif',
             ]);
@@ -405,11 +408,16 @@ class LaundryController extends Controller
 
             // Simpan Layanan
             foreach ($request->layanan as $layananData) {
+                $estimasiJam = (float) $layananData['estimasi_selesai'];
+                if (($layananData['estimasi_satuan'] ?? 'jam') === 'harian') {
+                    $estimasiJam *= 24;
+                }
+
                 $laundry->layanan()->create([
                     'jenis_layanan' => $layananData['jenis_layanan'],
                     'nama_paket' => $layananData['nama_paket'],
                     'harga' => $layananData['harga'],
-                    'estimasi_selesai' => $layananData['estimasi_selesai'],
+                    'estimasi_selesai' => max(1, (int) round($estimasiJam)),
                     'deskripsi' => $layananData['deskripsi'] ?? null,
                     'status' => $layananData['status'] ?? 'aktif',
                 ]);
@@ -504,10 +512,11 @@ class LaundryController extends Controller
                 
                 // Validasi Layanan
                 'layanan' => 'required|array|min:1',
-                'layanan.*.jenis_layanan' => 'required|in:express,reguler',
+                'layanan.*.jenis_layanan' => 'required|in:jam,harian',
                 'layanan.*.nama_paket' => 'required|string|max:255',
                 'layanan.*.harga' => 'required|numeric|min:0',
                 'layanan.*.estimasi_selesai' => 'required|numeric|min:1',
+                'layanan.*.estimasi_satuan' => 'required|in:jam,harian',
                 'layanan.*.deskripsi' => 'nullable|string|max:1000',
                 'layanan.*.status' => 'required|in:aktif,nonaktif',
             ], [
@@ -519,12 +528,14 @@ class LaundryController extends Controller
                 'layanan.required' => 'Minimal harus ada 1 jenis layanan',
                 'layanan.min' => 'Minimal harus ada 1 jenis layanan',
                 'layanan.*.jenis_layanan.required' => 'Jenis layanan harus dipilih',
-                'layanan.*.jenis_layanan.in' => 'Jenis layanan harus express atau reguler',
+                'layanan.*.jenis_layanan.in' => 'Jenis layanan harus jam atau harian',
                 'layanan.*.nama_paket.required' => 'Nama paket harus diisi',
                 'layanan.*.harga.required' => 'Harga layanan harus diisi',
                 'layanan.*.harga.min' => 'Harga tidak boleh negatif',
-                'layanan.*.estimasi_selesai.required' => 'Estimasi waktu selesai harus diisi (jam)',
-                'layanan.*.estimasi_selesai.min' => 'Estimasi minimal 1 jam',
+                'layanan.*.estimasi_selesai.required' => 'Estimasi waktu selesai harus diisi',
+                'layanan.*.estimasi_selesai.min' => 'Estimasi minimal 1',
+                'layanan.*.estimasi_satuan.required' => 'Satuan estimasi harus dipilih',
+                'layanan.*.estimasi_satuan.in' => 'Satuan estimasi harus jam atau harian',
                 'layanan.*.status.required' => 'Status layanan harus dipilih',
                 'layanan.*.status.in' => 'Status harus aktif atau nonaktif',
             ]);
@@ -622,11 +633,16 @@ class LaundryController extends Controller
             $laundry->layanan()->delete();
             
             foreach ($request->layanan as $layananData) {
+                $estimasiJam = (float) $layananData['estimasi_selesai'];
+                if (($layananData['estimasi_satuan'] ?? 'jam') === 'harian') {
+                    $estimasiJam *= 24;
+                }
+
                 $laundry->layanan()->create([
                     'jenis_layanan' => $layananData['jenis_layanan'],
                     'nama_paket' => $layananData['nama_paket'],
                     'harga' => $layananData['harga'],
-                    'estimasi_selesai' => $layananData['estimasi_selesai'],
+                    'estimasi_selesai' => max(1, (int) round($estimasiJam)),
                     'deskripsi' => $layananData['deskripsi'] ?? null,
                     'status' => $layananData['status'] ?? 'aktif',
                 ]);

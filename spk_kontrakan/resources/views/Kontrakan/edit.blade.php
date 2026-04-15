@@ -481,26 +481,66 @@
 
                                 <!-- Fasilitas -->
                                 <div class="col-md-6">
+                                    @php
+                                        $facilityOptions = [
+                                            'WiFi',
+                                            'Kasur',
+                                            'Lemari',
+                                            'Meja Belajar',
+                                            'Kamar Mandi Dalam',
+                                            'Kamar Mandi Luar',
+                                            'Closet Duduk',
+                                            'Dapur',
+                                            'Dapur Bersama',
+                                            'Tempat Cuci Piring',
+                                            'Kompor',
+                                            'Ruang Tamu',
+                                            'Jemuran',
+                                            'Parkir Motor',
+                                            'Parkir Mobil',
+                                            'Garasi',
+                                            'Listrik Termasuk',
+                                            'Air PDAM/Sumur',
+                                            'Keamanan 24 Jam',
+                                            'CCTV',
+                                            'Akses 24 Jam',
+                                            'Musholla',
+                                            'Perlengkapan Tidur',
+                                        ];
+                                        $selectedFacilities = collect(explode(',', old('fasilitas', $kontrakan->fasilitas ?? '')))
+                                            ->map(fn($item) => strtolower(trim($item)))
+                                            ->filter()
+                                            ->values()
+                                            ->all();
+                                    @endphp
                                     <label for="fasilitas" class="form-label fw-semibold">
                                         Fasilitas
                                     </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-end-0">
-                                            <i class="bi bi-star text-warning"></i>
-                                        </span>
-                                        <input 
-                                            type="text" 
-                                            name="fasilitas" 
-                                            class="form-control border-start-0 @error('fasilitas') is-invalid @enderror" 
-                                            id="fasilitas" 
-                                            placeholder="Contoh: WiFi, AC, Kasur, Lemari"
-                                            value="{{ old('fasilitas', $kontrakan->fasilitas) }}"
-                                        >
+                                    <input type="hidden" name="fasilitas" id="fasilitas" value="{{ old('fasilitas', $kontrakan->fasilitas) }}">
+                                    <div class="border rounded p-2 bg-light @error('fasilitas') border-danger @enderror">
+                                        <div class="row g-2">
+                                            @foreach($facilityOptions as $facility)
+                                                <div class="col-6">
+                                                    <div class="form-check">
+                                                        <input
+                                                            class="form-check-input fasilitas-checkbox"
+                                                            type="checkbox"
+                                                            value="{{ $facility }}"
+                                                            id="fasilitas_{{ $loop->index }}"
+                                                            {{ in_array(strtolower($facility), $selectedFacilities) ? 'checked' : '' }}
+                                                        >
+                                                        <label class="form-check-label small" for="fasilitas_{{ $loop->index }}">
+                                                            {{ $facility }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
                                         @error('fasilitas')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="text-danger small mt-2">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                    <small class="text-muted">Pisahkan dengan koma (,) untuk fasilitas lebih dari satu</small>
+                                    <small class="text-muted">Checklist satu atau lebih fasilitas sesuai data kontrakan</small>
                                 </div>
                             </div>
                         </div>
@@ -991,6 +1031,33 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // ========== FASILITAS CHECKLIST ==========
+    const fasilitasHiddenInput = document.getElementById('fasilitas');
+    const fasilitasCheckboxes = document.querySelectorAll('.fasilitas-checkbox');
+    let fasilitasTouched = false;
+
+    function syncFasilitasChecklist() {
+        if (!fasilitasHiddenInput || !fasilitasCheckboxes.length) return;
+        const selectedFacilities = Array.from(fasilitasCheckboxes)
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => checkbox.value.trim())
+            .filter(Boolean);
+        fasilitasHiddenInput.value = selectedFacilities.join(', ');
+    }
+
+    if (fasilitasCheckboxes.length) {
+        fasilitasCheckboxes.forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                fasilitasTouched = true;
+                syncFasilitasChecklist();
+            });
+        });
+    }
+
+    if (fasilitasHiddenInput && !fasilitasHiddenInput.value.trim()) {
+        syncFasilitasChecklist();
+    }
     
     // ========== FOTO PREVIEW ==========
     const fotoInput = document.getElementById('foto');
@@ -1037,6 +1104,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('kontrakanForm');
     
     form.addEventListener('submit', function(e) {
+        if (fasilitasHiddenInput && (fasilitasTouched || !fasilitasHiddenInput.value.trim())) {
+            syncFasilitasChecklist();
+        }
+
         const lat = parseFloat(latInput.value);
         const lng = parseFloat(lngInput.value);
         

@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Kelola Kriteria SAW'); ?>
 
 <?php $__env->startSection('content'); ?>

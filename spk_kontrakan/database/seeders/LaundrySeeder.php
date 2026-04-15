@@ -32,14 +32,14 @@ class LaundrySeeder extends Seeder
                 ],
                 'layanan' => [
                     [
-                        'jenis_layanan' => 'kiloan',
+                        'jenis_layanan' => 'harian',
                         'nama_paket' => 'Cuci + Setrika',
                         'harga' => 7000,
                         'estimasi_selesai' => 24,
                         'deskripsi' => 'Paket cuci komplit dengan setrika rapi',
                     ],
                     [
-                        'jenis_layanan' => 'satuan',
+                        'jenis_layanan' => 'jam',
                         'nama_paket' => 'Setrika Saja',
                         'harga' => 5000,
                         'estimasi_selesai' => 12,
@@ -61,21 +61,21 @@ class LaundrySeeder extends Seeder
                 ],
                 'layanan' => [
                     [
-                        'jenis_layanan' => 'kiloan',
+                        'jenis_layanan' => 'jam',
                         'nama_paket' => 'Express 6 Jam',
                         'harga' => 12000,
                         'estimasi_selesai' => 6,
                         'deskripsi' => 'Layanan kilat selesai 6 jam',
                     ],
                     [
-                        'jenis_layanan' => 'kiloan',
+                        'jenis_layanan' => 'harian',
                         'nama_paket' => 'Reguler',
                         'harga' => 8000,
                         'estimasi_selesai' => 24,
                         'deskripsi' => 'Paket reguler 1 hari selesai',
                     ],
                     [
-                        'jenis_layanan' => 'satuan',
+                        'jenis_layanan' => 'jam',
                         'nama_paket' => 'Dry Clean',
                         'harga' => 25000,
                         'estimasi_selesai' => 48,
@@ -97,14 +97,14 @@ class LaundrySeeder extends Seeder
                 ],
                 'layanan' => [
                     [
-                        'jenis_layanan' => 'kiloan',
+                        'jenis_layanan' => 'harian',
                         'nama_paket' => 'Cuci Lipat',
                         'harga' => 5000,
                         'estimasi_selesai' => 48,
                         'deskripsi' => 'Paket ekonomis cuci dan lipat',
                     ],
                     [
-                        'jenis_layanan' => 'kiloan',
+                        'jenis_layanan' => 'harian',
                         'nama_paket' => 'Cuci + Setrika',
                         'harga' => 6000,
                         'estimasi_selesai' => 48,
@@ -126,14 +126,14 @@ class LaundrySeeder extends Seeder
                 ],
                 'layanan' => [
                     [
-                        'jenis_layanan' => 'kiloan',
+                        'jenis_layanan' => 'harian',
                         'nama_paket' => 'Reguler',
                         'harga' => 7500,
                         'estimasi_selesai' => 24,
                         'deskripsi' => 'Paket standar cuci setrika',
                     ],
                     [
-                        'jenis_layanan' => 'satuan',
+                        'jenis_layanan' => 'jam',
                         'nama_paket' => 'Sepatu',
                         'harga' => 15000,
                         'estimasi_selesai' => 48,
@@ -155,7 +155,7 @@ class LaundrySeeder extends Seeder
                 ],
                 'layanan' => [
                     [
-                        'jenis_layanan' => 'kiloan',
+                        'jenis_layanan' => 'harian',
                         'nama_paket' => 'Paket Mahasiswa',
                         'harga' => 6000,
                         'estimasi_selesai' => 36,

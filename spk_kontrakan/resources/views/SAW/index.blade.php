@@ -236,28 +236,20 @@
                                     <i class="bi bi-speedometer2 me-2" style="color: #667eea;"></i>Pilih Jenis Layanan
                                 </h6>
                                 <div class="row g-2 g-md-3">
-                                    <div class="col-12 col-md-4">
-                                        <input type="radio" class="btn-check" name="jenis_layanan" id="layanan_reguler" value="reguler">
-                                        <label class="btn btn-outline-warning w-100 py-2 py-md-3" for="layanan_reguler" style="border-color: #667eea; color: #667eea;">
+                                    <div class="col-12 col-md-6">
+                                        <input type="radio" class="btn-check" name="jenis_layanan" id="layanan_harian" value="harian">
+                                        <label class="btn btn-outline-warning w-100 py-2 py-md-3" for="layanan_harian" style="border-color: #667eea; color: #667eea;">
                                             <i class="bi bi-clock fs-5 fs-md-4 d-block mb-2"></i>
-                                            <strong class="small">Reguler</strong>
-                                            <small class="d-block text-muted" style="font-size: 0.75rem;">Normal</small>
+                                            <strong class="small">Harian</strong>
+                                            <small class="d-block text-muted" style="font-size: 0.75rem;">Selesai harian</small>
                                         </label>
                                     </div>
-                                    <div class="col-12 col-md-4">
-                                        <input type="radio" class="btn-check" name="jenis_layanan" id="layanan_express" value="express">
-                                        <label class="btn btn-outline-warning w-100 py-2 py-md-3" for="layanan_express" style="border-color: #667eea; color: #667eea;">
+                                    <div class="col-12 col-md-6">
+                                        <input type="radio" class="btn-check" name="jenis_layanan" id="layanan_jam" value="jam">
+                                        <label class="btn btn-outline-warning w-100 py-2 py-md-3" for="layanan_jam" style="border-color: #667eea; color: #667eea;">
                                             <i class="bi bi-lightning-charge fs-5 fs-md-4 d-block mb-2"></i>
-                                            <strong class="small">Express</strong>
-                                            <small class="d-block text-muted" style="font-size: 0.75rem;">Cepat</small>
-                                        </label>
-                                    </div>
-                                    <div class="col-12 col-md-4">
-                                        <input type="radio" class="btn-check" name="jenis_layanan" id="layanan_kilat" value="kilat">
-                                        <label class="btn btn-outline-warning w-100 py-2 py-md-3" for="layanan_kilat" style="border-color: #667eea; color: #667eea;">
-                                            <i class="bi bi-rocket-takeoff fs-5 fs-md-4 d-block mb-2"></i>
-                                            <strong class="small">Kilat</strong>
-                                            <small class="d-block text-muted" style="font-size: 0.75rem;">Super Cepat</small>
+                                            <strong class="small">Jam</strong>
+                                            <small class="d-block text-muted" style="font-size: 0.75rem;">Selesai per jam</small>
                                         </label>
                                     </div>
                                 </div>

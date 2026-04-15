@@ -46,6 +46,16 @@ class AuthService {
     _currentUser = null;
   }
 
+  /// Tangani response 401 secara terpusat.
+  /// Token lokal dibersihkan agar app tidak terus memakai token invalid.
+  Future<bool> handleUnauthorized(int statusCode) async {
+    if (statusCode == 401) {
+      await clearToken();
+      return true;
+    }
+    return false;
+  }
+
   // Register
   Future<Map<String, dynamic>> register({
     required String name,

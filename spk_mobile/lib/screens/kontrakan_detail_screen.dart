@@ -126,6 +126,13 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
     }
   }
 
+  String _formatDistanceValue(double km) {
+    if (km < 1) {
+      return '${(km * 1000).toStringAsFixed(0)} m';
+    }
+    return '${km.toStringAsFixed(2)} km';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -207,6 +214,11 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                       color: Color(0xFF1A1A2E),
                     ),
                   ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Hunian nyaman dekat kampus untuk kebutuhan harian Anda',
+                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  ),
                   const SizedBox(height: 10),
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -229,7 +241,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                           ),
                         ),
                         Text(
-                          ' /tahun',
+                          ' /thn',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -241,11 +253,43 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                   ),
                   const SizedBox(height: 16),
 
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildSummaryChip(
+                        icon: widget.kontrakan.isAvailable
+                            ? Icons.check_circle_rounded
+                            : Icons.do_not_disturb_on_rounded,
+                        label: widget.kontrakan.isAvailable
+                            ? 'Tersedia'
+                            : 'Penuh',
+                        color: widget.kontrakan.isAvailable
+                            ? const Color(0xFF2E7D32)
+                            : const Color(0xFFE65100),
+                      ),
+                      _buildSummaryChip(
+                        icon: Icons.bed_rounded,
+                        label: '${widget.kontrakan.jumlahKamar} kamar',
+                        color: const Color(0xFF1565C0),
+                      ),
+                      _buildSummaryChip(
+                        icon: Icons.near_me_rounded,
+                        label: _formatDistanceValue(
+                          widget.kontrakan.jarakKampus,
+                        ),
+                        color: const Color(0xFF00897B),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
                   // Location
                   _buildInfoRow(Icons.location_on, widget.kontrakan.alamat),
                   _buildInfoRow(
                     Icons.directions_walk,
-                    '${widget.kontrakan.jarakKampus} km dari kampus',
+                    '${_formatDistanceValue(widget.kontrakan.jarakKampus)} dari kampus',
                   ),
                   _buildInfoRow(
                     Icons.bed,
@@ -274,29 +318,54 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: widget.kontrakan.fasilitasList.map((f) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE3F2FD),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: const Color(0xFF1565C0).withOpacity(0.15),
-                          ),
-                        ),
-                        child: Text(
-                          f,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF1565C0),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                    children: widget.kontrakan.fasilitasList.isEmpty
+                        ? [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF3F7FB),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: const Color(0xFFDDE7F3),
+                                ),
+                              ),
+                              child: const Text(
+                                'Fasilitas belum tersedia',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF5A6B85),
+                                ),
+                              ),
+                            ),
+                          ]
+                        : widget.kontrakan.fasilitasList.map((f) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE3F2FD),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: const Color(
+                                    0xFF1565C0,
+                                  ).withOpacity(0.15),
+                                ),
+                              ),
+                              child: Text(
+                                f,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF1565C0),
+                                ),
+                              ),
+                            );
+                          }).toList(),
                   ),
 
                   if (widget.kontrakan.deskripsi != null) ...[
@@ -368,7 +437,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                         Icon(Icons.chat_rounded, size: 20),
                         SizedBox(width: 6),
                         Text(
-                          'WhatsApp',
+                          'Chat Pemilik',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -420,8 +489,8 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                   ),
                   child: Text(
                     widget.kontrakan.isAvailable
-                        ? 'Booking Sekarang'
-                        : 'Tidak Tersedia',
+                        ? 'Ajukan Booking'
+                        : 'Sedang Penuh',
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -458,6 +527,36 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                 color: Color(0xFF333333),
                 height: 1.3,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryChip({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.22)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
             ),
           ),
         ],

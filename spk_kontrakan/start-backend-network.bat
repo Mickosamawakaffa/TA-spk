@@ -13,8 +13,7 @@ echo.
 
 REM Dapatkan IP address komputer
 echo Mendeteksi IP Address komputer...
-for /f "tokens=2 delims=:" %%A in ('ipconfig ^| findstr /i "IPv4" ^| findstr /i "192.168"') do set IP=%%A
-set IP=%IP: =%
+for /f %%I in ('powershell -NoProfile -Command "(Get-NetIPAddress -AddressFamily IPv4 ^| Where-Object IPAddress -NotLike '127.*' ^| Where-Object IPAddress -NotLike '169.254.*' ^| Where-Object IPAddress -NotLike '192.168.137.*' ^| Select-Object -First 1 -ExpandProperty IPAddress)"') do set IP=%%I
 
 if "%IP%"=="" (
     echo ❌ ERROR: Tidak bisa menemukan IP Address!

@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Kelola Booking'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -103,11 +101,34 @@
 
     
     <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 pb-0">
+            <form id="bulkDeleteForm" action="<?php echo e(route('admin.bookings.bulk-destroy')); ?>" method="POST" class="d-flex flex-wrap gap-2 align-items-center">
+                <?php echo csrf_field(); ?>
+                <input type="hidden" name="action" id="bulkDeleteAction" value="selected">
+                <input type="hidden" name="status" value="<?php echo e(request('status')); ?>">
+                <input type="hidden" name="kontrakan_id" value="<?php echo e(request('kontrakan_id')); ?>">
+
+                <button type="button" id="btnDeleteSelected" class="btn btn-danger btn-sm" disabled>
+                    <i class="bi bi-trash me-1"></i>Hapus Terpilih
+                </button>
+                <?php if(auth()->user()->role === 'super_admin'): ?>
+                <button type="button" id="btnDeleteAll" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-trash3 me-1"></i>Hapus Semua
+                </button>
+                <small class="text-muted">Hapus Semua akan mengikuti filter aktif.</small>
+                <?php else: ?>
+                <small class="text-muted">Admin hanya dapat menghapus booking status pending atau dibatalkan.</small>
+                <?php endif; ?>
+            </form>
+        </div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light">
                         <tr>
+                            <th class="ps-3" style="width: 44px;">
+                                <input type="checkbox" class="form-check-input" id="selectAllBookings" title="Pilih semua di halaman ini">
+                            </th>
                             <th class="ps-3">ID</th>
                             <th>Kontrakan</th>
                             <th>Penyewa</th>
@@ -120,7 +141,13 @@
                     </thead>
                     <tbody>
                         <?php $__empty_1 = true; $__currentLoopData = $bookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $booking): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                        <?php
+                            $canDeleteBooking = auth()->user()->role === 'super_admin' || in_array($booking->status, ['pending', 'cancelled']);
+                        ?>
                         <tr>
+                            <td class="ps-3">
+                                <input type="checkbox" class="form-check-input booking-checkbox" name="booking_ids[]" value="<?php echo e($booking->id); ?>" form="bulkDeleteForm" <?php echo e($canDeleteBooking ? '' : 'disabled'); ?>>
+                            </td>
                             <td class="ps-3">
                                 <span class="badge bg-light text-dark">#<?php echo e($booking->id); ?></span>
                             </td>
@@ -194,7 +221,7 @@
                                         </button>
                                     </form>
                                     <?php endif; ?>
-                                    <?php if(auth()->user()->role == 'super_admin' || $booking->status == 'pending'): ?>
+                                    <?php if(auth()->user()->role == 'super_admin' || in_array($booking->status, ['pending', 'cancelled'])): ?>
                                     <form action="<?php echo e(route('admin.bookings.destroy', $booking->id)); ?>" method="POST" class="d-inline">
                                         <?php echo csrf_field(); ?>
                                         <?php echo method_field('DELETE'); ?>
@@ -208,7 +235,7 @@
                         </tr>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
+                            <td colspan="9" class="text-center py-5 text-muted">
                                 <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
                                 Belum ada data booking
                             </td>
@@ -226,6 +253,118 @@
         <?php endif; ?>
     </div>
 </div>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection('scripts'); ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const selectAll = document.getElementById('selectAllBookings');
+        const checkboxes = Array.from(document.querySelectorAll('.booking-checkbox'));
+        const selectableCheckboxes = checkboxes.filter(item => !item.disabled);
+        const btnDeleteSelected = document.getElementById('btnDeleteSelected');
+        const btnDeleteAll = document.getElementById('btnDeleteAll');
+        const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+        const bulkDeleteAction = document.getElementById('bulkDeleteAction');
+
+        function showWarning(message) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Perhatian',
+                    text: message,
+                    confirmButtonColor: '#d33'
+                });
+                return;
+            }
+
+            alert(message);
+        }
+
+        function confirmDelete(message, onConfirm) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Konfirmasi Hapus',
+                    text: message,
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, hapus',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        onConfirm();
+                    }
+                });
+                return;
+            }
+
+            if (confirm(message)) {
+                onConfirm();
+            }
+        }
+
+        function checkedCount() {
+            return selectableCheckboxes.filter(item => item.checked).length;
+        }
+
+        function refreshSelectedState() {
+            const count = checkedCount();
+            btnDeleteSelected.disabled = count === 0;
+            btnDeleteSelected.innerHTML = count > 0
+                ? `<i class="bi bi-trash me-1"></i>Hapus Terpilih (${count})`
+                : '<i class="bi bi-trash me-1"></i>Hapus Terpilih';
+
+            if (selectAll) {
+                selectAll.checked = selectableCheckboxes.length > 0 && count === selectableCheckboxes.length;
+            }
+        }
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function () {
+                selectableCheckboxes.forEach(item => {
+                    item.checked = selectAll.checked;
+                });
+                refreshSelectedState();
+            });
+        }
+
+        checkboxes.forEach(item => {
+            item.addEventListener('change', refreshSelectedState);
+        });
+
+        btnDeleteSelected.addEventListener('click', function () {
+            const count = checkedCount();
+
+            if (count === 0) {
+                showWarning('Pilih minimal 1 booking yang ingin dihapus.');
+                return;
+            }
+
+            confirmDelete(`Yakin ingin menghapus ${count} booking terpilih? Tindakan ini tidak dapat dibatalkan.`, function () {
+                bulkDeleteAction.value = 'selected';
+                bulkDeleteForm.submit();
+            });
+        });
+
+        if (btnDeleteAll) {
+            btnDeleteAll.addEventListener('click', function () {
+                const filterActive = <?php echo (request('status') || request('kontrakan_id')) ? 'true' : 'false'; ?>;
+                const message = filterActive
+                    ? 'Yakin ingin menghapus semua booking sesuai filter saat ini? Tindakan ini tidak dapat dibatalkan.'
+                    : 'Yakin ingin menghapus semua data booking? Tindakan ini tidak dapat dibatalkan.';
+
+                confirmDelete(message, function () {
+                    bulkDeleteAction.value = 'all';
+                    bulkDeleteForm.submit();
+                });
+            });
+        }
+
+        refreshSelectedState();
+    });
+</script>
 <?php $__env->stopSection(); ?>
 
 <?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\laragon\www\TA\spk_kontrakan\resources\views/admin/bookings/index.blade.php ENDPATH**/ ?>

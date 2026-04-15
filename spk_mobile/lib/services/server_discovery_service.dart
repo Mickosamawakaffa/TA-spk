@@ -147,4 +147,10 @@ class ServerDiscoveryService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_cacheKey, serverUrl);
   }
+
+  /// Hapus cache URL server agar discovery dimulai dari nol.
+  static Future<void> resetCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_cacheKey);
+  }
 }

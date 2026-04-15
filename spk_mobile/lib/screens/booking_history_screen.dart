@@ -17,6 +17,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
   final _bookingService = BookingService();
   final _imagePicker = ImagePicker();
   late TabController _tabController;
+  int _currentTabIndex = 0;
 
   List<Booking> _activeBookings = [];
   List<Booking> _pastBookings = [];
@@ -27,11 +28,20 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(_handleTabChange);
     _loadBookings();
+  }
+
+  void _handleTabChange() {
+    if (!mounted) return;
+    if (_currentTabIndex != _tabController.index) {
+      setState(() => _currentTabIndex = _tabController.index);
+    }
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
     super.dispose();
   }
@@ -333,13 +343,28 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                         ),
                       ),
                       const SizedBox(width: 14),
-                      const Text(
-                        'Booking Saya',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          letterSpacing: 0.3,
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Booking Saya',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Pantau status aktif dan riwayat booking',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -353,35 +378,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                       borderRadius: BorderRadius.circular(14),
                     ),
                     padding: const EdgeInsets.all(4),
-                    child: TabBar(
-                      controller: _tabController,
-                      indicator: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(11),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      dividerColor: Colors.transparent,
-                      labelColor: const Color(0xFF1565C0),
-                      unselectedLabelColor: Colors.white.withOpacity(0.85),
-                      labelStyle: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                      ),
-                      unselectedLabelStyle: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
-                      ),
-                      tabs: const [
-                        Tab(text: 'Aktif'),
-                        Tab(text: 'Riwayat'),
-                      ],
-                    ),
+                    child: _buildSegmentedTabs(),
                   ),
                 ],
               ),
@@ -952,5 +949,91 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (Match m) => '${m[1]}.',
         );
+  }
+
+  Widget _buildSegmentedTabs() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildSegmentItem(
+            index: 0,
+            icon: Icons.bolt_rounded,
+            label: 'Aktif',
+            count: _activeBookings.length,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildSegmentItem(
+            index: 1,
+            icon: Icons.history_rounded,
+            label: 'Riwayat',
+            count: _pastBookings.length,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSegmentItem({
+    required int index,
+    required IconData icon,
+    required String label,
+    required int count,
+  }) {
+    final selected = _currentTabIndex == index;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(11),
+      onTap: () {
+        _tabController.animateTo(index);
+        setState(() => _currentTabIndex = index);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(11),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 17,
+              color: selected
+                  ? const Color(0xFF1565C0)
+                  : Colors.white.withOpacity(0.9),
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                '$label ($count)',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  fontSize: 13,
+                  color: selected
+                      ? const Color(0xFF1565C0)
+                      : Colors.white.withOpacity(0.9),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

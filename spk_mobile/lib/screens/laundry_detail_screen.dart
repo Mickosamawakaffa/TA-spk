@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/laundry.dart';
 import '../services/location_service.dart';
@@ -145,87 +146,143 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                     ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF00897B), Color(0xFF00695C)],
-                  ),
-                ),
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.local_laundry_service,
-                                size: 40,
-                                color: Color(0xFF00897B),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    widget.laundry.nama,
-                                    style: const TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.star,
-                                        size: 20,
-                                        color: Colors.amber[300],
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        widget.laundry.rating.toStringAsFixed(
-                                          1,
-                                        ),
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white.withValues(
-                                            alpha: 0.95,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CachedNetworkImage(
+                    imageUrl: widget.laundry.primaryPhoto,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF00897B), Color(0xFF00695C)],
                         ),
-                      ],
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF00897B), Color(0xFF00695C)],
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.2),
+                          Colors.black.withOpacity(0.55),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.local_laundry_service,
+                                  size: 40,
+                                  color: Color(0xFF00897B),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      widget.laundry.nama,
+                                      style: const TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Layanan laundry cepat dan praktis',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white.withOpacity(0.9),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.star,
+                                          size: 20,
+                                          color: Colors.amber[300],
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          widget.laundry.rating.toStringAsFixed(
+                                            1,
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white.withValues(
+                                              alpha: 0.95,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: [
+                                        _buildHeaderChip(
+                                          icon: Icons.payments_rounded,
+                                          label:
+                                              '${widget.laundry.formattedHargaKiloan}/kg',
+                                        ),
+                                        _buildHeaderChip(
+                                          icon: Icons.schedule_rounded,
+                                          label: widget.laundry.estimasiSelesai,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -289,7 +346,8 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                 const SizedBox(height: 24),
 
                 // Action Buttons
-                if (widget.laundry.noWhatsapp != null) ...[
+                if (widget.laundry.noWhatsapp != null &&
+                    widget.laundry.noWhatsapp!.isNotEmpty) ...[
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -298,7 +356,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                           _launchWhatsApp(widget.laundry.noWhatsapp!),
                       icon: const Icon(Icons.message, size: 24),
                       label: const Text(
-                        'Hubungi via WhatsApp',
+                        'Chat Laundry',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -328,7 +386,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                       ),
                       icon: const Icon(Icons.map, size: 24),
                       label: const Text(
-                        'Lihat di Maps',
+                        'Buka Maps',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -411,10 +469,10 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.purple.withValues(alpha: 0.1),
+        color: const Color(0xFF00897B).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.purple.withValues(alpha: 0.3),
+          color: const Color(0xFF00897B).withValues(alpha: 0.26),
           width: 1,
         ),
       ),
@@ -426,14 +484,18 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.location_on, color: Colors.purple, size: 24),
+                  const Icon(
+                    Icons.location_on,
+                    color: Color(0xFF00897B),
+                    size: 24,
+                  ),
                   const SizedBox(width: 12),
-                  Text(
+                  const Text(
                     'Deteksi Lokasi Saya',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: Color(0xFF1A1A2E),
                     ),
                   ),
                 ],
@@ -444,7 +506,9 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Color(0xFF00897B),
+                    ),
                   ),
                 ),
             ],
@@ -522,13 +586,40 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
+                backgroundColor: const Color(0xFF00897B),
                 foregroundColor: Colors.white,
                 disabledBackgroundColor: Colors.grey,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderChip({required IconData icon, required String label}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(width: 1),
+          Icon(icon, size: 13, color: Colors.white),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
             ),
           ),
         ],

@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Kelola User'); ?>
 
 <?php $__env->startSection('content'); ?>

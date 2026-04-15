@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Daftar Kontrakan'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -1508,7 +1506,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchSuggestions = document.getElementById('searchSuggestions');
     
     if (searchInput && searchSuggestions) {
-        const commonSearches = ['WiFi', 'AC', 'Dapur', 'Kamar Mandi Dalam', 'Parkir', 'Listrik', 'Air', 'Dekat Kampus'];
+        const commonSearches = ['WiFi', 'AC', 'Dapur', 'Tempat Cuci Piring', 'Kamar Mandi Dalam', 'Parkir', 'Listrik', 'Air', 'Dekat Kampus'];
         
         searchInput.addEventListener('input', function() {
             const value = this.value.toLowerCase();

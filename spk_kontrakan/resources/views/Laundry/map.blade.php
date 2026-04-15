@@ -144,14 +144,11 @@
                         </label>
                         <select name="jenis_layanan" class="form-select">
                             <option value="">Semua Layanan</option>
-                            <option value="express" {{ ($filters['jenis_layanan'] ?? '') == 'express' ? 'selected' : '' }}>
-                                ⚡ Express
+                            <option value="jam" {{ ($filters['jenis_layanan'] ?? '') == 'jam' ? 'selected' : '' }}>
+                                ⚡ Jam
                             </option>
-                            <option value="reguler" {{ ($filters['jenis_layanan'] ?? '') == 'reguler' ? 'selected' : '' }}>
-                                🕐 Reguler
-                            </option>
-                            <option value="kilat" {{ ($filters['jenis_layanan'] ?? '') == 'kilat' ? 'selected' : '' }}>
-                                🚀 Kilat
+                            <option value="harian" {{ ($filters['jenis_layanan'] ?? '') == 'harian' ? 'selected' : '' }}>
+                                🕐 Harian
                             </option>
                         </select>
                     </div>
@@ -323,9 +320,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (location.layanan && location.layanan.length > 0) {
             layananHtml = location.layanan.map(function(layanan) {
                 const jenisIcon = {
+                    'jam': '⚡',
+                    'harian': '🕐',
+                    // Backward compatibility for old values
                     'express': '⚡',
+                    'kilat': '⚡',
+                    'satuan': '⚡',
                     'reguler': '🕐',
-                    'kilat': '🚀'
+                    'kiloan': '🕐'
                 };
                 return `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8f9fa; border-radius: 5px; margin-bottom: 5px;">
