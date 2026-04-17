@@ -272,8 +272,8 @@
             <a href="{{ route('admin.login') }}" class="btn-portal-primary">
                 🔐 Login Pemilik
             </a>
-            <a href="{{ route('admin.register') }}" class="btn-portal-secondary">
-                📝 Daftar Sebagai Pemilik
+            <a href="{{ route('admin.login') }}" class="btn-portal-secondary">
+                ℹ️ Hubungi Super Admin
             </a>
         </div>
     </div>
@@ -379,10 +379,10 @@
     <div style="max-width: 800px; margin: 0 auto;">
         <h2 class="cta-title">Siap Memulai?</h2>
         <p class="cta-subtitle">
-            Daftar sekarang dan dapatkan akses penuh ke dashboard manajemen properti
+            Hubungi super admin untuk mendapatkan akun dan akses dashboard
         </p>
-        <a href="{{ route('admin.register') }}" class="btn-portal-primary" style="display: inline-block;">
-            Daftar Gratis Sekarang
+        <a href="{{ route('admin.login') }}" class="btn-portal-primary" style="display: inline-block;">
+            Buka Halaman Login
         </a>
     </div>
 </section>

@@ -32,10 +32,7 @@ Route::get('/pemilik', function () {
 // AUTH ADMIN (PUBLIC - TIDAK PERLU LOGIN)
 // -------------------------------------------------
 Route::get('/admin/login', [AdminAuthController::class, 'loginPage'])->name('admin.login');
-Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.post');
-
-Route::get('/admin/register', [AdminAuthController::class, 'registerPage'])->name('admin.register');
-Route::post('/admin/register', [AdminAuthController::class, 'register'])->name('admin.register.post');
+Route::post('/admin/login', [AdminAuthController::class, 'login'])->middleware('throttle:10,1')->name('admin.login.post');
 
 // -------------------------------------------------
 // ROUTE ADMIN TERPROTEKSI LOGIN
@@ -46,7 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // ========== 🆕 CLEAR DASHBOARD CACHE (BARU!) ==========
-    Route::get('/dashboard/clear-cache', [DashboardController::class, 'clearCache'])->name('dashboard.clear-cache');
+    Route::post('/dashboard/clear-cache', [DashboardController::class, 'clearCache'])->name('dashboard.clear-cache');
 
     // ========== 🆕 EXPORT ROUTES ==========
     Route::prefix('export')->name('export.')->group(function () {
@@ -64,21 +61,25 @@ Route::middleware('auth')->group(function () {
     });
 
     // ========== 🆕 ACTIVITY LOG ROUTES ==========
-    Route::prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware('role:super_admin')->group(function () {
+        Route::get('/activity-logs/dashboard', [ActivityLogController::class, 'dashboard'])->name('activity-logs.dashboard');
+        Route::get('/activity-logs/security', [ActivityLogController::class, 'security'])->name('activity-logs.security');
+        Route::get('/activity-logs/api-stats', [ActivityLogController::class, 'apiStats'])->name('activity-logs.api-stats');
+        Route::post('/activity-logs/archive', [ActivityLogController::class, 'archive'])->name('activity-logs.archive');
         Route::get('/activity-logs/export', [ActivityLogController::class, 'export'])->name('activity-logs.export');
         Route::post('/activity-logs/clear', [ActivityLogController::class, 'clear'])->name('activity-logs.clear');
         Route::resource('activity-logs', ActivityLogController::class)->only(['index', 'show']);
     });
 
     // ========== 🆕 USER MANAGEMENT ROUTES ==========
-    Route::prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware('role:super_admin')->group(function () {
         Route::resource('users', UserManagementController::class);
         Route::post('/users/{user}/restore', [UserManagementController::class, 'restore'])->name('users.restore')->withTrashed();
         Route::post('/users/bulk-delete', [UserManagementController::class, 'bulkDelete'])->name('users.bulk-delete');
     });
 
     // ========== 🆕 BACKUP & RESTORE ROUTES ==========
-    Route::prefix('admin/backup')->name('admin.backup.')->group(function () {
+    Route::prefix('admin/backup')->name('admin.backup.')->middleware('role:super_admin')->group(function () {
         Route::get('/', [BackupController::class, 'index'])->name('index');
         Route::post('/create', [BackupController::class, 'create'])->name('create');
         Route::get('/download/{backup}', [BackupController::class, 'download'])->name('download');
@@ -155,6 +156,9 @@ Route::middleware('auth')->group(function () {
 
     // Review Routes
     Route::prefix('reviews')->name('reviews.')->group(function () {
+        Route::get('/{type}/{id}/create', [ReviewController::class, 'create'])
+            ->where('type', 'kontrakan|laundry')
+            ->name('create');
         Route::post('/kontrakan/{kontrakan}', [ReviewController::class, 'storeKontrakan'])->name('kontrakan.store');
         Route::post('/laundry/{laundry}', [ReviewController::class, 'storeLaundry'])->name('laundry.store');
         Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
@@ -170,4 +174,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/favorite/{type}/{id}', [FavoriteController::class, 'toggle'])->name('favorite.toggle');
 
     Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
+});
+
+// Register admin hanya untuk super admin yang sudah login
+Route::middleware(['auth', 'role:super_admin'])->group(function () {
+    Route::get('/admin/register', [AdminAuthController::class, 'registerPage'])->name('admin.register');
+    Route::post('/admin/register', [AdminAuthController::class, 'register'])->name('admin.register.post');
 });

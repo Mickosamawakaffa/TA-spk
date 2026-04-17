@@ -39,7 +39,7 @@ class SAWController extends Controller
             $kriteriaKontrakan = Kriteria::where('tipe_bisnis', 'kontrakan')->get();
             $kriteriaLaundry = Kriteria::where('tipe_bisnis', 'laundry')->get();
             
-            return view('SAW.bobot', compact('kriteriaKontrakan', 'kriteriaLaundry'));
+            return view('saw.bobot', compact('kriteriaKontrakan', 'kriteriaLaundry'));
             
         } catch (Exception $e) {
             Log::error('Error di SAW Bobot: ' . $e->getMessage());

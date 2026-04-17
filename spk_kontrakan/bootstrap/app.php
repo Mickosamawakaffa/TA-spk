@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Alias middleware admin
         $middleware->alias([
             'auth.admin' => \App\Http\Middleware\AdminAuth::class,
+            'role' => \App\Http\Middleware\EnsureRole::class,
         ]);
 
         // Redirect guest ke admin.login
