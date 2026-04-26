@@ -201,26 +201,84 @@
 
                                 <!-- Fasilitas -->
                                 <div class="col-md-6">
-                                    <label for="fasilitas" class="form-label fw-semibold">
-                                        Fasilitas <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-end-0">
-                                            <i class="bi bi-list-check text-primary"></i>
-                                        </span>
-                                        <input 
-                                            type="text" 
-                                            name="fasilitas" 
-                                            class="form-control border-start-0 @error('fasilitas') is-invalid @enderror" 
-                                            id="fasilitas" 
-                                            placeholder="Cuci + Setrika"
-                                            value="{{ old('fasilitas', $laundry->fasilitas) }}"
-                                            required
-                                        >
-                                        @error('fasilitas')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                    @php
+                                        $masterFasilitas = [
+                                            'Cuci Kering',
+                                            'Cuci Lipat',
+                                            'Cuci + Setrika',
+                                            'Setrika Saja',
+                                            'Express',
+                                            'Reguler',
+                                            'Antar Jemput',
+                                            'Pewangi Premium',
+                                            'Packaging Rapi',
+                                            'Cuci Boneka',
+                                            'Cuci Gordyn',
+                                            'Cuci Tas',
+                                            'Cuci Bedcover',
+                                            'Cuci Seprei',
+                                            'Cuci Selimut',
+                                        ];
+                                        $selectedFasilitas = collect(explode(',', old('fasilitas', $laundry->fasilitas)))
+                                            ->map(function ($item) { return trim($item); })
+                                            ->filter()
+                                            ->values();
+                                        $fasilitasOptions = collect($masterFasilitas)
+                                            ->merge($selectedFasilitas)
+                                            ->unique()
+                                            ->values();
+                                    @endphp
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label for="fasilitas_search" class="form-label fw-semibold mb-0">
+                                            Fasilitas <span class="text-danger">*</span>
+                                        </label>
+                                        <span id="fasilitas_selected_count" class="badge text-bg-primary rounded-pill">0 dipilih</span>
                                     </div>
+                                    <div class="input-group mb-2">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="bi bi-search text-secondary"></i>
+                                        </span>
+                                        <input
+                                            type="text"
+                                            id="fasilitas_search"
+                                            class="form-control border-start-0"
+                                            placeholder="Cari fasilitas..."
+                                        >
+                                    </div>
+                                    <div class="d-flex gap-2 mb-2">
+                                        <button type="button" id="select_all_fasilitas" class="btn btn-sm btn-outline-primary py-1 px-2">
+                                            <i class="bi bi-check2-square me-1"></i>Pilih Semua
+                                        </button>
+                                        <button type="button" id="clear_all_fasilitas" class="btn btn-sm btn-outline-secondary py-1 px-2">
+                                            <i class="bi bi-x-square me-1"></i>Hapus Semua
+                                        </button>
+                                    </div>
+                                    <div id="fasilitas_checkbox_container" class="fasilitas-panel border rounded p-2 bg-white @error('fasilitas') border-danger @enderror">
+                                        <div class="fasilitas-chip-list">
+                                        @foreach($fasilitasOptions as $fasilitasOption)
+                                            <div class="fasilitas-option-item">
+                                                <input
+                                                    class="fasilitas-checkbox visually-hidden"
+                                                    type="checkbox"
+                                                    value="{{ $fasilitasOption }}"
+                                                    id="fasilitas_{{ $loop->index }}"
+                                                    {{ $selectedFasilitas->contains($fasilitasOption) ? 'checked' : '' }}
+                                                >
+                                                <label class="fasilitas-chip" for="fasilitas_{{ $loop->index }}">
+                                                    {{ $fasilitasOption }}
+                                                </label>
+                                            </div>
+                                        @endforeach
+                                        </div>
+                                        <div id="fasilitas_empty_state" class="text-muted small py-2 px-1" style="display: none;">
+                                            Tidak ada fasilitas yang cocok dengan pencarian.
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="fasilitas" id="fasilitas" value="{{ old('fasilitas', $laundry->fasilitas) }}">
+                                    @error('fasilitas')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                    <small class="text-muted">Pilih satu atau lebih fasilitas yang disediakan laundry ini.</small>
                                 </div>
 
                                 <!-- Status Operasional -->
@@ -466,16 +524,7 @@
                                                         placeholder="Deskripsi singkat paket ini..."
                                                     >{{ $layanan->deskripsi }}</textarea>
                                                 </div>
-
-                                                <div class="col-md-12">
-                                                    <label class="form-label fw-semibold">
-                                                        Status <span class="text-danger">*</span>
-                                                    </label>
-                                                    <select name="layanan[{{ $index }}][status]" class="form-select" required>
-                                                        <option value="aktif" {{ $layanan->status == 'aktif' ? 'selected' : '' }}>Aktif</option>
-                                                        <option value="nonaktif" {{ $layanan->status == 'nonaktif' ? 'selected' : '' }}>Nonaktif</option>
-                                                    </select>
-                                                </div>
+                                                <input type="hidden" name="layanan[{{ $index }}][status]" value="{{ $layanan->status ?? 'aktif' }}">
                                             </div>
                                         </div>
                                     </div>
@@ -564,6 +613,7 @@
                                                         placeholder="Deskripsi singkat paket ini..."
                                                     ></textarea>
                                                 </div>
+                                                <input type="hidden" name="layanan[0][status]" value="aktif">
                                             </div>
                                         </div>
                                     </div>
@@ -749,6 +799,11 @@ document.addEventListener('DOMContentLoaded', function() {
     let layananCount = {{ $laundry->layanan ? $laundry->layanan->count() : 1 }};
     const container = document.getElementById('layananContainer');
     const addButton = document.getElementById('addLayanan');
+    const laundryFormElement = document.getElementById('laundryForm');
+    const DRAFT_KEY = 'laundry_edit_draft_{{ $laundry->id }}_v1';
+    const excludedDraftFields = new Set(['_token', '_method']);
+    let isRestoringDraft = false;
+    let draftSaveTimeout;
     
     addButton.addEventListener('click', function() {
         const newItem = document.createElement('div');
@@ -835,46 +890,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             placeholder="Deskripsi singkat paket ini..."
                         ></textarea>
                     </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">
-                            Rating (0-5) <span class="text-muted">(Opsional)</span>
-                        </label>
-                        <input 
-                            type="number" 
-                            name="layanan[${layananCount}][rating]" 
-                            class="form-control" 
-                            placeholder="4.5"
-                            min="0"
-                            max="5"
-                            step="0.1"
-                        >
-                        <small class="text-muted">Rating rata-rata paket ini (0-5)</small>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">
-                            Waktu Proses (Jam) <span class="text-muted">(Opsional)</span>
-                        </label>
-                        <input 
-                            type="number" 
-                            name="layanan[${layananCount}][waktu_proses]" 
-                            class="form-control" 
-                            placeholder="24"
-                            min="1"
-                        >
-                        <small class="text-muted">Waktu rata-rata proses paket ini</small>
-                    </div>
-
-                    <div class="col-md-12">
-                        <label class="form-label fw-semibold">
-                            Status <span class="text-danger">*</span>
-                        </label>
-                        <select name="layanan[${layananCount}][status]" class="form-select" required>
-                            <option value="aktif" selected>Aktif</option>
-                            <option value="nonaktif">Nonaktif</option>
-                        </select>
-                    </div>
+                    <input type="hidden" name="layanan[${layananCount}][status]" value="aktif">
                 </div>
             </div>
         `;
@@ -882,12 +898,14 @@ document.addEventListener('DOMContentLoaded', function() {
         container.appendChild(newItem);
         layananCount++;
         updateRemoveButtons();
+        scheduleDraftSave();
     });
     
     container.addEventListener('click', function(e) {
         if (e.target.closest('.remove-layanan')) {
             e.target.closest('.layanan-item').remove();
             updateRemoveButtons();
+            scheduleDraftSave();
         }
     });
     
@@ -899,6 +917,141 @@ document.addEventListener('DOMContentLoaded', function() {
                 removeBtn.style.display = 'block';
             } else {
                 removeBtn.style.display = 'none';
+            }
+        });
+    }
+
+    // ========== AUTOSAVE DRAFT (LOCALSTORAGE) ==========
+    function scheduleDraftSave() {
+        if (!laundryFormElement || isRestoringDraft) {
+            return;
+        }
+
+        clearTimeout(draftSaveTimeout);
+        draftSaveTimeout = setTimeout(saveDraft, 250);
+    }
+
+    function saveDraft() {
+        if (!laundryFormElement || isRestoringDraft) {
+            return;
+        }
+
+        syncFasilitasInput();
+        const draftData = {};
+        const fields = laundryFormElement.querySelectorAll('input[name], select[name], textarea[name]');
+
+        fields.forEach(field => {
+            if (field.type === 'file') {
+                return;
+            }
+
+            if (excludedDraftFields.has(field.name)) {
+                return;
+            }
+
+            if (field.type === 'checkbox' || field.type === 'radio') {
+                if (field.checked) {
+                    draftData[field.name] = field.value;
+                }
+                return;
+            }
+
+            draftData[field.name] = field.value;
+        });
+
+        try {
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
+        } catch (error) {
+            console.warn('Gagal menyimpan draft form laundry.', error);
+        }
+    }
+
+    function restoreDraft() {
+        if (!laundryFormElement) {
+            return;
+        }
+
+        let rawDraft = null;
+        try {
+            rawDraft = localStorage.getItem(DRAFT_KEY);
+        } catch (error) {
+            console.warn('Gagal membaca draft form laundry.', error);
+            return;
+        }
+
+        if (!rawDraft) {
+            return;
+        }
+
+        let draftData;
+        try {
+            draftData = JSON.parse(rawDraft);
+        } catch (error) {
+            console.warn('Draft form laundry tidak valid.', error);
+            return;
+        }
+
+        isRestoringDraft = true;
+
+        const layananIndices = Object.keys(draftData)
+            .map(key => key.match(/^layanan\[(\d+)\]\[/))
+            .filter(Boolean)
+            .map(match => parseInt(match[1], 10));
+
+        const maxLayananIndex = layananIndices.length > 0 ? Math.max(...layananIndices) : 0;
+        while (layananCount <= maxLayananIndex) {
+            addButton.click();
+        }
+
+        const fields = laundryFormElement.querySelectorAll('input[name], select[name], textarea[name]');
+        fields.forEach(field => {
+            if (field.type === 'file') {
+                return;
+            }
+
+            if (excludedDraftFields.has(field.name)) {
+                return;
+            }
+
+            if (!(field.name in draftData)) {
+                return;
+            }
+
+            const value = draftData[field.name];
+            if (field.type === 'checkbox' || field.type === 'radio') {
+                field.checked = value === field.value;
+            } else {
+                field.value = value;
+            }
+        });
+
+        const fasilitasValues = String(draftData.fasilitas || '')
+            .split(',')
+            .map(item => item.trim())
+            .filter(Boolean);
+
+        Array.from(fasilitasCheckboxes).forEach(checkbox => {
+            checkbox.checked = fasilitasValues.includes(checkbox.value);
+        });
+
+        syncFasilitasInput();
+        filterFasilitasOptions();
+        updateRemoveButtons();
+        handleManualCoordinateInput();
+
+        isRestoringDraft = false;
+    }
+
+    if (laundryFormElement) {
+        laundryFormElement.addEventListener('input', scheduleDraftSave);
+        laundryFormElement.addEventListener('change', scheduleDraftSave);
+        laundryFormElement.addEventListener('submit', function (event) {
+            if (!event.defaultPrevented) {
+                try {
+                    localStorage.removeItem(DRAFT_KEY);
+                } catch (error) {
+                    console.warn('Gagal menghapus draft form laundry.', error);
+                }
             }
         });
     }
@@ -1064,6 +1217,98 @@ document.addEventListener('DOMContentLoaded', function() {
     lngInput.addEventListener('change', handleManualCoordinateInput);
     latInput.addEventListener('blur', handleManualCoordinateInput);
     lngInput.addEventListener('blur', handleManualCoordinateInput);
+
+    // ========== FASILITAS DROPDOWN (MULTI-SELECT) ==========
+    const fasilitasCheckboxes = document.querySelectorAll('.fasilitas-checkbox');
+    const fasilitasInput = document.getElementById('fasilitas');
+    const fasilitasSearch = document.getElementById('fasilitas_search');
+    const fasilitasSelectedCount = document.getElementById('fasilitas_selected_count');
+    const selectAllFasilitasBtn = document.getElementById('select_all_fasilitas');
+    const clearAllFasilitasBtn = document.getElementById('clear_all_fasilitas');
+    const fasilitasEmptyState = document.getElementById('fasilitas_empty_state');
+
+    function updateFasilitasCounter() {
+        const selectedCount = Array.from(fasilitasCheckboxes).filter(checkbox => checkbox.checked).length;
+        fasilitasSelectedCount.textContent = `${selectedCount} dipilih`;
+    }
+
+    function filterFasilitasOptions() {
+        const keyword = (fasilitasSearch.value || '').trim().toLowerCase();
+        let visibleCount = 0;
+        Array.from(fasilitasCheckboxes).forEach(checkbox => {
+            const item = checkbox.closest('.fasilitas-option-item');
+            const text = checkbox.value.toLowerCase();
+            const isVisible = !(keyword !== '' && !text.includes(keyword));
+            item.style.display = isVisible ? '' : 'none';
+            if (isVisible) {
+                visibleCount++;
+            }
+        });
+
+        if (fasilitasEmptyState) {
+            fasilitasEmptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+    }
+
+    function syncFasilitasInput() {
+        const selectedValues = Array.from(fasilitasCheckboxes)
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => checkbox.value.trim())
+            .filter(Boolean);
+        fasilitasInput.value = selectedValues.join(', ');
+        updateFasilitasCounter();
+        if (!isRestoringDraft) {
+            scheduleDraftSave();
+        }
+    }
+
+    if (fasilitasCheckboxes.length > 0 && fasilitasInput) {
+        Array.from(fasilitasCheckboxes).forEach(checkbox => {
+            checkbox.addEventListener('change', syncFasilitasInput);
+        });
+
+        if (selectAllFasilitasBtn) {
+            selectAllFasilitasBtn.addEventListener('click', function () {
+                Array.from(fasilitasCheckboxes).forEach(checkbox => {
+                    const item = checkbox.closest('.fasilitas-option-item');
+                    if (!item || item.style.display !== 'none') {
+                        checkbox.checked = true;
+                    }
+                });
+                syncFasilitasInput();
+            });
+        }
+
+        if (clearAllFasilitasBtn) {
+            clearAllFasilitasBtn.addEventListener('click', function () {
+                Array.from(fasilitasCheckboxes).forEach(checkbox => {
+                    const item = checkbox.closest('.fasilitas-option-item');
+                    if (!item || item.style.display !== 'none') {
+                        checkbox.checked = false;
+                    }
+                });
+                syncFasilitasInput();
+            });
+        }
+        if (fasilitasSearch) {
+            fasilitasSearch.addEventListener('input', filterFasilitasOptions);
+        }
+        syncFasilitasInput();
+        filterFasilitasOptions();
+
+        const laundryForm = fasilitasInput.closest('form');
+        if (laundryForm) {
+            laundryForm.addEventListener('submit', function (event) {
+                syncFasilitasInput();
+                if (!fasilitasInput.value.trim()) {
+                    event.preventDefault();
+                    alert('Pilih minimal satu fasilitas.');
+                }
+            });
+        }
+    }
+
+    restoreDraft();
 });
 
 // Modal functions
@@ -1145,6 +1390,44 @@ document.addEventListener('keydown', function(e) {
     
     .spinner-border {
         animation: spin 0.75s linear infinite;
+    }
+
+    .fasilitas-panel {
+        max-height: 220px;
+        overflow-y: auto;
+        background: #f8faff !important;
+    }
+
+    .fasilitas-chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+    }
+
+    .fasilitas-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.7rem;
+        border: 1px solid #d8e2f1;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #2c3e50;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .fasilitas-chip:hover {
+        border-color: #86b7fe;
+        background: #eef5ff;
+        transform: translateY(-1px);
+    }
+
+    .fasilitas-checkbox:checked + .fasilitas-chip {
+        border-color: #0d6efd;
+        background: #0d6efd;
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(13, 110, 253, 0.25);
     }
 </style>
 @endsection
