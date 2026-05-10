@@ -9,7 +9,7 @@ class AppConfig {
   // ============================================================================
 
   // Default fallback (dipakai jika auto-detect gagal)
-  static const String _defaultServer = 'http://192.168.18.16:8000';
+  static const String _defaultServer = 'http://192.168.18.17:41197';
 
   // Runtime values — diupdate otomatis oleh ServerDiscoveryService
   static String _serverUrl = _defaultServer;
@@ -30,4 +30,5 @@ class AppConfig {
   // Local Storage Keys
   static const String tokenKey = 'auth_token';
   static const String userKey = 'user_data';
+  static const String deviceTokenKey = 'device_token';
 }

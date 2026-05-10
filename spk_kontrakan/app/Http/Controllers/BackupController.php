@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use ZipArchive;
 use Exception;
@@ -55,46 +54,15 @@ class BackupController extends Controller
     public function create(Request $request)
     {
         try {
-            $timestamp = now()->format('Y-m-d-H-i-s');
-            $backupFile = $this->backupPath . "/backup_{$timestamp}.sql";
+            $exitCode = Artisan::call('database:backup');
 
-            // Get database credentials (use config() instead of env() for config:cache compatibility)
-            $database = config('database.connections.mysql.database');
-            $username = config('database.connections.mysql.username');
-            $password = config('database.connections.mysql.password');
-            $host = config('database.connections.mysql.host');
-
-            // Create SQL dump (Windows MySQL)
-            $command = sprintf(
-                'mysqldump --user=%s --password=%s --host=%s %s > "%s"',
-                escapeshellarg($username),
-                escapeshellarg($password),
-                escapeshellarg($host),
-                escapeshellarg($database),
-                $backupFile
-            );
-
-            $output = null;
-            $exitCode = null;
-            exec($command, $output, $exitCode);
-
-            if ($exitCode === 0 && File::exists($backupFile)) {
-                // Create zip file
-                $zipFile = $this->backupPath . "/backup_{$timestamp}.zip";
-                $zip = new ZipArchive();
-                
-                if ($zip->open($zipFile, ZipArchive::CREATE) === true) {
-                    $zip->addFile($backupFile, 'database.sql');
-                    $zip->close();
-
-                    // Delete original SQL file
-                    File::delete($backupFile);
-
-                    return redirect()->back()->with('success', "Backup berhasil dibuat: backup_{$timestamp}.zip");
-                }
+            if ($exitCode === 0) {
+                $output = trim(Artisan::output());
+                return redirect()->back()->with('success', $output !== '' ? $output : 'Backup berhasil dibuat');
             }
 
-            return redirect()->back()->with('error', 'Gagal membuat backup');
+            $output = trim(Artisan::output());
+            return redirect()->back()->with('error', $output !== '' ? $output : 'Gagal membuat backup');
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }

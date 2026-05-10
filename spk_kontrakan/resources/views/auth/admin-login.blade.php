@@ -23,7 +23,7 @@
 
         .auth-card {
             width: 100%;
-            max-width: 420px;
+            max-width: 720px;
             background: white;
             border-radius: 12px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
@@ -125,6 +125,23 @@
         .auth-footer a:hover {
             color: #764ba2;
         }
+
+        .btn-register-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 16px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            color: #667eea;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-register-link:hover {
+            background: #667eea;
+            color: #fff;
+        }
     </style>
 </head>
 
@@ -145,6 +162,13 @@
         </div>
 
         <div class="auth-body">
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
             @if(session('error'))
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
@@ -172,7 +196,8 @@
         </div>
 
         <div class="auth-footer">
-            <p>Belum punya akun bisnis? Hubungi super admin untuk pembuatan akun.</p>
+            <p>Belum punya akun bisnis?</p>
+            <a class="btn-register-link" href="/admin/register" onclick="window.location.href='/admin/register'; return false;">Daftar di sini</a>
         </div>
     </div>
 </div>

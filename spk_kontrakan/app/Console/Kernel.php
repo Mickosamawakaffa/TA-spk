@@ -12,22 +12,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // Auto-verify bookings setiap hari jam 12 malam (00:00)
-        // Ini akan check booking dengan payment_paid dan check-in date sudah tiba
-        // Kemudian auto-update status menjadi "checked_in"
-        $schedule->command('bookings:auto-verify')
-                 ->dailyAt('00:00')  // Jam 12 malam setiap hari
-                 ->description('Auto-verify bookings yang sudah payment_paid dan check-in date tiba');
-
-        // Log setiap kali scheduler jalan
-        $schedule->command('bookings:auto-verify')
-                 ->dailyAt('00:00')
-                 ->onSuccess(function () {
-                     \Log::info('✅ Auto-verify bookings scheduler selesai dijalankan');
-                 })
-                 ->onFailure(function () {
-                     \Log::error('❌ Auto-verify bookings scheduler gagal');
-                 });
+        // Scheduler didaftarkan di routes/console.php (Laravel 11 style).
     }
 
     /**

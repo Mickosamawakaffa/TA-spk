@@ -172,4 +172,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Favorite::class);
     }
+
+    /**
+     * Device tokens untuk push notification admin.
+     */
+    public function adminDeviceTokens()
+    {
+        return $this->hasMany(AdminDeviceToken::class);
+    }
 }

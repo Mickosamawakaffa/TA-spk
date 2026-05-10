@@ -33,6 +33,8 @@ Route::get('/pemilik', function () {
 // -------------------------------------------------
 Route::get('/admin/login', [AdminAuthController::class, 'loginPage'])->name('admin.login');
 Route::post('/admin/login', [AdminAuthController::class, 'login'])->middleware('throttle:10,1')->name('admin.login.post');
+Route::get('/admin/register', [AdminAuthController::class, 'registerPage'])->name('admin.register');
+Route::post('/admin/register', [AdminAuthController::class, 'register'])->middleware('throttle:10,1')->name('admin.register.post');
 
 // -------------------------------------------------
 // ROUTE ADMIN TERPROTEKSI LOGIN
@@ -41,6 +43,10 @@ Route::middleware('auth')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Admin Profile
+    Route::get('/admin/profile', [\App\Http\Controllers\AdminProfileController::class, 'edit'])->name('admin.profile');
+    Route::put('/admin/profile', [\App\Http\Controllers\AdminProfileController::class, 'update'])->name('admin.profile.update');
     
     // ========== 🆕 CLEAR DASHBOARD CACHE (BARU!) ==========
     Route::post('/dashboard/clear-cache', [DashboardController::class, 'clearCache'])->name('dashboard.clear-cache');
@@ -174,10 +180,4 @@ Route::middleware('auth')->group(function () {
     Route::post('/favorite/{type}/{id}', [FavoriteController::class, 'toggle'])->name('favorite.toggle');
 
     Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
-});
-
-// Register admin hanya untuk super admin yang sudah login
-Route::middleware(['auth', 'role:super_admin'])->group(function () {
-    Route::get('/admin/register', [AdminAuthController::class, 'registerPage'])->name('admin.register');
-    Route::post('/admin/register', [AdminAuthController::class, 'register'])->name('admin.register.post');
 });

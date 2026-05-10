@@ -7,6 +7,15 @@ use Illuminate\Http\Request;
 
 class KriteriaController extends Controller
 {
+    private function ensureSuperAdmin()
+    {
+        if (auth()->user()->role !== 'super_admin') {
+            return redirect()->back()->with('error', 'Hanya super admin yang dapat mengubah kriteria.');
+        }
+
+        return null;
+    }
+
     public function index(Request $request)
     {
         // Ambil filter dan sorting dari request
@@ -100,11 +109,19 @@ class KriteriaController extends Controller
 
     public function create()
     {
+        if ($response = $this->ensureSuperAdmin()) {
+            return $response;
+        }
+
         return view('kriteria.create');
     }
 
     public function store(Request $request)
     {
+        if ($response = $this->ensureSuperAdmin()) {
+            return $response;
+        }
+
         $request->validate([
             'tipe_bisnis' => 'required|in:kontrakan,laundry',
             'nama_kriteria' => 'required|string|max:255',
@@ -127,11 +144,19 @@ class KriteriaController extends Controller
 
     public function edit(Kriteria $kriterium)
     {
+        if ($response = $this->ensureSuperAdmin()) {
+            return $response;
+        }
+
         return view('kriteria.edit', ['kriteria' => $kriterium]);
     }
 
     public function update(Request $request, Kriteria $kriterium)
     {
+        if ($response = $this->ensureSuperAdmin()) {
+            return $response;
+        }
+
         $request->validate([
             'tipe_bisnis' => 'required|in:kontrakan,laundry',
             'nama_kriteria' => 'required|string|max:255',
@@ -149,9 +174,8 @@ class KriteriaController extends Controller
 
     public function destroy(Kriteria $kriterium)
     {
-        // CEK ROLE - HANYA ADMIN DAN SUPER ADMIN YANG BOLEH HAPUS
-        if (!in_array(auth()->user()->role, ['admin', 'super_admin'])) {
-            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk menghapus data!');
+        if ($response = $this->ensureSuperAdmin()) {
+            return $response;
         }
         
         $tipeBisnis = $kriterium->tipe_bisnis; // Simpan sebelum dihapus

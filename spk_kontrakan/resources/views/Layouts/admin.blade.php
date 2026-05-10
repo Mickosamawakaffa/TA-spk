@@ -699,7 +699,6 @@
                         <div class="fw-bold">{{ Auth::user()->name }}</div>
                         <small class="text-muted">{{ Auth::user()->email }}</small>
                     </li>
-                    <li><a class="dropdown-item py-2" href="{{ route('welcome') }}"><i class="bi bi-house me-2"></i>Lihat Halaman User</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <form method="POST" action="{{ route('admin.logout') }}">
@@ -723,6 +722,14 @@
                 <a href="{{ route('dashboard') }}" class="menu-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <i class="bi bi-speedometer2"></i>
                     <span>Dashboard Utama</span>
+                </a>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-section-title">Akun</div>
+                <a href="{{ route('admin.profile') }}" class="menu-item {{ request()->routeIs('admin.profile') ? 'active' : '' }}">
+                    <i class="bi bi-person-circle"></i>
+                    <span>Profil</span>
                 </a>
             </div>
 

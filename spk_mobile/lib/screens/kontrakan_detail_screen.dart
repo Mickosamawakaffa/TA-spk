@@ -58,71 +58,39 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
   }
 
   Future<void> _toggleFavorite() async {
-    setState(() => _isFavLoading = true);
-    try {
-      final result = await _favoriteService.toggleKontrakanFavorite(
-        widget.kontrakan.id,
-      );
-      if (!mounted) return;
+    if (!mounted) return;
 
-      if (result['success'] == true) {
-        setState(() {
-          _isFavorite = result['isFavorite'] ?? !_isFavorite;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(
-                  _isFavorite
-                      ? Icons.favorite_rounded
-                      : Icons.favorite_border_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                const SizedBox(width: 10),
-                Text(result['message'] ?? 'Status favorit diubah'),
-              ],
+    setState(() {
+      _isFavorite = !_isFavorite;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              _isFavorite
+                  ? Icons.favorite_rounded
+                  : Icons.favorite_border_rounded,
+              color: Colors.white,
+              size: 20,
             ),
-            backgroundColor: _isFavorite
-                ? const Color(0xFF1565C0)
-                : Colors.grey[700],
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Gagal mengubah favorit'),
-            backgroundColor: Colors.red[700],
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal: $e'),
-          backgroundColor: Colors.red[700],
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          margin: const EdgeInsets.all(16),
+            const SizedBox(width: 10),
+            const Text('Perubahan favorit disimpan lokal (tanpa auto-save DB)'),
+          ],
         ),
-      );
-    } finally {
-      if (mounted) setState(() => _isFavLoading = false);
+        backgroundColor: _isFavorite
+            ? const Color(0xFF1565C0)
+            : Colors.grey[700],
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+
+    if (_isFavLoading) {
+      setState(() => _isFavLoading = false);
     }
   }
 

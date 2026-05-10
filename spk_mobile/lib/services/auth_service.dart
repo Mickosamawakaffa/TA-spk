@@ -42,8 +42,19 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(AppConfig.tokenKey);
     await prefs.remove(AppConfig.userKey);
+    await prefs.remove(AppConfig.deviceTokenKey);
     _token = null;
     _currentUser = null;
+  }
+
+  Future<void> saveDeviceToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(AppConfig.deviceTokenKey, token);
+  }
+
+  Future<String?> loadDeviceToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(AppConfig.deviceTokenKey);
   }
 
   /// Tangani response 401 secara terpusat.
@@ -135,6 +146,11 @@ class AuthService {
       if (_token == null) {
         await clearToken();
         return {'success': true};
+      }
+
+      final deviceToken = await loadDeviceToken();
+      if (deviceToken != null) {
+        await unregisterDeviceToken(deviceToken);
       }
 
       final response = await http.post(
@@ -262,6 +278,49 @@ class AuthService {
       }
     } catch (e) {
       return {'success': false, 'message': 'Error: $e'};
+    }
+  }
+
+  Future<void> registerDeviceToken({
+    required String token,
+    String? platform,
+  }) async {
+    if (_token == null) return;
+
+    try {
+      await http.post(
+        Uri.parse('${AppConfig.baseUrl}/device-tokens'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({
+          'token': token,
+          if (platform != null) 'platform': platform,
+        }),
+      );
+      await saveDeviceToken(token);
+    } catch (_) {
+      // Non-blocking: ignore errors
+    }
+  }
+
+  Future<void> unregisterDeviceToken(String token) async {
+    if (_token == null) return;
+
+    try {
+      await http.delete(
+        Uri.parse('${AppConfig.baseUrl}/device-tokens'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({'token': token}),
+      );
+    } catch (_) {
+      // Non-blocking: ignore errors
     }
   }
 }

@@ -701,7 +701,6 @@
                         <div class="fw-bold"><?php echo e(Auth::user()->name); ?></div>
                         <small class="text-muted"><?php echo e(Auth::user()->email); ?></small>
                     </li>
-                    <li><a class="dropdown-item py-2" href="<?php echo e(route('welcome')); ?>"><i class="bi bi-house me-2"></i>Lihat Halaman User</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <form method="POST" action="<?php echo e(route('admin.logout')); ?>">
@@ -725,6 +724,14 @@
                 <a href="<?php echo e(route('dashboard')); ?>" class="menu-item <?php echo e(request()->routeIs('dashboard') ? 'active' : ''); ?>">
                     <i class="bi bi-speedometer2"></i>
                     <span>Dashboard Utama</span>
+                </a>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-section-title">Akun</div>
+                <a href="<?php echo e(route('admin.profile')); ?>" class="menu-item <?php echo e(request()->routeIs('admin.profile') ? 'active' : ''); ?>">
+                    <i class="bi bi-person-circle"></i>
+                    <span>Profil</span>
                 </a>
             </div>
 

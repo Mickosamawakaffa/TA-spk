@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Kontrakan;
 use App\Models\Laundry;
 use App\Models\Kriteria;
+use App\Models\Booking;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 
@@ -146,8 +147,8 @@ class DashboardController extends Controller
 
         // ========== TAMBAHAN DATA YANG HILANG ==========
         $additionalData = [
-            // Data review
-            'totalReviews' => \App\Models\Review::count() ?? 0,
+            // Data booking
+            'totalBookings' => Booking::count() ?? 0,
             
             // Data admin
             'totalAdmins' => \App\Models\User::where('role', 'admin')->count() ?? 1,

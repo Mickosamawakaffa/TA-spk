@@ -2,18 +2,18 @@
 class Environment {
   // 💻 For Development
   // Android Emulator = http://10.0.2.2:8000
-  // iOS Simulator = http://localhost:8000  
+  // iOS Simulator = http://localhost:8000
   // Real Device = Ganti dengan IP komputer Anda
-  
+
   // Pilih sesuai platform dan environment saat development
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://192.168.18.16:8000', // Default IP lokal
+    defaultValue: 'http://192.168.18.17:41197', // Default IP lokal
   );
 
   static const String storageBaseUrl = String.fromEnvironment(
     'STORAGE_BASE_URL',
-    defaultValue: 'http://192.168.18.16:8000/storage',
+    defaultValue: 'http://192.168.18.17:41197/storage',
   );
 
   // Mode debugging

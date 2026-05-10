@@ -225,6 +225,7 @@ class KontrakanController extends Controller
             'jumlah_kamar' => $request->jumlah_kamar,
             'bathroom_count' => $request->bathroom_count ?? 1,
             'foto' => $filename,
+            'availability_confirmed_at' => now(),
         ]);
 
         // Log activity
@@ -335,6 +336,7 @@ class KontrakanController extends Controller
             'jumlah_kamar' => $request->jumlah_kamar,
             'bathroom_count' => $request->bathroom_count ?? $kontrakan->bathroom_count ?? 1,
             'foto' => $filename,
+            'availability_confirmed_at' => now(),
         ]);
 
         // Log activity
@@ -449,6 +451,7 @@ class KontrakanController extends Controller
             'status' => $newStatus,
             // Reset occupied_until jika status jadi available
             'occupied_until' => $newStatus === 'available' ? null : $kontrakan->occupied_until,
+            'availability_confirmed_at' => now(),
         ]);
 
         // Log activity

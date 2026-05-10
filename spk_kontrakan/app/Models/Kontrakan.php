@@ -23,10 +23,12 @@ class Kontrakan extends Model
         'foto',
         'status',
         'occupied_until',
+        'availability_confirmed_at',
     ];
 
     protected $casts = [
         'occupied_until' => 'date',
+        'availability_confirmed_at' => 'datetime',
     ];
 
     /**

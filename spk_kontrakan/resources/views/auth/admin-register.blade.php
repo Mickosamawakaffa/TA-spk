@@ -23,7 +23,7 @@
 
         .auth-card {
             width: 100%;
-            max-width: 420px;
+            max-width: 720px;
             background: white;
             border-radius: 12px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);

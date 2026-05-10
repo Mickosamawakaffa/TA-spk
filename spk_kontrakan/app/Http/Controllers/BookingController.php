@@ -358,18 +358,10 @@ class BookingController extends Controller
     }
 
     /**
-     * Hapus booking (super admin bisa hapus semua, admin biasa hanya pending/cancelled)
+     * Hapus booking
      */
     public function destroy(Booking $booking)
     {
-        // Super admin bisa hapus booking apapun
-        if (auth()->user()->role !== 'super_admin') {
-            // Admin biasa hanya bisa hapus pending atau cancelled
-            if (!in_array($booking->status, [Booking::STATUS_PENDING, Booking::STATUS_CANCELLED])) {
-                return back()->with('error', 'Hanya booking pending atau yang dibatalkan yang bisa dihapus.');
-            }
-        }
-
         // delete() akan trigger boot()->deleted() yang auto sync status kontrakan
         $booking->delete();
 
@@ -415,28 +407,11 @@ class BookingController extends Controller
             return back()->with('error', 'Tidak ada data booking yang bisa dihapus.');
         }
 
-        $isSuperAdmin = auth()->user()->role === 'super_admin';
         $deletedCount = 0;
-        $skippedCount = 0;
 
         foreach ($bookings as $booking) {
-            $canDelete = $isSuperAdmin || in_array($booking->status, [Booking::STATUS_PENDING, Booking::STATUS_CANCELLED]);
-
-            if (!$canDelete) {
-                $skippedCount++;
-                continue;
-            }
-
             $booking->delete();
             $deletedCount++;
-        }
-
-        if ($deletedCount === 0) {
-            return back()->with('error', 'Tidak ada booking yang dihapus. Admin biasa hanya boleh menghapus status pending/dibatalkan.');
-        }
-
-        if ($skippedCount > 0) {
-            return back()->with('success', "Berhasil hapus {$deletedCount} booking. {$skippedCount} booking dilewati karena tidak memiliki izin hapus.");
         }
 
         return back()->with('success', "Berhasil hapus {$deletedCount} booking.");

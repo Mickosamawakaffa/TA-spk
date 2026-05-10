@@ -11,7 +11,7 @@ import '../config/app_config.dart';
 ///   3. Localhost (desktop / iOS simulator)
 ///   4. Scan subnet lokal HP secara paralel
 class ServerDiscoveryService {
-  static const int _port = 8000;
+  static const int _port = 41197;
   static const String _cacheKey = 'discovered_server_url';
   static const Duration _probeTimeout = Duration(seconds: 2);
   static const int _scanBatchSize = 24;

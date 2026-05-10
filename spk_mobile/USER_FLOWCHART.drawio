@@ -1,0 +1,13 @@
+<mxfile host="app.diagrams.net" modified="2026-05-05" agent="GitHub Copilot" version="20.8.16">
+  <diagram id="user-flow" name="Page-1">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1080" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="flowchart LR&#xa;  Start([Start]) --&gt; Landing[Landing Page]&#xa;  Landing --&gt; HasAccount{Sudah punya akun?}&#xa;  HasAccount --&gt;|Ya| Login[Login]&#xa;  HasAccount --&gt;|Tidak| Register[Register]&#xa;  Register --&gt; Login&#xa;&#xa;  Login --&gt; LoginOk{Login sukses?}&#xa;  LoginOk --&gt;|Tidak| Login&#xa;  LoginOk --&gt;|Ya| Dashboard[Dashboard]&#xa;&#xa;  Dashboard --&gt; Menu{Pilih Menu?}&#xa;  Menu --&gt;|Kontrakan| KontrakanList[Kontrakan]&#xa;  Menu --&gt;|Lainnya| PickLaundry{Pilih Laundry?}&#xa;  PickLaundry --&gt;|Ya| LaundryList[Laundry]&#xa;  PickLaundry --&gt;|Tidak| PickRekom{Pilih Rekomendasi?}&#xa;  PickRekom --&gt;|Ya| Recommendations[Rekomendasi]&#xa;  PickRekom --&gt;|Tidak| PickBooking{Pilih Booking History?}&#xa;  PickBooking --&gt;|Ya| BookingHistory[Booking History]&#xa;  PickBooking --&gt;|Tidak| PickProfile{Pilih Profile?}&#xa;  PickProfile --&gt;|Ya| Profile[Profile]&#xa;  PickProfile --&gt;|Tidak| Dashboard&#xa;&#xa;  KontrakanList --&gt; KontrakanDetail[Detail Kontrakan]&#xa;  KontrakanDetail --&gt; Booking[Booking]&#xa;  Booking --&gt; End([End])&#xa;&#xa;  LaundryList --&gt; LaundryDetail[Detail Laundry]&#xa;  LaundryDetail --&gt; End&#xa;&#xa;  Recommendations --&gt; End&#xa;&#xa;  BookingHistory --&gt; BookingDetail[Detail Booking]&#xa;  BookingDetail --&gt; End&#xa;&#xa;  Profile --&gt; ProfileAction{Kelola Profil?}&#xa;  ProfileAction --&gt;|Ya| EditProfile[Edit Profile]&#xa;  ProfileAction --&gt;|Tidak| Logout[Logout]&#xa;  EditProfile --&gt; End&#xa;  Logout --&gt; Login" style="shape=mxgraph.misc.mermaid;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="1700" height="980" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

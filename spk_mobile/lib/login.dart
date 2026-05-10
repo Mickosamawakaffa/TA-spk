@@ -3,6 +3,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'screens/improved_home_screen.dart';
 import 'register.dart';
 import 'services/auth_service.dart';
+import 'services/notification_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -220,6 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _isLoading = false);
 
       if (result['success']) {
+        await NotificationService().init(_authService);
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const ImprovedHomeScreen()),

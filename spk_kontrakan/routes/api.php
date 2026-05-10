@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\SAWController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\FavoriteController;
+use App\Http\Controllers\Api\DeviceTokenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -181,6 +182,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [ReviewController::class, 'destroy']);
     });
     
+    // Device Token Routes (Admin push notifications)
+    Route::post('/device-tokens', [DeviceTokenController::class, 'store']);
+    Route::delete('/device-tokens', [DeviceTokenController::class, 'destroy']);
+
     // Favorite Routes
     Route::prefix('favorites')->group(function () {
         Route::get('/', [FavoriteController::class, 'index']);

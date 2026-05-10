@@ -54,7 +54,7 @@
     <!-- Info Card -->
     <div class="alert alert-info border-0 rounded-3 mb-4">
         <i class="bi bi-info-circle me-2"></i>
-        <strong>Tips:</strong> Lakukan backup secara berkala untuk mengamankan data. Backup dibuat dalam format ZIP dan dapat di-download.
+        <strong>Tips:</strong> Backup otomatis dijalankan 1x per minggu (Minggu pukul 01:00), dan Anda tetap bisa membuat backup manual kapan saja.
     </div>
 
     <!-- Backups List -->
@@ -159,7 +159,7 @@
                         <i class="bi bi-exclamation-triangle me-2"></i>Reminder
                     </h6>
                     <small class="text-muted d-block">
-                        ⚠️ Backup database secara rutin (minimal 1x sehari) untuk mencegah kehilangan data yang tidak dapat dipulihkan.
+                        Backup otomatis mingguan aktif, namun backup manual tetap disarankan sebelum perubahan data besar.
                     </small>
                 </div>
             </div>

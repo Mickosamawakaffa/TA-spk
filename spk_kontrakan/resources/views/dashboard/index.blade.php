@@ -6,8 +6,17 @@
 <!-- Load Skeleton Loader Script -->
 @include('components.skeleton-script')
 
-<div class="container-fluid px-2 px-md-4">
+@php
+    $isSuperAdmin = Auth::user()->role === 'super_admin';
+@endphp
+
+<div class="container-fluid px-2 px-md-4 dashboard-shell">
 <style>
+        .dashboard-shell {
+            background: radial-gradient(1200px 400px at 10% -10%, rgba(102, 126, 234, 0.12), transparent 60%),
+                radial-gradient(1000px 360px at 90% -15%, rgba(118, 75, 162, 0.12), transparent 60%);
+        }
+
         .header-dashboard {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 16px;
@@ -51,6 +60,58 @@
             position: relative;
             z-index: 1;
         }
+
+        .header-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .meta-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.85rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+
+        .header-actions {
+            margin-top: 1.25rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .action-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .action-chip:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.22);
+            color: white;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+        }
         
         .stats-card {
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -58,6 +119,138 @@
             border-radius: 16px;
             overflow: hidden;
             position: relative;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            backdrop-filter: blur(12px);
+            border-radius: 18px;
+            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+        }
+
+        .mini-metric {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.12), rgba(118, 75, 162, 0.08));
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .mini-metric span {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .mini-metric strong {
+            font-size: 1.35rem;
+            color: #4338ca;
+        }
+
+        .insight-card {
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        }
+
+        .insight-card h6 {
+            font-weight: 700;
+            color: #4f46e5;
+        }
+
+        .insight-list {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .insight-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            background: rgba(248, 250, 252, 0.9);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .insight-item i {
+            color: #667eea;
+            font-size: 1.1rem;
+            margin-top: 2px;
+        }
+
+        .metric-card {
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        }
+
+        .metric-card h6 {
+            font-weight: 700;
+            color: #4f46e5;
+        }
+
+        .metric-grid {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            background: rgba(248, 250, 252, 0.95);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .metric-row span {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .metric-row strong {
+            color: #1f2937;
+            font-weight: 700;
+        }
+
+        .progress-rail {
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(226, 232, 240, 0.9);
+            overflow: hidden;
+            margin-top: 0.4rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 999px;
+        }
+
+        .rank-list {
+            display: grid;
+            gap: 0.6rem;
+        }
+
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.7rem 0.9rem;
+            border-radius: 12px;
+            background: rgba(248, 250, 252, 0.95);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .rank-item small {
+            color: #64748b;
+            display: block;
         }
         
         .stats-card::before {
@@ -232,12 +425,29 @@
     <div class="header-dashboard">
         <h2 class="mb-2">📊 Dashboard Analytics</h2>
         <p class="mb-0">Selamat datang, <strong>{{ Auth::user()->name }}!</strong> 👋</p>
+        <div class="header-meta">
+            <div class="meta-chip"><i class="bi bi-calendar-event"></i>{{ now()->format('d M Y') }}</div>
+            <div class="meta-chip"><i class="bi bi-building"></i>{{ $jumlahKontrakan }} kontrakan</div>
+            @if($isSuperAdmin)
+            <div class="meta-chip"><i class="bi bi-droplet"></i>{{ $jumlahLaundry }} laundry</div>
+            @endif
+        </div>
+        <div class="header-actions">
+            <a href="{{ route('kontrakan.index') }}" class="action-chip"><i class="bi bi-building"></i>Kontrakan</a>
+            <a href="{{ route('admin.bookings.index') }}" class="action-chip"><i class="bi bi-calendar-check"></i>Booking</a>
+            <a href="{{ route('admin.profile') }}" class="action-chip"><i class="bi bi-person-circle"></i>Profil</a>
+            @if($isSuperAdmin)
+            <a href="{{ route('laundry.index') }}" class="action-chip"><i class="bi bi-water"></i>Laundry</a>
+            <a href="{{ route('kriteria.index') }}" class="action-chip"><i class="bi bi-list-check"></i>Kriteria</a>
+            <a href="{{ route('saw.index') }}" class="action-chip"><i class="bi bi-calculator"></i>Analisis</a>
+            @endif
+        </div>
     </div>
 
     <!-- Statistics Cards -->
     <div class="row g-3 g-md-4 mb-4 mb-md-5" id="statsContainer">
         <!-- Card Kontrakan - Purple Theme -->
-        <div class="col-6 col-lg-3">
+        <div class="{{ $isSuperAdmin ? 'col-6 col-lg-3' : 'col-12 col-lg-6' }}">
             <div class="card stats-card h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none !important; box-shadow: 0 8px 25px rgba(102, 126, 234, 0.35); position: relative; z-index: 1;">
                 <div class="card-body text-white p-3 p-md-4" style="position: relative; z-index: 2;">
                     <div class="d-flex justify-content-between align-items-start mb-3">
@@ -260,6 +470,33 @@
             </div>
         </div>
 
+        @if(!$isSuperAdmin)
+        <!-- Card Booking - Blue Theme -->
+        <div class="col-12 col-lg-6">
+            <div class="card stats-card h-100" style="background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%); border: none !important; box-shadow: 0 8px 25px rgba(37, 99, 235, 0.25); position: relative; z-index: 1;">
+                <div class="card-body text-white p-3 p-md-4" style="position: relative; z-index: 2;">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="flex-grow-1">
+                            <p class="mb-2 opacity-75 small fw-semibold"><i class="bi bi-calendar-check me-1"></i>Total Booking</p>
+                            <h2 class="mb-2 mb-md-3 fw-bold display-6">{{ $totalBookings }}</h2>
+                            <p class="mb-0 opacity-85 small d-none d-md-block">
+                                <i class="bi bi-clock me-1"></i>Update real-time
+                            </p>
+                        </div>
+                        <div class="rounded-circle p-2 p-md-3 d-flex align-items-center justify-content-center d-none d-sm-flex" style="min-width: 50px; min-height: 50px; background: rgba(255,255,255,0.25);">
+                            <i class="bi bi-calendar2-week" style="font-size: 1.5rem;"></i>
+                        </div>
+                    </div>
+                    <a href="{{ route('admin.bookings.index') }}" class="btn btn-light btn-sm w-100 fw-semibold d-none d-md-block" style="position: relative; z-index: 3; color: #1d4ed8;">
+                        <i class="bi bi-arrow-right me-2"></i>Kelola Booking
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @endif
+
+        @if($isSuperAdmin)
         <!-- Card Laundry - Purple Theme -->
         <div class="col-6 col-lg-3">
             <div class="card stats-card h-100" style="background: linear-gradient(135deg, #818cf8 0%, #667eea 100%); border: none !important; box-shadow: 0 8px 25px rgba(102, 126, 234, 0.35); position: relative; z-index: 1;">
@@ -284,6 +521,9 @@
             </div>
         </div>
 
+        @endif
+
+        @if($isSuperAdmin)
         <!-- Card Kriteria -->
         <div class="col-6 col-lg-3">
             <div class="card stats-card h-100" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #4338ca 100%); border: none !important; box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3); position: relative; z-index: 1;">
@@ -307,7 +547,9 @@
                 </div>
             </div>
         </div>
+        @endif
 
+        @if($isSuperAdmin)
         <!-- Card SAW - Amber/Gold Tone -->
         <div class="col-6 col-lg-3">
             <div class="card stats-card h-100" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%); border: none !important; box-shadow: 0 8px 25px rgba(217, 119, 6, 0.35); position: relative; z-index: 1;">
@@ -331,50 +573,70 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 
-    <!-- Charts Section -->
+    <!-- Snapshot Section -->
     <div class="row g-3 g-md-4 mb-4 mb-md-5">
-        <!-- Bar Chart: Perbandingan Harga -->
-        <div class="col-12 col-xl-8">
-            <div class="card chart-card h-100">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="mb-0 fw-bold" style="color: #667eea;">
-                        <i class="bi bi-bar-chart-fill me-2"></i>
-                        <span class="d-none d-md-inline">Perbandingan Harga (Top 5)</span>
-                        <span class="d-md-none">Harga (Top 5)</span>
-                    </h5>
+        <div class="col-12 col-xl-7">
+            <div class="glass-panel p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0" style="color: #4f46e5;">Ringkasan Aktivitas</h5>
+                    <span class="badge" style="background: rgba(102, 126, 234, 0.12); color: #4f46e5;">Update Hari Ini</span>
                 </div>
-                <div class="card-body p-3 p-md-4">
-                    <canvas id="hargaChart" height="80"></canvas>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="mini-metric">
+                            <span>Kontrakan Aktif</span>
+                            <strong>{{ $jumlahKontrakan }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mini-metric">
+                            <span>Booking Masuk</span>
+                            <strong>{{ $totalBookings ?? 0 }}</strong>
+                        </div>
+                    </div>
+                    @if($isSuperAdmin)
+                    <div class="col-md-6">
+                        <div class="mini-metric">
+                            <span>Laundry Terdaftar</span>
+                            <strong>{{ $jumlahLaundry }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mini-metric">
+                            <span>Kriteria Aktif</span>
+                            <strong>{{ $jumlahKriteria }}</strong>
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
-
-        <!-- Donut Charts: Distribusi Jarak -->
-        <div class="col-12 col-xl-4">
-            <div class="card chart-card h-100">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="mb-0 fw-bold" style="color: #667eea;">
-                        <i class="bi bi-pie-chart-fill me-2"></i>
-                        <span class="d-none d-md-inline">Distribusi Jarak</span>
-                        <span class="d-md-none">Jarak</span>
-                    </h5>
-                </div>
-                <div class="card-body p-3 p-md-4">
-                    <canvas id="jarakChart" height="200"></canvas>
-                    <div class="mt-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2 py-2 border-bottom">
-                            <span class="small"><span class="badge" style="background-color: #198754;">●</span> <span class="d-none d-sm-inline">Dekat (≤500m)</span><span class="d-sm-none">Dekat</span></span>
-                            <strong style="color: #667eea;">{{ $jarakKontrakan['dekat'] + $jarakLaundry['dekat'] }}</strong>
+        <div class="col-12 col-xl-5">
+            <div class="insight-card p-4 h-100">
+                <h6 class="mb-3">Insight Cepat</h6>
+                <div class="insight-list">
+                    <div class="insight-item">
+                        <i class="bi bi-geo-alt"></i>
+                        <div>
+                            <div class="fw-semibold">Dominasi lokasi</div>
+                            <small class="text-muted">{{ $jarakKontrakan['dekat'] }} lokasi dekat kampus.</small>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2 py-2 border-bottom">
-                            <span class="small"><span class="badge" style="background-color: #ffc107;">●</span> <span class="d-none d-sm-inline">Sedang (501-1000m)</span><span class="d-sm-none">Sedang</span></span>
-                            <strong style="color: #667eea;">{{ $jarakKontrakan['sedang'] + $jarakLaundry['sedang'] }}</strong>
+                    </div>
+                    <div class="insight-item">
+                        <i class="bi bi-cash-stack"></i>
+                        <div>
+                            <div class="fw-semibold">Harga rata-rata</div>
+                            <small class="text-muted">Rp {{ number_format($avgHargaKontrakan, 0, ',', '.') }} per bulan.</small>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center py-2">
-                            <span class="small"><span class="badge" style="background-color: #dc3545;">●</span> <span class="d-none d-sm-inline">Jauh (>1000m)</span><span class="d-sm-none">Jauh</span></span>
-                            <strong style="color: #667eea;">{{ $jarakKontrakan['jauh'] + $jarakLaundry['jauh'] }}</strong>
+                    </div>
+                    <div class="insight-item">
+                        <i class="bi bi-people"></i>
+                        <div>
+                            <div class="fw-semibold">Admin aktif</div>
+                            <small class="text-muted">{{ $totalAdmins ?? 1 }} akun admin tersedia.</small>
                         </div>
                     </div>
                 </div>
@@ -382,23 +644,145 @@
         </div>
     </div>
 
-    <!-- Line Chart: Trend Data -->
+    <!-- Compact Visual Widgets -->
     <div class="row g-3 g-md-4 mb-4 mb-md-5">
-        <div class="col-12">
-            <div class="card chart-card">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="mb-0 fw-bold" style="color: #667eea;">
-                        <i class="bi bi-graph-up me-2"></i>
-                        <span class="d-none d-md-inline">Trend Data (6 Bulan Terakhir)</span>
-                        <span class="d-md-none">Trend Data</span>
-                    </h5>
+        <div class="col-12 col-lg-4">
+            <div class="metric-card p-4 h-100">
+                <h6 class="mb-3">Ringkasan Harga Kontrakan</h6>
+                <div class="metric-grid">
+                    <div class="metric-row">
+                        <span>Harga Terendah</span>
+                        <strong>Rp {{ number_format($minHargaKontrakan, 0, ',', '.') }}</strong>
+                    </div>
+                    <div class="metric-row">
+                        <span>Harga Rata-rata</span>
+                        <strong>Rp {{ number_format($avgHargaKontrakan, 0, ',', '.') }}</strong>
+                    </div>
+                    <div class="metric-row">
+                        <span>Harga Tertinggi</span>
+                        <strong>Rp {{ number_format($maxHargaKontrakan, 0, ',', '.') }}</strong>
+                    </div>
+                    <div class="metric-row">
+                        <span>Rata-rata Jarak</span>
+                        <strong>{{ number_format($avgJarakKontrakan, 0, ',', '.') }} m</strong>
+                    </div>
                 </div>
-                <div class="card-body p-3 p-md-4">
-                    <canvas id="trendChart" height="60"></canvas>
+            </div>
+        </div>
+        <div class="col-12 col-lg-4">
+            <div class="metric-card p-4 h-100">
+                <h6 class="mb-3">Distribusi Jarak Kontrakan</h6>
+                @php
+                    $totalJarakKontrakan = max(1, $jarakKontrakan['dekat'] + $jarakKontrakan['sedang'] + $jarakKontrakan['jauh']);
+                @endphp
+                <div class="metric-grid">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold">Dekat (≤500m)</span>
+                            <strong>{{ $jarakKontrakan['dekat'] }}</strong>
+                        </div>
+                        <div class="progress-rail">
+                            <div class="progress-fill" style="width: {{ ($jarakKontrakan['dekat'] / $totalJarakKontrakan) * 100 }}%; background: #22c55e;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold">Sedang (501-1000m)</span>
+                            <strong>{{ $jarakKontrakan['sedang'] }}</strong>
+                        </div>
+                        <div class="progress-rail">
+                            <div class="progress-fill" style="width: {{ ($jarakKontrakan['sedang'] / $totalJarakKontrakan) * 100 }}%; background: #f59e0b;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold">Jauh (>1000m)</span>
+                            <strong>{{ $jarakKontrakan['jauh'] }}</strong>
+                        </div>
+                        <div class="progress-rail">
+                            <div class="progress-fill" style="width: {{ ($jarakKontrakan['jauh'] / $totalJarakKontrakan) * 100 }}%; background: #ef4444;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-4">
+            <div class="metric-card p-4 h-100">
+                <h6 class="mb-3">Kontrakan Harga Tertinggi</h6>
+                <div class="rank-list">
+                    @foreach($topKontrakan as $kontrakan)
+                    <div class="rank-item">
+                        <div>
+                            <div class="fw-semibold">{{ $kontrakan->nama }}</div>
+                            <small>{{ $kontrakan->jumlah_kamar ?? 0 }} kamar • {{ $kontrakan->jarak ?? 0 }} m</small>
+                        </div>
+                        <strong>Rp {{ number_format($kontrakan->harga, 0, ',', '.') }}</strong>
+                    </div>
+                    @endforeach
                 </div>
             </div>
         </div>
     </div>
+
+    @if($isSuperAdmin)
+    <div class="row g-3 g-md-4 mb-4 mb-md-5">
+        <div class="col-12 col-lg-6">
+            <div class="metric-card p-4 h-100">
+                <h6 class="mb-3">Laundry Harga Terendah</h6>
+                <div class="rank-list">
+                    @foreach($hargaLaundry as $laundry)
+                    <div class="rank-item">
+                        <div>
+                            <div class="fw-semibold">{{ $laundry->nama }}</div>
+                            <small>Harga mulai</small>
+                        </div>
+                        <strong>Rp {{ number_format($laundry->harga, 0, ',', '.') }}</strong>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-6">
+            <div class="metric-card p-4 h-100">
+                <h6 class="mb-3">Distribusi Jarak Laundry</h6>
+                @php
+                    $totalJarakLaundry = max(1, $jarakLaundry['dekat'] + $jarakLaundry['sedang'] + $jarakLaundry['jauh']);
+                @endphp
+                <div class="metric-grid">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold">Dekat (≤500m)</span>
+                            <strong>{{ $jarakLaundry['dekat'] }}</strong>
+                        </div>
+                        <div class="progress-rail">
+                            <div class="progress-fill" style="width: {{ ($jarakLaundry['dekat'] / $totalJarakLaundry) * 100 }}%; background: #22c55e;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold">Sedang (501-1000m)</span>
+                            <strong>{{ $jarakLaundry['sedang'] }}</strong>
+                        </div>
+                        <div class="progress-rail">
+                            <div class="progress-fill" style="width: {{ ($jarakLaundry['sedang'] / $totalJarakLaundry) * 100 }}%; background: #f59e0b;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold">Jauh (>1000m)</span>
+                            <strong>{{ $jarakLaundry['jauh'] }}</strong>
+                        </div>
+                        <div class="progress-rail">
+                            <div class="progress-fill" style="width: {{ ($jarakLaundry['jauh'] / $totalJarakLaundry) * 100 }}%; background: #ef4444;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+
 
     <!-- Quick Actions -->
     <div class="row g-4 mb-4">
@@ -410,6 +794,7 @@
                         Quick Actions
                     </h5>
                     <div class="row g-3">
+                        @if($isSuperAdmin)
                         <div class="col-md-3">
                             <a href="{{ route('kontrakan.create') }}" class="btn btn-admin-outline w-100 py-3">
                                 <i class="bi bi-building me-2"></i> Tambah Kontrakan
@@ -430,6 +815,23 @@
                                 <i class="bi bi-calculator me-2"></i> Sistem Analisis
                             </a>
                         </div>
+                        @else
+                        <div class="col-12 col-md-4">
+                            <a href="{{ route('kontrakan.create') }}" class="btn btn-admin-outline w-100 py-3">
+                                <i class="bi bi-building me-2"></i> Tambah Kontrakan
+                            </a>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <a href="{{ route('admin.bookings.index') }}" class="btn btn-admin-outline w-100 py-3">
+                                <i class="bi bi-calendar-check me-2"></i> Kelola Booking
+                            </a>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <a href="{{ route('admin.profile') }}" class="btn btn-admin-solid w-100 py-3">
+                                <i class="bi bi-person-circle me-2"></i> Profil Admin
+                            </a>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -438,21 +840,22 @@
 
     <!-- Additional Stats Section -->
     <div class="row g-4 mb-4">
-        <!-- Activity Stats -->
-        <div class="col-md-6 col-lg-3">
-            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px;">
+        @if(!$isSuperAdmin)
+        <!-- System Status -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border-radius: 12px;">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="mb-2 opacity-75 small fw-semibold">Total Review</p>
-                            <h3 class="fw-bold mb-0">{{ $totalReviews ?? 0 }}</h3>
+                            <p class="mb-2 opacity-75 small fw-semibold">System Status</p>
+                            <h3 class="fw-bold mb-0"><i class="bi bi-check-circle-fill"></i> Aktif</h3>
                         </div>
-                        <div style="font-size: 2.5rem; opacity: 0.3;">⭐</div>
+                        <div style="font-size: 2.5rem; opacity: 0.3;">✓</div>
                     </div>
                 </div>
             </div>
         </div>
-
+        @else
         <!-- System Status -->
         <div class="col-md-6 col-lg-3">
             <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border-radius: 12px;">
@@ -467,7 +870,7 @@
                 </div>
             </div>
         </div>
-
+        @if($isSuperAdmin)
         <!-- Last Backup -->
         <div class="col-md-6 col-lg-3">
             <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%); color: white; border-radius: 12px;">
@@ -497,12 +900,14 @@
                 </div>
             </div>
         </div>
+        @endif
+        @endif
     </div>
 
     <!-- Recent Data Tables -->
     <div class="row g-4">
         <!-- Recent Kontrakan -->
-        <div class="col-lg-6">
+        <div class="{{ $isSuperAdmin ? 'col-lg-6' : 'col-12' }}">
             <div class="card chart-card">
                 <div class="card-header bg-white border-0 py-3">
                     <h5 class="mb-0 fw-bold" style="color: #667eea;">
@@ -557,6 +962,7 @@
             </div>
         </div>
 
+        @if($isSuperAdmin)
         <!-- Recent Laundry -->
         <div class="col-lg-6">
             <div class="card chart-card">
@@ -626,6 +1032,7 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 </div>
 
@@ -706,6 +1113,7 @@
     </div>
 </div>
 
+@if($isSuperAdmin)
 <!-- Modal Laundry -->
 <div class="modal fade" id="laundryModal" tabindex="-1" aria-labelledby="laundryModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -950,9 +1358,7 @@
         </div>
     </div>
 </div>
-
-<!-- Chart.js Library -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+@endif
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -990,133 +1396,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCounter();
     });
     
-    // ========== BAR CHART: PERBANDINGAN HARGA ==========
-    const hargaKontrakan = @json($hargaKontrakan);
-    const hargaLaundry = @json($hargaLaundry);
-    
-    new Chart(document.getElementById('hargaChart'), {
-        type: 'bar',
-        data: {
-            labels: hargaKontrakan.map(k => k.nama),
-            datasets: [{
-                label: 'Kontrakan',
-                data: hargaKontrakan.map(k => k.harga),
-                backgroundColor: 'rgba(102, 126, 234, 0.8)',
-                borderColor: 'rgba(102, 126, 234, 1)',
-                borderWidth: 2
-            }, {
-                label: 'Laundry',
-                data: hargaLaundry.map(l => l.harga),
-                backgroundColor: 'rgba(240, 147, 251, 0.8)',
-                borderColor: 'rgba(240, 147, 251, 1)',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': Rp ' + context.parsed.y.toLocaleString('id-ID');
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return 'Rp ' + (value/1000) + 'k';
-                        }
-                    }
-                }
-            }
-        }
-    });
-    
-    // ========== DONUT CHART: DISTRIBUSI JARAK ==========
-    const jarakData = @json($jarakKontrakan);
-    const totalDekat = jarakData.dekat + @json($jarakLaundry['dekat']);
-    const totalSedang = jarakData.sedang + @json($jarakLaundry['sedang']);
-    const totalJauh = jarakData.jauh + @json($jarakLaundry['jauh']);
-    
-    new Chart(document.getElementById('jarakChart'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Dekat (≤500m)', 'Sedang (501-1000m)', 'Jauh (>1000m)'],
-            datasets: [{
-                data: [totalDekat, totalSedang, totalJauh],
-                backgroundColor: [
-                    'rgba(25, 135, 84, 0.8)',
-                    'rgba(255, 193, 7, 0.8)',
-                    'rgba(220, 53, 69, 0.8)'
-                ],
-                borderColor: [
-                    'rgba(25, 135, 84, 1)',
-                    'rgba(255, 193, 7, 1)',
-                    'rgba(220, 53, 69, 1)'
-                ],
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-    });
-    
-    // ========== LINE CHART: TREND DATA ==========
-    const monthlyData = @json($monthlyData);
-    
-    new Chart(document.getElementById('trendChart'), {
-        type: 'line',
-        data: {
-            labels: monthlyData.map(m => m.month),
-            datasets: [{
-                label: 'Kontrakan',
-                data: monthlyData.map(m => m.kontrakan),
-                borderColor: 'rgba(102, 126, 234, 1)',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                tension: 0.4,
-                fill: true
-            }, {
-                label: 'Laundry',
-                data: monthlyData.map(m => m.laundry),
-                borderColor: 'rgba(240, 147, 251, 1)',
-                backgroundColor: 'rgba(240, 147, 251, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    position: 'top'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
-            }
-        }
-    });
 });
 </script>
 
