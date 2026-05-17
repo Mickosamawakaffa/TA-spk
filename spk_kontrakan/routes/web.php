@@ -129,6 +129,7 @@ Route::middleware('auth')->group(function () {
     // ========== 🗺️ MAP VIEW LAUNDRY (BARU - HARUS SEBELUM RESOURCE!) ==========
     Route::get('/laundry/map', [LaundryController::class, 'map'])->name('laundry.map');
 
+
     // ========== BULK DELETE LAUNDRY (HARUS SEBELUM RESOURCE!) ==========
     Route::post('/laundry/bulk-destroy', [LaundryController::class, 'bulkDestroy'])->name('laundry.bulk-destroy');
 

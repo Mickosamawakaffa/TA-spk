@@ -671,6 +671,7 @@ class LaundryController extends Controller
         }
     }
 
+
     /**
      * Remove the specified laundry from storage
      */

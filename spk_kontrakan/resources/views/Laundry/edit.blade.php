@@ -149,6 +149,12 @@
                                         @error('alamat')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
+                                                <div class="d-flex flex-wrap gap-2 align-items-center mt-2">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="alamatAutoBtn">
+                                                        <i class="bi bi-geo-alt me-1"></i>Gunakan alamat dari peta
+                                                    </button>
+                                                    <small class="text-muted">Alamat otomatis dari peta, silakan lengkapi RT/RW/No rumah.</small>
+                                                </div>
                                     </div>
                                 </div>
 
@@ -794,6 +800,142 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log(`Jarak ke kampus: ${jarakKm.toFixed(2)} km (${jarakMeter} m)`);
         }
     }
+
+    // ========== AUTO UPDATE ALAMAT DARI MAP ==========
+    const alamatInput = document.getElementById('alamat');
+    const alamatAutoBtn = document.getElementById('alamatAutoBtn');
+    let reverseGeocodeTimeout;
+    let lastGeocodeKey = '';
+    let lastLatLng = null;
+    let isManualAddress = false;
+    let isSettingAlamat = false;
+
+    function setAlamatValue(value) {
+        if (!alamatInput) {
+            return;
+        }
+
+        isSettingAlamat = true;
+        alamatInput.value = value;
+        isSettingAlamat = false;
+        isManualAddress = false;
+    }
+
+    if (alamatInput) {
+        alamatInput.addEventListener('input', function () {
+            if (isSettingAlamat) {
+                return;
+            }
+            isManualAddress = alamatInput.value.trim() !== '';
+        });
+    }
+
+    function scheduleReverseGeocode(lat, lng, force = false) {
+        if (!alamatInput) {
+            return;
+        }
+
+        lastLatLng = { lat, lng };
+        if (!force && isManualAddress && alamatInput.value.trim() !== '') {
+            return;
+        }
+
+        const key = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+        if (!force && key === lastGeocodeKey) {
+            return;
+        }
+
+        lastGeocodeKey = key;
+        clearTimeout(reverseGeocodeTimeout);
+        reverseGeocodeTimeout = setTimeout(() => {
+            reverseGeocode(lat, lng, force);
+        }, 450);
+    }
+
+    async function reverseGeocode(lat, lng, force = false) {
+        if (!alamatInput) {
+            return;
+        }
+
+        if (!force && isManualAddress && alamatInput.value.trim() !== '') {
+            return;
+        }
+
+        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=18&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&accept-language=id`;
+
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+            const detailedAddress = buildDetailedAddress(data?.address);
+            if (detailedAddress) {
+                setAlamatValue(detailedAddress);
+                return;
+            }
+
+            if (data && data.display_name) {
+                setAlamatValue(data.display_name);
+            }
+        } catch (error) {
+            console.warn('Gagal mengambil alamat otomatis.', error);
+        }
+    }
+
+    function buildDetailedAddress(address) {
+        if (!address) {
+            return '';
+        }
+
+        const parts = [];
+        const seen = new Set();
+        const addPart = (value) => {
+            if (!value) {
+                return;
+            }
+            const text = String(value).trim();
+            if (!text) {
+                return;
+            }
+            const key = text.toLowerCase();
+            if (seen.has(key)) {
+                return;
+            }
+            seen.add(key);
+            parts.push(text);
+        };
+
+        const road = address.road || address.pedestrian || address.cycleway || address.footway || address.path || address.residential;
+        const houseNumber = address.house_number || address.house_name || address.building;
+
+        if (road && houseNumber) {
+            addPart(`${road} No ${houseNumber}`);
+        } else {
+            addPart(road);
+            addPart(houseNumber);
+        }
+
+        addPart(address.neighbourhood);
+        addPart(address.suburb);
+        addPart(address.hamlet);
+        addPart(address.village);
+        addPart(address.town);
+        addPart(address.city_district);
+        addPart(address.city);
+        addPart(address.county);
+        addPart(address.state);
+        addPart(address.postcode);
+        addPart(address.country);
+
+        return parts.join(', ');
+    }
     
     // ========== LAYANAN MANAGEMENT ==========
     let layananCount = {{ $laundry->layanan ? $laundry->layanan->count() : 1 }};
@@ -1122,6 +1264,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('latitude').value = position.lat.toFixed(6);
         document.getElementById('longitude').value = position.lng.toFixed(6);
         updateJarakKampus(position.lat, position.lng);
+        scheduleReverseGeocode(position.lat, position.lng);
     });
     
     // Update marker saat klik di peta
@@ -1134,6 +1277,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('latitude').value = lat.toFixed(6);
         document.getElementById('longitude').value = lng.toFixed(6);
         updateJarakKampus(lat, lng);
+        scheduleReverseGeocode(lat, lng);
         
         map.setView([lat, lng], map.getZoom());
     });
@@ -1158,6 +1302,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     marker.setLatLng([lat, lng]);
                     map.setView([lat, lng], 15);
                     updateJarakKampus(lat, lng);
+                    scheduleReverseGeocode(lat, lng);
                     
                     btn.disabled = false;
                     btn.innerHTML = originalHTML;
@@ -1211,6 +1356,25 @@ document.addEventListener('DOMContentLoaded', function() {
         marker.setLatLng([lat, lng]);
         map.setView([lat, lng], map.getZoom());
         updateJarakKampus(lat, lng);
+        scheduleReverseGeocode(lat, lng);
+    }
+
+    if (alamatAutoBtn) {
+        alamatAutoBtn.addEventListener('click', function () {
+            let lat = lastLatLng?.lat;
+            let lng = lastLatLng?.lng;
+
+            if ((!lat || !lng) && marker) {
+                const position = marker.getLatLng();
+                lat = position.lat;
+                lng = position.lng;
+            }
+
+            if (lat && lng) {
+                isManualAddress = false;
+                scheduleReverseGeocode(lat, lng, true);
+            }
+        });
     }
 
     latInput.addEventListener('change', handleManualCoordinateInput);
