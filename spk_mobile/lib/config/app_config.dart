@@ -1,31 +1,44 @@
 class AppConfig {
   // ============================================================================
-  // 🔧 BASE URL CONFIGURATION - AUTO-DETECTED AT RUNTIME
+  // 🔧 BASE URL CONFIGURATION - FIXED IP (NOT AUTO-DETECT)
   // ============================================================================
-  // URL ini otomatis dideteksi saat app startup via ServerDiscoveryService.
-  // Fallback default: IP terakhir yang berhasil terhubung.
+  // PENTING: Update IP ini sesuai dengan server backend Anda!
+  // Format: http://[IP_ADDRESS]:[PORT]
   //
-  // ✅ Tidak perlu update manual lagi!
+  // Contoh:
+  // - Local: http://localhost:8000
+  // - Network: http://192.168.1.100:8000
+  // - Remote: http://your-server.com
+  //
+  // ⚠️ JIKA CONNECTION TIMEOUT:
+  // - Pastikan backend server running
+  // - Pastikan device/emulator connect ke WiFi yang sama
+  // - Pastikan port sudah benar
   // ============================================================================
 
-  // Default fallback (dipakai jika auto-detect gagal)
-  static const String _defaultServer = 'http://192.168.18.17:41197';
+  /// Backend server URL - DIUBAH MENJADI FIXED (tidak auto-detect)
+  /// Alasan: ServerDiscoveryService scanning port yang salah
+  ///
+  /// UPDATE INI SESUAI DENGAN BACKEND ANDA!
+  /// Jika backend di: php artisan serve
+  /// Maka gunakan: http://127.0.0.1:8000 (localhost) atau http://[IP]:8000 (network)
+  static const String _defaultServer = 'http://10.31.174.99:8000';
 
-  // Runtime values — diupdate otomatis oleh ServerDiscoveryService
+  // Runtime values — bisa di-override via setServerUrl() jika perlu
   static String _serverUrl = _defaultServer;
 
   static String get serverUrl => _serverUrl;
   static String get baseUrl => '$_serverUrl/api';
   static String get storageUrl => '$_serverUrl/storage';
 
-  /// Dipanggil oleh ServerDiscoveryService setelah server ditemukan
+  /// Override server URL jika perlu (untuk testing atau switching server)
   static void setServerUrl(String url) {
     _serverUrl = url;
   }
 
-  // Timeouts
-  static const Duration connectionTimeout = Duration(seconds: 10);
-  static const Duration receiveTimeout = Duration(seconds: 10);
+  // Timeouts - Increased untuk network yang lambat dan operations yang heavy (password hashing, db insert)
+  static const Duration connectionTimeout = Duration(seconds: 30);
+  static const Duration receiveTimeout = Duration(seconds: 30);
 
   // Local Storage Keys
   static const String tokenKey = 'auth_token';
