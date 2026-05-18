@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
+use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
 
 class AdminAuthController extends Controller
@@ -23,16 +23,8 @@ class AdminAuthController extends Controller
             'password' => 'required'
         ]);
 
-        // FIXED: Hapus guard('admin'), pakai default Auth
-        if (Auth::attempt($credentials)) {
-            // Cek role - hanya admin dan super_admin yang boleh login
-            $user = Auth::user();
-            if (!in_array($user->role, ['admin', 'super_admin'])) {
-                Auth::logout();
-                $request->session()->invalidate();
-                return back()->with('error', 'Akses ditolak. Halaman ini khusus untuk pemilik bisnis.');
-            }
-
+        // Gunakan guard 'admin' - ambil dari tabel admins
+        if (Auth::guard('admin')->attempt($credentials)) {
             $request->session()->regenerate();
             return redirect()->intended(route('dashboard'));
         }
@@ -51,16 +43,25 @@ class AdminAuthController extends Controller
     {
         $request->validate([
             'name'     => 'required|string|max:50',
-            'email'    => 'required|email|unique:users,email',
+            'email'    => 'required|email|unique:admins,email',
             'password' => 'required|min:6|confirmed'
+        ], [
+            'name.required' => 'Nama wajib diisi',
+            'name.max' => 'Nama maksimal 50 karakter',
+            'email.required' => 'Email wajib diisi',
+            'email.email' => 'Format email tidak valid',
+            'email.unique' => 'Email sudah terdaftar',
+            'password.required' => 'Password wajib diisi',
+            'password.min' => 'Password minimal 6 karakter',
+            'password.confirmed' => 'Konfirmasi password tidak cocok'
         ]);
 
-        // Simpan ke tabel users (ROLE SELALU admin - tidak bisa diubah user)
-        User::create([
+        // Simpan ke tabel admins (ROLE SELALU admin)
+        Admin::create([
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role'     => 'admin'  // PAKSA SELALU ADMIN - tidak bisa jadi super_admin lewat register
+            'role'     => 'admin'  // Hanya admin, tidak bisa super_admin
         ]);
 
         return redirect()->route('admin.login')->with('success', 'Akun admin berhasil dibuat!');
@@ -69,8 +70,7 @@ class AdminAuthController extends Controller
     // Logout Admin
     public function logout(Request $request)
     {
-        // FIXED: Hapus guard('admin'), pakai default Auth
-        Auth::logout();
+        Auth::guard('admin')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

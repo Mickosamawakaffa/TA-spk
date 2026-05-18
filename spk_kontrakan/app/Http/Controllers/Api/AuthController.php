@@ -19,6 +19,8 @@ class AuthController extends Controller
     public function register(RegisterRequest $request)
     {
         try {
+            Log::info('Register attempt', ['email' => $request->email, 'name' => $request->name]);
+            
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
@@ -29,6 +31,8 @@ class AuthController extends Controller
 
             $token = $user->createToken('mobile-app-token')->plainTextToken;
 
+            Log::info('Registration successful', ['user_id' => $user->id]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Registrasi berhasil',
@@ -37,11 +41,28 @@ class AuthController extends Controller
                     'token' => $token
                 ]
             ], 201);
-        } catch (\Exception $e) {
-            Log::error('Registration error: ' . $e->getMessage());
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error('Database error during registration', [
+                'email' => $request->email,
+                'message' => $e->getMessage(),
+                'sql' => $e->getSql() ?? 'N/A',
+                'bindings' => $e->getBindings() ?? []
+            ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat registrasi',
+                'message' => 'Database error: ' . $e->getMessage(),
+                'error_code' => 'DB_ERROR',
+            ], 500);
+        } catch (\Exception $e) {
+            Log::error('Registration error', [
+                'email' => $request->email,
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat registrasi: ' . $e->getMessage(),
                 'error_code' => 'REGISTRATION_FAILED',
             ], 500);
         }
