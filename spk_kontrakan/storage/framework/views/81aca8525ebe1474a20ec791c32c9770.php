@@ -727,14 +727,6 @@
                 </a>
             </div>
 
-            <div class="menu-section">
-                <div class="menu-section-title">Akun</div>
-                <a href="<?php echo e(route('admin.profile')); ?>" class="menu-item <?php echo e(request()->routeIs('admin.profile') ? 'active' : ''); ?>">
-                    <i class="bi bi-person-circle"></i>
-                    <span>Profil</span>
-                </a>
-            </div>
-
             <!-- Bisnis Management -->
             <div class="menu-section">
                 <div class="menu-section-title">Kelola Bisnis</div>
@@ -783,6 +775,14 @@
                 </a>
             </div>
             <?php endif; ?>
+
+            <div class="menu-section">
+                <div class="menu-section-title">Akun</div>
+                <a href="<?php echo e(route('admin.profile')); ?>" class="menu-item <?php echo e(request()->routeIs('admin.profile') ? 'active' : ''); ?>">
+                    <i class="bi bi-person-circle"></i>
+                    <span>Profil</span>
+                </a>
+            </div>
         </div>
     </div>
 

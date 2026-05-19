@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'login.dart';
-import 'screens/improved_home_screen.dart';
 import 'services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -59,7 +58,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                      icon: const Icon(
+                        Icons.arrow_back_rounded,
+                        color: Colors.white,
+                      ),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
@@ -119,7 +121,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       controller: _nameController,
                       prefixIcon: Icons.person_outline,
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Nama tidak boleh kosong';
+                        if (v == null || v.trim().isEmpty)
+                          return 'Nama tidak boleh kosong';
                         return null;
                       },
                     ),
@@ -130,7 +133,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: Icons.email_outlined,
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Email tidak boleh kosong';
+                        if (v == null || v.trim().isEmpty)
+                          return 'Email tidak boleh kosong';
                         if (!v.contains('@')) return 'Email tidak valid';
                         return null;
                       },
@@ -148,10 +152,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               : Icons.visibility_off_outlined,
                           color: const Color(0xFF1565C0),
                         ),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
                       validator: (v) {
-                        if (v == null || v.isEmpty) return 'Password tidak boleh kosong';
+                        if (v == null || v.isEmpty)
+                          return 'Password tidak boleh kosong';
                         if (v.length < 6) return 'Password minimal 6 karakter';
                         return null;
                       },
@@ -169,10 +176,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               : Icons.visibility_off_outlined,
                           color: const Color(0xFF1565C0),
                         ),
-                        onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                        onPressed: () => setState(
+                          () => _obscureConfirmPassword =
+                              !_obscureConfirmPassword,
+                        ),
                       ),
                       validator: (v) {
-                        if (v != _passwordController.text) return 'Password tidak cocok';
+                        if (v != _passwordController.text)
+                          return 'Password tidak cocok';
                         return null;
                       },
                     ),
@@ -200,12 +211,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       children: [
                         Text(
                           'Sudah punya akun? ',
-                          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
                         ),
                         GestureDetector(
                           onTap: () => Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const LoginScreen(),
+                            ),
                           ),
                           child: const Text(
                             'Masuk',
@@ -272,7 +288,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFF1565C0), width: 1.5),
+              borderSide: const BorderSide(
+                color: Color(0xFF1565C0),
+                width: 1.5,
+              ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -280,9 +299,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFFEF5350), width: 1.5),
+              borderSide: const BorderSide(
+                color: Color(0xFFEF5350),
+                width: 1.5,
+              ),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 15,
+            ),
           ),
         ),
       ],
@@ -336,7 +361,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   color: const Color(0xFF1565C0).withOpacity(0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.school_rounded, color: Color(0xFF1565C0), size: 22),
+                child: const Icon(
+                  Icons.school_rounded,
+                  color: Color(0xFF1565C0),
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -365,14 +394,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildInfoItem(Icons.home_rounded, 'Temukan Kontrakan Terbaik',
-              'Rekomendasi kontrakan terdekat dari kampus'),
+          _buildInfoItem(
+            Icons.home_rounded,
+            'Temukan Kontrakan Terbaik',
+            'Rekomendasi kontrakan terdekat dari kampus',
+          ),
           const SizedBox(height: 10),
-          _buildInfoItem(Icons.local_laundry_service_rounded, 'Cari Laundry Terpercaya',
-              'Temukan laundry dengan kualitas terbaik'),
+          _buildInfoItem(
+            Icons.local_laundry_service_rounded,
+            'Cari Laundry Terpercaya',
+            'Temukan laundry dengan kualitas terbaik',
+          ),
           const SizedBox(height: 10),
-          _buildInfoItem(Icons.analytics_rounded, 'Metode SAW',
-              'Rekomendasi berdasarkan preferensi Anda'),
+          _buildInfoItem(
+            Icons.analytics_rounded,
+            'Metode SAW',
+            'Rekomendasi berdasarkan preferensi Anda',
+          ),
         ],
       ),
     );
@@ -388,12 +426,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title,
-                  style: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E))),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1A1A2E),
+                ),
+              ),
               const SizedBox(height: 2),
-              Text(description,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500], height: 1.3)),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[500],
+                  height: 1.3,
+                ),
+              ),
             ],
           ),
         ),
@@ -412,58 +461,118 @@ class _RegisterScreenState extends State<RegisterScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text,
         passwordConfirmation: _confirmPasswordController.text,
+        phone: '', // Send empty phone field
       );
 
       if (!mounted) return;
 
-      if (result['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(
-              children: [
-                Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-                SizedBox(width: 10),
-                Text('Registrasi berhasil! Selamat datang!'),
-              ],
+      // Better error handling with null safety
+      final success = result['success'] ?? false;
+
+      if (success == true) {
+        // Success - show message dan navigate
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(
+                    Icons.check_circle_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  SizedBox(width: 10),
+                  Text('Registrasi berhasil! Silakan login.'),
+                ],
+              ),
+              backgroundColor: const Color(0xFF2E7D32),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.all(16),
+              duration: const Duration(seconds: 2),
             ),
-            backgroundColor: const Color(0xFF2E7D32),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            margin: const EdgeInsets.all(16),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+          );
+        }
+
         await Future.delayed(const Duration(seconds: 1));
         if (mounted) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => const ImprovedHomeScreen()),
+            MaterialPageRoute(
+              builder: (_) => LoginScreen(initialEmail: _emailController.text),
+            ),
           );
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
-                const SizedBox(width: 10),
-                Expanded(child: Text(result['message'] ?? 'Registrasi gagal')),
-              ],
+        // Error handling
+        debugPrint('Register failed result: $result');
+        final status = result['status'];
+        final serverMessage = result['message']?.toString().trim();
+        final errors = result['errors'];
+
+        // Extract first error message
+        String? errorMessage;
+
+        if (errors is Map && errors.isNotEmpty) {
+          final firstError = errors.values.first;
+          if (firstError is List && firstError.isNotEmpty) {
+            errorMessage = firstError.first.toString();
+          } else {
+            errorMessage = firstError.toString();
+          }
+        } else if (errors is List && errors.isNotEmpty) {
+          errorMessage = errors.first.toString();
+        }
+
+        // Fallback to server message
+        if ((errorMessage == null || errorMessage.isEmpty) &&
+            (serverMessage != null && serverMessage.isNotEmpty)) {
+          errorMessage = serverMessage;
+        }
+
+        // Final fallback
+        if (errorMessage == null || errorMessage.isEmpty) {
+          errorMessage = status != null
+              ? 'Registrasi gagal (HTTP $status)'
+              : 'Registrasi gagal. Coba lagi.';
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(errorMessage)),
+                ],
+              ),
+              backgroundColor: const Color(0xFFC62828),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.all(16),
+              duration: const Duration(seconds: 3),
             ),
-            backgroundColor: const Color(0xFFC62828),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            margin: const EdgeInsets.all(16),
-            duration: const Duration(seconds: 3),
-          ),
-        );
+          );
+        }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (mounted) {
+        debugPrint('Register exception: $e\n$stackTrace');
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text('Terjadi kesalahan: $e'),
             backgroundColor: const Color(0xFFC62828),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -472,4 +581,3 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 }
-

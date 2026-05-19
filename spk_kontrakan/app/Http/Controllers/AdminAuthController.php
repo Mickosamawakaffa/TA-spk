@@ -23,13 +23,21 @@ class AdminAuthController extends Controller
             'password' => 'required'
         ]);
 
-        // Gunakan guard 'admin' - ambil dari tabel admins
-        if (Auth::guard('admin')->attempt($credentials)) {
-            $request->session()->regenerate();
-            return redirect()->intended(route('dashboard'));
+        // Cek admin secara eksplisit agar bisa tahu sumber gagal login
+        $admin = Admin::where('email', $credentials['email'])->first();
+
+        if (!$admin) {
+            return back()->with('error', 'Email tidak terdaftar sebagai admin.');
         }
 
-        return back()->with('error', 'Email atau password salah!');
+        if (!Hash::check($credentials['password'], $admin->password)) {
+            return back()->with('error', 'Password salah.');
+        }
+
+        Auth::guard('admin')->login($admin);
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('dashboard'));
     }
 
     // Halaman Register

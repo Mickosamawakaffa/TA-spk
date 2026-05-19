@@ -1,4 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
@@ -8,10 +12,28 @@ class AuthService {
   // Singleton pattern
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
-  AuthService._internal();
 
-  String? _token;
-  User? _currentUser;
+  late String? _token;
+  late User? _currentUser;
+
+  // HttpClient - lazy initialization
+  HttpClient? _httpClient;
+
+  AuthService._internal() {
+    _token = null;
+    _currentUser = null;
+  }
+
+  /// Initialize HttpClient secara lazy
+  HttpClient _getHttpClient() {
+    if (_httpClient == null) {
+      _httpClient = HttpClient();
+      _httpClient!.badCertificateCallback = (cert, host, port) =>
+          true; // Accept all certs (development only)
+      _httpClient!.connectionTimeout = const Duration(seconds: 30);
+    }
+    return _httpClient!;
+  }
 
   String? get token => _token;
   User? get currentUser => _currentUser;
@@ -67,6 +89,45 @@ class AuthService {
     return false;
   }
 
+  /// Custom HTTP POST dengan HttpClient yang accept semua cert
+  Future<http.Response> _customPost(
+    Uri uri, {
+    required Map<String, String> headers,
+    required String body,
+  }) async {
+    debugPrint('[HTTP] POST $uri');
+    debugPrint('[HTTP] Headers: $headers');
+    debugPrint('[HTTP] Body: $body');
+
+    try {
+      final client = _getHttpClient();
+      final request = await client.postUrl(uri);
+      headers.forEach((key, value) {
+        request.headers.add(key, value);
+      });
+      request.write(body);
+
+      final response = await request.close().timeout(
+        const Duration(seconds: 60),
+      );
+      final responseBody = await response.transform(utf8.decoder).join();
+
+      debugPrint('[HTTP] Status: ${response.statusCode}');
+      debugPrint('[HTTP] Response: $responseBody');
+
+      return http.Response(responseBody, response.statusCode);
+    } on SocketException catch (e) {
+      debugPrint('[HTTP] SocketException: $e');
+      rethrow;
+    } on TimeoutException catch (e) {
+      debugPrint('[HTTP] TimeoutException: $e');
+      rethrow;
+    } catch (e) {
+      debugPrint('[HTTP] Exception: $e');
+      rethrow;
+    }
+  }
+
   // Register
   Future<Map<String, dynamic>> register({
     required String name,
@@ -76,8 +137,11 @@ class AuthService {
     String? phone,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/register'),
+      final url = '${AppConfig.baseUrl}/register';
+      debugPrint('[REGISTER] Attempting POST to: $url');
+
+      final response = await _customPost(
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -91,22 +155,80 @@ class AuthService {
         }),
       );
 
-      final data = jsonDecode(response.body);
+      debugPrint('Register response status: ${response.statusCode}');
+      debugPrint(
+        'Register response body: ${response.body.substring(0, math.min(response.body.length, 300))}',
+      );
 
-      if (response.statusCode == 201 && data['success'] == true) {
-        final token = data['data']['token'];
-        final user = User.fromJson(data['data']['user']);
-        await _saveToken(token, user);
-        return {'success': true, 'message': data['message']};
-      } else {
-        return {
-          'success': false,
-          'message': data['message'] ?? 'Registrasi gagal',
-          'errors': data['errors'],
-        };
+      Map<String, dynamic>? data;
+      String? rawBody;
+      try {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map) {
+          data = Map<String, dynamic>.from(decoded);
+        } else {
+          rawBody = response.body;
+        }
+      } catch (_) {
+        rawBody = response.body;
       }
+
+      if (response.statusCode == 201 &&
+          data != null &&
+          (data['success'] ?? false) == true) {
+        try {
+          final token = data['data']?['token'];
+          final userData = data['data']?['user'];
+
+          if (token == null || userData == null) {
+            return {
+              'success': false,
+              'message': 'Invalid response format from server',
+            };
+          }
+
+          final user = User.fromJson(userData);
+          await _saveToken(token, user);
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Registrasi berhasil',
+          };
+        } catch (e) {
+          debugPrint('Error parsing registration user data: $e');
+          return {'success': false, 'message': 'Error parsing user data'};
+        }
+      }
+
+      final preview = response.body.length > 300
+          ? response.body.substring(0, 300)
+          : response.body;
+      debugPrint('Register failed: ${response.statusCode} $preview');
+
+      return {
+        'success': false,
+        'message': data?['message'] ?? 'Registrasi gagal',
+        'errors': data?['errors'],
+        'status': response.statusCode,
+        'error_code': data?['error_code'],
+        'raw_body': rawBody,
+      };
+    } on SocketException catch (e) {
+      debugPrint('SocketException in register: $e');
+      return {
+        'success': false,
+        'message': 'Gagal terhubung ke server. Periksa koneksi internet.',
+      };
+    } on TimeoutException catch (e) {
+      debugPrint('TimeoutException in register: $e');
+      return {
+        'success': false,
+        'message': 'Registrasi timeout. Server tidak merespons.',
+      };
     } catch (e) {
-      return {'success': false, 'message': 'Error: $e'};
+      debugPrint('Register exception type: ${e.runtimeType}');
+      debugPrint('Register exception: $e');
+      debugPrint('Register stack trace: ${StackTrace.current}');
+      return {'success': false, 'message': 'Error: ${e.runtimeType} - $e'};
     }
   }
 
@@ -116,8 +238,11 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/login'),
+      final url = '${AppConfig.baseUrl}/login';
+      debugPrint('[LOGIN] Attempting POST to: $url');
+
+      final response = await _customPost(
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -125,18 +250,68 @@ class AuthService {
         body: jsonEncode({'email': email, 'password': password}),
       );
 
-      final data = jsonDecode(response.body);
+      debugPrint('Login response status: ${response.statusCode}');
+      debugPrint(
+        'Login response body: ${response.body.substring(0, math.min(response.body.length, 300))}',
+      );
 
-      if (response.statusCode == 200 && data['success'] == true) {
-        final token = data['data']['token'];
-        final user = User.fromJson(data['data']['user']);
-        await _saveToken(token, user);
-        return {'success': true, 'message': data['message']};
-      } else {
-        return {'success': false, 'message': data['message'] ?? 'Login gagal'};
+      Map<String, dynamic>? data;
+      try {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map) {
+          data = Map<String, dynamic>.from(decoded);
+        }
+      } catch (e) {
+        debugPrint('Failed to parse login response: $e');
       }
+
+      if (response.statusCode == 200 &&
+          data != null &&
+          (data['success'] ?? false) == true) {
+        try {
+          final token = data['data']?['token'];
+          final userData = data['data']?['user'];
+
+          if (token == null || userData == null) {
+            return {
+              'success': false,
+              'message': 'Invalid response format from server',
+            };
+          }
+
+          final user = User.fromJson(userData);
+          await _saveToken(token, user);
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Login berhasil',
+          };
+        } catch (e) {
+          debugPrint('Error parsing user data: $e');
+          return {'success': false, 'message': 'Error parsing user data'};
+        }
+      } else {
+        final errorMessage =
+            data?['message'] ?? data?['error'] ?? 'Login gagal';
+
+        return {
+          'success': false,
+          'message': errorMessage,
+          'status': response.statusCode,
+        };
+      }
+    } on SocketException {
+      return {
+        'success': false,
+        'message': 'Gagal terhubung ke server. Periksa koneksi internet.',
+      };
+    } on TimeoutException {
+      return {
+        'success': false,
+        'message': 'Login timeout. Server tidak merespons.',
+      };
     } catch (e) {
-      return {'success': false, 'message': 'Error: $e'};
+      debugPrint('Login exception: $e');
+      return {'success': false, 'message': 'Terjadi kesalahan: $e'};
     }
   }
 
@@ -214,11 +389,7 @@ class AuthService {
           'Accept': 'application/json',
           'Authorization': 'Bearer $_token',
         },
-        body: jsonEncode({
-          'name': name,
-          'email': email,
-          'phone': phone,
-        }),
+        body: jsonEncode({'name': name, 'email': email, 'phone': phone}),
       );
 
       final data = jsonDecode(response.body);

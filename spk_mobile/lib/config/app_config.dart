@@ -22,7 +22,7 @@ class AppConfig {
   /// UPDATE INI SESUAI DENGAN BACKEND ANDA!
   /// Jika backend di: php artisan serve
   /// Maka gunakan: http://127.0.0.1:8000 (localhost) atau http://[IP]:8000 (network)
-  static const String _defaultServer = 'http://10.31.174.99:8000';
+  static const String _defaultServer = 'http://10.192.233.99:8000';
 
   // Runtime values — bisa di-override via setServerUrl() jika perlu
   static String _serverUrl = _defaultServer;
@@ -38,6 +38,8 @@ class AppConfig {
 
   // Timeouts - Increased untuk network yang lambat dan operations yang heavy (password hashing, db insert)
   static const Duration connectionTimeout = Duration(seconds: 30);
+
+  // ✅ UPDATED: Backend base URL sesuai IP hotspot HP (10.119.236.99:8000)
   static const Duration receiveTimeout = Duration(seconds: 30);
 
   // Local Storage Keys

@@ -9,7 +9,7 @@ class AdminAuth
 {
     public function handle($request, Closure $next)
     {
-        if (! Auth::check()) {
+        if (! Auth::guard('admin')->check()) {  // ← tambah guard('admin')
             return redirect()->route('admin.login');
         }
 

@@ -142,29 +142,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
             // Image Gallery
             SizedBox(
               height: 250,
-              child: PageView.builder(
-                itemCount: widget.kontrakan.galeri.isEmpty
-                    ? 1
-                    : widget.kontrakan.galeri.length,
-                itemBuilder: (context, index) {
-                  final imageUrl = widget.kontrakan.galeri.isEmpty
-                      ? widget.kontrakan.primaryPhoto
-                      : widget.kontrakan.galeri[index].photoUrl;
-
-                  return CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      color: Colors.grey[300],
-                      child: const Center(child: CircularProgressIndicator()),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.image, size: 100),
-                    ),
-                  );
-                },
-              ),
+              child: _buildGallery(),
             ),
 
             // Info Section
@@ -468,6 +446,54 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGallery() {
+    if (!widget.kontrakan.hasPhoto) {
+      return _buildMissingPhoto();
+    }
+
+    final galleryItems = widget.kontrakan.galeri
+        .where((item) => item.foto.isNotEmpty)
+        .toList();
+
+    return PageView.builder(
+      itemCount: galleryItems.isEmpty ? 1 : galleryItems.length,
+      itemBuilder: (context, index) {
+        final imageUrl = galleryItems.isEmpty
+            ? widget.kontrakan.primaryPhoto
+            : galleryItems[index].photoUrl;
+
+        return CachedNetworkImage(
+          imageUrl: imageUrl,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => Container(
+            color: Colors.grey[300],
+            child: const Center(child: CircularProgressIndicator()),
+          ),
+          errorWidget: (context, url, error) => _buildMissingPhoto(),
+        );
+      },
+    );
+  }
+
+  Widget _buildMissingPhoto() {
+    return Container(
+      color: Colors.grey[300],
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.image_not_supported, size: 72, color: Colors.grey),
+            SizedBox(height: 8),
+            Text(
+              'Foto tidak tersedia',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
         ),
       ),
     );

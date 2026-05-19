@@ -725,14 +725,6 @@
                 </a>
             </div>
 
-            <div class="menu-section">
-                <div class="menu-section-title">Akun</div>
-                <a href="{{ route('admin.profile') }}" class="menu-item {{ request()->routeIs('admin.profile') ? 'active' : '' }}">
-                    <i class="bi bi-person-circle"></i>
-                    <span>Profil</span>
-                </a>
-            </div>
-
             <!-- Bisnis Management -->
             <div class="menu-section">
                 <div class="menu-section-title">Kelola Bisnis</div>
@@ -781,6 +773,14 @@
                 </a>
             </div>
             @endif
+
+            <div class="menu-section">
+                <div class="menu-section-title">Akun</div>
+                <a href="{{ route('admin.profile') }}" class="menu-item {{ request()->routeIs('admin.profile') ? 'active' : '' }}">
+                    <i class="bi bi-person-circle"></i>
+                    <span>Profil</span>
+                </a>
+            </div>
         </div>
     </div>
 

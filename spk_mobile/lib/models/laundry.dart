@@ -143,6 +143,12 @@ class Laundry {
     return fallback;
   }
 
+  bool get hasPhoto {
+    if (foto != null && foto!.isNotEmpty) return true;
+    if (galeri.any((g) => g.foto.isNotEmpty)) return true;
+    return false;
+  }
+
   // Get primary photo URL
   // Prioritize 'foto' field (Admin-set primary photo) over galeri entries,
   // because galeri items may reference files that have been deleted/replaced.

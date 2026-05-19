@@ -3,10 +3,11 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'screens/improved_home_screen.dart';
 import 'register.dart';
 import 'services/auth_service.dart';
-import 'services/notification_service.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final String? initialEmail;
+  
+  const LoginScreen({super.key, this.initialEmail});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -20,6 +21,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _obscurePassword = true;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-fill email jika datang dari register
+    if (widget.initialEmail != null) {
+      _emailController.text = widget.initialEmail!;
+    }
+  }
 
   @override
   void dispose() {
@@ -220,29 +230,47 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
-      if (result['success']) {
-        await NotificationService().init(_authService);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const ImprovedHomeScreen()),
-        );
+      // Better error handling with null safety
+      final success = result['success'] ?? false;
+
+      if (success == true) {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const ImprovedHomeScreen()),
+          );
+        }
       } else {
+        final errorMessage =
+            result['message'] ??
+            result['error'] ??
+            'Login gagal. Periksa email dan password Anda.';
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red[700],
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e, stackTrace) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      debugPrint('Login error: $e\n$stackTrace');
+
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? 'Login gagal'),
-            backgroundColor: Colors.red,
+            content: Text('Terjadi kesalahan: $e'),
+            backgroundColor: Colors.red[700],
+            duration: const Duration(seconds: 3),
           ),
         );
       }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Terjadi kesalahan: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
 
@@ -306,6 +334,13 @@ class _LoginScreenState extends State<LoginScreen> {
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: const BorderSide(color: Color(0xFFEF5350)),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(
+                color: Color(0xFFEF5350),
+                width: 1.5,
+              ),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,

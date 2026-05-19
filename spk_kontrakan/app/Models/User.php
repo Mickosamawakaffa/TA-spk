@@ -58,11 +58,12 @@ class User extends Authenticatable
      */
     public function getRoleLabelAttribute(): string
     {
-        return match($this->role) {
+        $role = $this->role ?? 'user';
+        return match($role) {
             'super_admin' => 'Super Admin',
             'admin' => 'Admin',
             'user' => 'Mahasiswa',
-            default => $this->role,
+            default => $role,
         };
     }
 
@@ -71,7 +72,8 @@ class User extends Authenticatable
      */
     public function getUserTypeAttribute(): string
     {
-        return $this->role === 'user' ? 'mahasiswa' : $this->role;
+        $role = $this->role ?? 'user';
+        return $role === 'user' ? 'mahasiswa' : $role;
     }
 
     /**

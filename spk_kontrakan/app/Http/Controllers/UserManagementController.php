@@ -14,10 +14,7 @@ class UserManagementController extends Controller
     {
         $query = User::query();
 
-        // Filter by role
-        if ($request->filled('role')) {
-            $query->where('role', $request->role);
-        }
+        // NOTE: users table no longer contains a `role` column; ignore role filter
 
         // Search by name or email
         if ($request->filled('search')) {
@@ -53,21 +50,18 @@ class UserManagementController extends Controller
             'name' => 'required|string|min:3|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:admin,super_admin,user',
         ], [
             'name.required' => 'Nama harus diisi',
             'email.required' => 'Email harus diisi',
             'email.unique' => 'Email sudah digunakan',
             'password.required' => 'Password harus diisi',
             'password.min' => 'Password minimal 8 karakter',
-            'role.required' => 'Role harus dipilih',
         ]);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
         ]);
 
         ActivityLog::log('create', "Membuat user baru: {$user->name}", 'User', $user->id, null, $user->toArray());
@@ -85,7 +79,6 @@ class UserManagementController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|min:3|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'role' => 'required|in:admin,super_admin,user',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
 
@@ -94,7 +87,6 @@ class UserManagementController extends Controller
         $updateData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'role' => $validated['role'],
         ];
 
         if ($request->filled('password')) {

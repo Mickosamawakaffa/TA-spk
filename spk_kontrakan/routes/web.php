@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Hash;
+use App\Models\Admin;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KontrakanController;
 use App\Http\Controllers\LaundryController;
@@ -36,10 +38,29 @@ Route::post('/admin/login', [AdminAuthController::class, 'login'])->middleware('
 Route::get('/admin/register', [AdminAuthController::class, 'registerPage'])->name('admin.register');
 Route::post('/admin/register', [AdminAuthController::class, 'register'])->middleware('throttle:10,1')->name('admin.register.post');
 
+// Local-only helper: reset demo admin passwords
+Route::get('/admin/reset-demo-passwords', function () {
+    if (!app()->environment('local')) {
+        abort(404);
+    }
+
+    $updated = 0;
+    foreach (['superadmin@gmail.com', 'admin@gmail.com'] as $email) {
+        $admin = Admin::where('email', $email)->first();
+        if ($admin) {
+            $admin->password = Hash::make('password');
+            $admin->save();
+            $updated++;
+        }
+    }
+
+    return "OK: reset $updated admin password(s)";
+});
+
 // -------------------------------------------------
 // ROUTE ADMIN TERPROTEKSI LOGIN
 // -------------------------------------------------
-Route::middleware('auth')->group(function () {
+Route::middleware('auth:admin')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

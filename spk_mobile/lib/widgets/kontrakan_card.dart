@@ -95,22 +95,29 @@ class KontrakanCard extends StatelessWidget {
                       showRanking && ranking != null ? 0 : 16,
                     ),
                   ),
-                  child: CachedNetworkImage(
-                    imageUrl: kontrakan.primaryPhoto,
-                    height: 180,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      height: 180,
-                      color: Colors.grey[300],
-                      child: const Center(child: CircularProgressIndicator()),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      height: 180,
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.image_not_supported, size: 50),
-                    ),
-                  ),
+                  child: kontrakan.hasPhoto
+                      ? CachedNetworkImage(
+                          imageUrl: kontrakan.primaryPhoto,
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            height: 180,
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            height: 180,
+                            color: Colors.grey[300],
+                            child: const Icon(
+                              Icons.image_not_supported,
+                              size: 50,
+                            ),
+                          ),
+                        )
+                      : _buildMissingPhoto(),
                 ),
                 Positioned(
                   top: 10,
@@ -274,6 +281,25 @@ class KontrakanCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildMissingPhoto() {
+    return Container(
+      height: 180,
+      width: double.infinity,
+      color: Colors.grey[300],
+      child: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
+          SizedBox(height: 8),
+          Text(
+            'Foto tidak tersedia',
+            style: TextStyle(color: Colors.grey, fontSize: 12),
+          ),
+        ],
       ),
     );
   }

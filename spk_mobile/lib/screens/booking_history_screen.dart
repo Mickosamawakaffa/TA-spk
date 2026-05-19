@@ -5,6 +5,8 @@ import '../config/app_config.dart';
 import '../services/booking_service.dart';
 import '../models/booking.dart';
 
+// ignore_for_file: deprecated_member_use
+
 class BookingHistoryScreen extends StatefulWidget {
   const BookingHistoryScreen({super.key});
 

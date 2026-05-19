@@ -183,6 +183,9 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _applyFilters() {
+    if (_selectedFilter == 'Penuh') {
+      _selectedFilter = 'Semua';
+    }
     var filtered = List<Kontrakan>.from(_allKontrakan);
 
     // Apply search
@@ -198,12 +201,8 @@ class _SearchScreenState extends State<SearchScreen> {
     }
 
     // Filter by status
-    if (_selectedFilter != 'Semua') {
-      filtered = filtered.where((k) {
-        if (_selectedFilter == 'Tersedia') return k.status == 'available';
-        if (_selectedFilter == 'Penuh') return k.status == 'occupied';
-        return true;
-      }).toList();
+    if (_selectedFilter == 'Tersedia') {
+      filtered = filtered.where((k) => k.status == 'available').toList();
     }
 
     // Filter by price
@@ -417,8 +416,6 @@ class _SearchScreenState extends State<SearchScreen> {
                           _buildFilterChip('Semua'),
                           const SizedBox(width: 8),
                           _buildFilterChip('Tersedia'),
-                          const SizedBox(width: 8),
-                          _buildFilterChip('Penuh'),
                         ],
                       ),
                     ),
@@ -724,9 +721,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     topLeft: Radius.circular(16),
                     bottomLeft: Radius.circular(16),
                   ),
-                  child:
-                      kontrakan.fotoUtama != null &&
-                          kontrakan.fotoUtama!.isNotEmpty
+                  child: kontrakan.hasPhoto
                       ? CachedNetworkImage(
                           imageUrl: kontrakan.primaryPhoto,
                           width: 120,
@@ -740,27 +735,10 @@ class _SearchScreenState extends State<SearchScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             ),
                           ),
-                          errorWidget: (context, url, error) => Container(
-                            width: 120,
-                            height: 140,
-                            color: Colors.grey[200],
-                            child: Icon(
-                              Icons.home_work,
-                              size: 40,
-                              color: Colors.grey[400],
-                            ),
-                          ),
+                          errorWidget: (context, url, error) =>
+                              _buildMissingKontrakanPhoto(),
                         )
-                      : Container(
-                          width: 120,
-                          height: 140,
-                          color: Colors.grey[200],
-                          child: Icon(
-                            Icons.home_work,
-                            size: 40,
-                            color: Colors.grey[400],
-                          ),
-                        ),
+                      : _buildMissingKontrakanPhoto(),
                 ),
                 Positioned(
                   top: 6,
@@ -948,45 +926,33 @@ class _SearchScreenState extends State<SearchScreen> {
                     topLeft: Radius.circular(16),
                     bottomLeft: Radius.circular(16),
                   ),
-                  child: CachedNetworkImage(
-                    imageUrl: laundry.primaryPhoto,
-                    width: 120,
-                    height: 140,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      width: 120,
-                      height: 140,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Colors.cyan[400]!, Colors.cyan[600]!],
-                        ),
-                      ),
-                      child: const Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      width: 120,
-                      height: 140,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Colors.cyan[400]!, Colors.cyan[600]!],
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.local_laundry_service,
-                        size: 50,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
+                  child: laundry.hasPhoto
+                      ? CachedNetworkImage(
+                          imageUrl: laundry.primaryPhoto,
+                          width: 120,
+                          height: 140,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            width: 120,
+                            height: 140,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Colors.cyan[400]!, Colors.cyan[600]!],
+                              ),
+                            ),
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) =>
+                              _buildMissingLaundryPhoto(),
+                        )
+                      : _buildMissingLaundryPhoto(),
                 ),
                 Positioned(
                   top: 6,
@@ -1176,6 +1142,38 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildMissingKontrakanPhoto() {
+    return Container(
+      width: 120,
+      height: 140,
+      color: Colors.grey[200],
+      child: Icon(
+        Icons.home_work,
+        size: 40,
+        color: Colors.grey[400],
+      ),
+    );
+  }
+
+  Widget _buildMissingLaundryPhoto() {
+    return Container(
+      width: 120,
+      height: 140,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.cyan[400]!, Colors.cyan[600]!],
+        ),
+      ),
+      child: const Icon(
+        Icons.local_laundry_service,
+        size: 50,
+        color: Colors.white,
       ),
     );
   }

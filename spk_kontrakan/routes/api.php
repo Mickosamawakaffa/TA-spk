@@ -111,10 +111,10 @@ Route::get('/docs', function () {
 });
 
 // -------------------------------------------------
-// AUTH ROUTES (PUBLIC - DENGAN RATE LIMITING)
+// AUTH ROUTES (PUBLIC - DEVELOPMENT MODE - NO RATE LIMITING)
 // -------------------------------------------------
-Route::middleware('throttle:register')->post('/register', [AuthController::class, 'register']);
-Route::middleware('throttle:login')->post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
 // -------------------------------------------------
 // KONTRAKAN ROUTES (PUBLIC - TANPA AUTH)

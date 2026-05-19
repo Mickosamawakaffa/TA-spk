@@ -92,6 +92,10 @@
             z-index: 1;
         }
 
+        .header-actions.profile-actions {
+            margin-top: 0.75rem;
+        }
+
         .action-chip {
             display: inline-flex;
             align-items: center;
@@ -150,38 +154,6 @@
             color: #4338ca;
         }
 
-        .insight-card {
-            border-radius: 16px;
-            border: 1px solid rgba(148, 163, 184, 0.2);
-            background: rgba(255, 255, 255, 0.85);
-            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
-        }
-
-        .insight-card h6 {
-            font-weight: 700;
-            color: #4f46e5;
-        }
-
-        .insight-list {
-            display: grid;
-            gap: 0.75rem;
-        }
-
-        .insight-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            padding: 0.75rem 1rem;
-            border-radius: 12px;
-            background: rgba(248, 250, 252, 0.9);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-        }
-
-        .insight-item i {
-            color: #667eea;
-            font-size: 1.1rem;
-            margin-top: 2px;
-        }
 
         .metric-card {
             border-radius: 16px;
@@ -435,12 +407,14 @@
         <div class="header-actions">
             <a href="<?php echo e(route('kontrakan.index')); ?>" class="action-chip"><i class="bi bi-building"></i>Kontrakan</a>
             <a href="<?php echo e(route('admin.bookings.index')); ?>" class="action-chip"><i class="bi bi-calendar-check"></i>Booking</a>
-            <a href="<?php echo e(route('admin.profile')); ?>" class="action-chip"><i class="bi bi-person-circle"></i>Profil</a>
             <?php if($isSuperAdmin): ?>
             <a href="<?php echo e(route('laundry.index')); ?>" class="action-chip"><i class="bi bi-water"></i>Laundry</a>
             <a href="<?php echo e(route('kriteria.index')); ?>" class="action-chip"><i class="bi bi-list-check"></i>Kriteria</a>
             <a href="<?php echo e(route('saw.index')); ?>" class="action-chip"><i class="bi bi-calculator"></i>Analisis</a>
             <?php endif; ?>
+        </div>
+        <div class="header-actions profile-actions">
+            <a href="<?php echo e(route('admin.profile')); ?>" class="action-chip"><i class="bi bi-person-circle"></i>Profil</a>
         </div>
     </div>
 
@@ -579,7 +553,7 @@
 
     <!-- Snapshot Section -->
     <div class="row g-3 g-md-4 mb-4 mb-md-5">
-        <div class="col-12 col-xl-7">
+        <div class="col-12">
             <div class="glass-panel p-4 h-100">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-bold mb-0" style="color: #4f46e5;">Ringkasan Aktivitas</h5>
@@ -612,34 +586,6 @@
                         </div>
                     </div>
                     <?php endif; ?>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-xl-5">
-            <div class="insight-card p-4 h-100">
-                <h6 class="mb-3">Insight Cepat</h6>
-                <div class="insight-list">
-                    <div class="insight-item">
-                        <i class="bi bi-geo-alt"></i>
-                        <div>
-                            <div class="fw-semibold">Dominasi lokasi</div>
-                            <small class="text-muted"><?php echo e($jarakKontrakan['dekat']); ?> lokasi dekat kampus.</small>
-                        </div>
-                    </div>
-                    <div class="insight-item">
-                        <i class="bi bi-cash-stack"></i>
-                        <div>
-                            <div class="fw-semibold">Harga rata-rata</div>
-                            <small class="text-muted">Rp <?php echo e(number_format($avgHargaKontrakan, 0, ',', '.')); ?> per bulan.</small>
-                        </div>
-                    </div>
-                    <div class="insight-item">
-                        <i class="bi bi-people"></i>
-                        <div>
-                            <div class="fw-semibold">Admin aktif</div>
-                            <small class="text-muted"><?php echo e($totalAdmins ?? 1); ?> akun admin tersedia.</small>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -840,55 +786,9 @@
     </div>
 
     <!-- Additional Stats Section -->
+    <?php if($isSuperAdmin): ?>
     <div class="row g-4 mb-4">
-        <?php if(!$isSuperAdmin): ?>
-        <!-- System Status -->
         <div class="col-12">
-            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border-radius: 12px;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="mb-2 opacity-75 small fw-semibold">System Status</p>
-                            <h3 class="fw-bold mb-0"><i class="bi bi-check-circle-fill"></i> Aktif</h3>
-                        </div>
-                        <div style="font-size: 2.5rem; opacity: 0.3;">✓</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <?php else: ?>
-        <!-- System Status -->
-        <div class="col-md-6 col-lg-3">
-            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border-radius: 12px;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="mb-2 opacity-75 small fw-semibold">System Status</p>
-                            <h3 class="fw-bold mb-0"><i class="bi bi-check-circle-fill"></i> Aktif</h3>
-                        </div>
-                        <div style="font-size: 2.5rem; opacity: 0.3;">✓</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <?php if($isSuperAdmin): ?>
-        <!-- Last Backup -->
-        <div class="col-md-6 col-lg-3">
-            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%); color: white; border-radius: 12px;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="mb-2 opacity-75 small fw-semibold">Database Size</p>
-                            <h3 class="fw-bold mb-0"><?php echo e(number_format(round((($jumlahKontrakan + $jumlahLaundry) * 0.15) / 1024, 2), 2, ',', '.')); ?> MB</h3>
-                        </div>
-                        <div style="font-size: 2.5rem; opacity: 0.3;">💾</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="col-md-6 col-lg-3">
             <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #fd7e14 0%, #fd7e14 100%); color: white; border-radius: 12px;">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -901,9 +801,8 @@
                 </div>
             </div>
         </div>
-        <?php endif; ?>
-        <?php endif; ?>
     </div>
+    <?php endif; ?>
 
     <!-- Recent Data Tables -->
     <div class="row g-4">

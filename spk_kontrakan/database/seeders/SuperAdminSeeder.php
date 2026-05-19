@@ -24,7 +24,7 @@ class SuperAdminSeeder extends Seeder
                 'role' => 'super_admin',
             ]);
             
-            $this->command->info('✅ Super Admin updated successfully!');
+            $this->command->info('OK: Super Admin updated successfully.');
         } else {
             // Create new super admin
             User::create([
@@ -35,11 +35,11 @@ class SuperAdminSeeder extends Seeder
                 'email_verified_at' => now(),
             ]);
             
-            $this->command->info('✅ Super Admin created successfully!');
+            $this->command->info('OK: Super Admin created successfully.');
         }
         
-        $this->command->info('📧 Email: superadmin@gmail.com');
-        $this->command->info('🔑 Password: password');
+        $this->command->info('Email: superadmin@gmail.com');
+        $this->command->info('Password: password');
         $this->command->line('');
         
         // Also create a regular admin for testing
@@ -54,9 +54,9 @@ class SuperAdminSeeder extends Seeder
                 'email_verified_at' => now(),
             ]);
             
-            $this->command->info('✅ Regular Admin created successfully!');
-            $this->command->info('📧 Email: admin@gmail.com');
-            $this->command->info('🔑 Password: password');
+            $this->command->info('OK: Regular Admin created successfully.');
+            $this->command->info('Email: admin@gmail.com');
+            $this->command->info('Password: password');
         }
     }
 }

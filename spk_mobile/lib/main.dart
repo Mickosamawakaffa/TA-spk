@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'login.dart';
 import 'screens/improved_home_screen.dart';
 import 'services/auth_service.dart';
-import 'services/notification_service.dart';
-import 'services/server_discovery_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -288,18 +284,27 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _checkAuth() async {
-    // 🔍 Auto-detect server IP
+    // ⚠️ DISABLED: Auto-discovery scanning wrong ports
+    // Sekarang menggunakan fixed IP dari AppConfig
+    // Jika perlu auto-discovery, uncomment kode di bawah dan configure timeout
+
+    /*
+    // 🔍 Auto-detect server IP (disabled - causing port scan issues)
     await ServerDiscoveryService.discover(
       onStatus: (status) {
         if (mounted) setState(() => _statusText = status);
       },
+    ).timeout(
+      const Duration(seconds: 5),
+      onTimeout: () {
+        debugPrint('Server discovery timeout, using configured IP');
+        return false;
+      },
     );
+    */
 
     if (mounted) setState(() => _statusText = 'Memeriksa sesi...');
     await _authService.loadToken();
-    if (_authService.isAuthenticated) {
-      await NotificationService().init(_authService);
-    }
     await Future.delayed(const Duration(milliseconds: 400));
 
     if (!mounted) return;

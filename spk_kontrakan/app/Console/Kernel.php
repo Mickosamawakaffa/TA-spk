@@ -22,6 +22,13 @@ class Kernel extends ConsoleKernel
     {
         $this->load(__DIR__.'/Commands');
 
+        // Register commands
+        $this->commands([
+            \App\Console\Commands\SyncAdminsFromUsers::class,
+            \App\Console\Commands\DedupeAdmins::class,
+            \App\Console\Commands\AdminSetPassword::class,
+        ]);
+
         require base_path('routes/console.php');
     }
 }

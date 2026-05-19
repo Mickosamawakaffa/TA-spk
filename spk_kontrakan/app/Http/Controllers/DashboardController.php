@@ -145,13 +145,32 @@ class DashboardController extends Controller
             ];
         });
 
+        // ========== INSIGHT REAL-TIME (No Cache) ==========
+        $realtimeJarakKontrakan = DB::table('kontrakans')
+            ->selectRaw("
+                SUM(CASE WHEN jarak <= 500 THEN 1 ELSE 0 END) as dekat,
+                SUM(CASE WHEN jarak > 500 AND jarak <= 1000 THEN 1 ELSE 0 END) as sedang,
+                SUM(CASE WHEN jarak > 1000 THEN 1 ELSE 0 END) as jauh
+            ")
+            ->first();
+
+        $realtimeKontrakanStats = DB::table('kontrakans')
+            ->selectRaw('
+                AVG(harga) as avg_harga,
+                AVG(jarak) as avg_jarak,
+                AVG(jumlah_kamar) as avg_kamar,
+                MIN(harga) as min_harga,
+                MAX(harga) as max_harga
+            ')
+            ->first();
+
         // ========== TAMBAHAN DATA YANG HILANG ==========
         $additionalData = [
             // Data booking
             'totalBookings' => Booking::count() ?? 0,
             
-            // Data admin
-            'totalAdmins' => \App\Models\User::where('role', 'admin')->count() ?? 1,
+            // Data admin (dari tabel admins)
+            'totalAdmins' => \App\Models\Admin::where('role', 'admin')->count() ?? 1,
             
             // Average kecepatan laundry (dari estimasi_selesai dalam jam)
             'avgKecepatan' => round(DB::table('layanan_laundry')
@@ -161,6 +180,16 @@ class DashboardController extends Controller
 
         // Merge semua data
         $data = array_merge($stats, $chartData, $additionalData, [
+            'jarakKontrakan' => [
+                'dekat' => $realtimeJarakKontrakan->dekat ?? 0,
+                'sedang' => $realtimeJarakKontrakan->sedang ?? 0,
+                'jauh' => $realtimeJarakKontrakan->jauh ?? 0,
+            ],
+            'avgHargaKontrakan' => $realtimeKontrakanStats->avg_harga ?? 0,
+            'avgJarakKontrakan' => $realtimeKontrakanStats->avg_jarak ?? 0,
+            'avgKamarKontrakan' => $realtimeKontrakanStats->avg_kamar ?? 0,
+            'minHargaKontrakan' => $realtimeKontrakanStats->min_harga ?? 0,
+            'maxHargaKontrakan' => $realtimeKontrakanStats->max_harga ?? 0,
             'recentKontrakan' => $recentKontrakan,
             'recentLaundry' => $recentLaundry,
         ]);

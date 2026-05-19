@@ -29,6 +29,9 @@ class AuthController extends Controller
                 'role' => 'user',
             ]);
 
+            // Refresh user to ensure all fields are loaded from DB
+            $user->refresh();
+
             $token = $user->createToken('mobile-app-token')->plainTextToken;
 
             Log::info('Registration successful', ['user_id' => $user->id]);
