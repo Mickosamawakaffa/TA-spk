@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/laundry.dart';
 import '../services/location_service.dart';
 import '../services/favorite_service.dart';
+import '../widgets/app_placeholder.dart';
 
 class LaundryDetailScreen extends StatefulWidget {
   final Laundry laundry;
@@ -149,28 +150,47 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  CachedNetworkImage(
-                    imageUrl: widget.laundry.primaryPhoto,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF00897B), Color(0xFF00695C)],
+                  widget.laundry.hasPhoto &&
+                          widget.laundry.primaryPhoto.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: widget.laundry.primaryPhoto,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Color(0xFF00897B), Color(0xFF00695C)],
+                              ),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Color(0xFF00897B), Color(0xFF00695C)],
+                              ),
+                            ),
+                            child: const Center(
+                              child: AppPlaceholder(
+                                height: 80,
+                                width: 80,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                        )
+                      : Container(
+                          color: const Color(0xFF00897B),
+                          child: const Center(
+                            child: AppPlaceholder(
+                              height: 80,
+                              width: 80,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF00897B), Color(0xFF00695C)],
-                        ),
-                      ),
-                    ),
-                  ),
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(

@@ -34,7 +34,12 @@ class FavoriteService {
   // Get all user's favorites with full data (raw JSON)
   Future<Map<String, dynamic>> getFavorites() async {
     if (!_ensureAuthenticated()) {
-      return {'success': false, 'message': 'Belum login', 'kontrakan': [], 'laundry': []};
+      return {
+        'success': false,
+        'message': 'Belum login',
+        'kontrakan': [],
+        'laundry': [],
+      };
     }
 
     try {
@@ -47,12 +52,19 @@ class FavoriteService {
           .timeout(AppConfig.connectionTimeout);
 
       debugPrint('[FAV] GET Status: ${response.statusCode}');
-      debugPrint('[FAV] GET Body: ${response.body.length > 300 ? response.body.substring(0, 300) : response.body}');
+      debugPrint(
+        '[FAV] GET Body: ${response.body.length > 300 ? response.body.substring(0, 300) : response.body}',
+      );
 
       if (response.statusCode == 401) {
         await _authService.handleUnauthorized(response.statusCode);
         debugPrint('[FAV] ❌ 401 Unauthorized — token expired/invalid');
-        return {'success': false, 'message': 'Sesi expired, silakan login ulang', 'kontrakan': [], 'laundry': []};
+        return {
+          'success': false,
+          'message': 'Sesi expired, silakan login ulang',
+          'kontrakan': [],
+          'laundry': [],
+        };
       }
 
       final data = jsonDecode(response.body);
@@ -64,7 +76,9 @@ class FavoriteService {
           'laundry': data['data']?['laundry'] ?? [],
         };
       } else {
-        debugPrint('[FAV] ❌ Response not success: ${response.statusCode} ${data['message']}');
+        debugPrint(
+          '[FAV] ❌ Response not success: ${response.statusCode} ${data['message']}',
+        );
         return {
           'success': false,
           'message': data['message'] ?? 'Gagal memuat favorit',
@@ -102,7 +116,9 @@ class FavoriteService {
       final rawKontrakan = result['kontrakan'] as List? ?? [];
       final rawLaundry = result['laundry'] as List? ?? [];
 
-      debugPrint('[FAV] Parsing ${rawKontrakan.length} kontrakan, ${rawLaundry.length} laundry');
+      debugPrint(
+        '[FAV] Parsing ${rawKontrakan.length} kontrakan, ${rawLaundry.length} laundry',
+      );
 
       final kontrakanList = <Kontrakan>[];
       for (final json in rawKontrakan) {
@@ -122,7 +138,9 @@ class FavoriteService {
         }
       }
 
-      debugPrint('[FAV] ✅ Parsed ${kontrakanList.length} kontrakan, ${laundryList.length} laundry');
+      debugPrint(
+        '[FAV] ✅ Parsed ${kontrakanList.length} kontrakan, ${laundryList.length} laundry',
+      );
 
       return {
         'success': true,
@@ -152,13 +170,15 @@ class FavoriteService {
       final kontrakanIds = <int>[];
       for (final e in (result['kontrakan'] as List? ?? [])) {
         final id = (e as Map<String, dynamic>?)?['id'];
-        if (id != null) kontrakanIds.add(id is int ? id : int.tryParse(id.toString()) ?? 0);
+        if (id != null)
+          kontrakanIds.add(id is int ? id : int.tryParse(id.toString()) ?? 0);
       }
 
       final laundryIds = <int>[];
       for (final e in (result['laundry'] as List? ?? [])) {
         final id = (e as Map<String, dynamic>?)?['id'];
-        if (id != null) laundryIds.add(id is int ? id : int.tryParse(id.toString()) ?? 0);
+        if (id != null)
+          laundryIds.add(id is int ? id : int.tryParse(id.toString()) ?? 0);
       }
 
       debugPrint('[FAV] IDs → kontrakan: $kontrakanIds, laundry: $laundryIds');
@@ -183,11 +203,16 @@ class FavoriteService {
           .post(Uri.parse(url), headers: _headers)
           .timeout(AppConfig.connectionTimeout);
 
-      debugPrint('[FAV] Toggle kontrakan → ${response.statusCode}: ${response.body}');
+      debugPrint(
+        '[FAV] Toggle kontrakan → ${response.statusCode}: ${response.body}',
+      );
 
       if (response.statusCode == 401) {
         await _authService.handleUnauthorized(response.statusCode);
-        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+        return {
+          'success': false,
+          'message': 'Sesi expired, silakan login ulang',
+        };
       }
 
       final data = jsonDecode(response.body);
@@ -202,7 +227,9 @@ class FavoriteService {
       } else {
         return {
           'success': false,
-          'message': data['message'] ?? 'Gagal mengubah status favorit (${response.statusCode})',
+          'message':
+              data['message'] ??
+              'Gagal mengubah status favorit (${response.statusCode})',
         };
       }
     } catch (e) {
@@ -225,11 +252,16 @@ class FavoriteService {
           .post(Uri.parse(url), headers: _headers)
           .timeout(AppConfig.connectionTimeout);
 
-      debugPrint('[FAV] Toggle laundry → ${response.statusCode}: ${response.body}');
+      debugPrint(
+        '[FAV] Toggle laundry → ${response.statusCode}: ${response.body}',
+      );
 
       if (response.statusCode == 401) {
         await _authService.handleUnauthorized(response.statusCode);
-        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+        return {
+          'success': false,
+          'message': 'Sesi expired, silakan login ulang',
+        };
       }
 
       final data = jsonDecode(response.body);
@@ -244,7 +276,9 @@ class FavoriteService {
       } else {
         return {
           'success': false,
-          'message': data['message'] ?? 'Gagal mengubah status favorit (${response.statusCode})',
+          'message':
+              data['message'] ??
+              'Gagal mengubah status favorit (${response.statusCode})',
         };
       }
     } catch (e) {
@@ -271,7 +305,10 @@ class FavoriteService {
 
       if (response.statusCode == 401) {
         await _authService.handleUnauthorized(response.statusCode);
-        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+        return {
+          'success': false,
+          'message': 'Sesi expired, silakan login ulang',
+        };
       }
 
       if (response.statusCode == 200 && data['success'] == true) {

@@ -12,7 +12,7 @@ class LaundryListScreen extends StatefulWidget {
 
 class _LaundryListScreenState extends State<LaundryListScreen> {
   final _laundryService = LaundryService();
-  
+
   List<Laundry> _laundryList = [];
   List<Laundry> _filteredList = [];
   bool _isLoading = true;
@@ -56,7 +56,7 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
       } else {
         _filteredList = _laundryList.where((laundry) {
           return laundry.nama.toLowerCase().contains(query.toLowerCase()) ||
-                 laundry.alamat.toLowerCase().contains(query.toLowerCase());
+              laundry.alamat.toLowerCase().contains(query.toLowerCase());
         }).toList();
       }
       _applySortInPlace(_sortBy);
@@ -183,7 +183,10 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
             // Info Bar
             if (!_isLoading)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 color: Colors.white,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -203,11 +206,12 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
                       ],
                     ),
                     Text(
-                      'Urut: ${_sortBy == "rating" ? "Rating" : _sortBy == "harga" ? "Harga" : "Jarak"}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[600],
-                      ),
+                      'Urut: ${_sortBy == "rating"
+                          ? "Rating"
+                          : _sortBy == "harga"
+                          ? "Harga"
+                          : "Jarak"}',
+                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                     ),
                   ],
                 ),
@@ -218,45 +222,45 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _filteredList.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.local_laundry_service_outlined,
-                                size: 80,
-                                color: Colors.grey[300],
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Belum ada laundry',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Laundry akan ditampilkan di sini',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[500],
-                                ),
-                              ),
-                            ],
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.local_laundry_service_outlined,
+                            size: 80,
+                            color: Colors.grey[300],
                           ),
-                        )
-                      : RefreshIndicator(
-                          onRefresh: _loadLaundry,
-                          child: ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _filteredList.length,
-                            itemBuilder: (context, index) {
-                              return _buildLaundryCard(_filteredList[index]);
-                            },
+                          const SizedBox(height: 16),
+                          Text(
+                            'Belum ada laundry',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[600],
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Laundry akan ditampilkan di sini',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _loadLaundry,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _filteredList.length,
+                        itemBuilder: (context, index) {
+                          return _buildLaundryCard(_filteredList[index]);
+                        },
+                      ),
+                    ),
             ),
           ],
         ),
@@ -328,7 +332,11 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            Icon(Icons.star, size: 16, color: Colors.amber[700]),
+                            Icon(
+                              Icons.star,
+                              size: 16,
+                              color: Colors.amber[700],
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               laundry.rating.toStringAsFixed(1),
@@ -389,10 +397,7 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
                   Expanded(
                     child: Text(
                       laundry.alamat,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[700],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -406,10 +411,7 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
                   const SizedBox(width: 6),
                   Text(
                     '${laundry.jamBuka} - ${laundry.jamTutup}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[700],
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                   ),
                 ],
               ),
@@ -454,7 +456,10 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
               const SizedBox(height: 12),
               // Estimasi
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -486,9 +491,7 @@ class _LaundryListScreenState extends State<LaundryListScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Urutkan Berdasarkan',
           style: TextStyle(fontWeight: FontWeight.bold),

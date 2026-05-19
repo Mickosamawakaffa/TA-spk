@@ -6,7 +6,7 @@ import 'services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   final String? initialEmail;
-  
+
   const LoginScreen({super.key, this.initialEmail});
 
   @override

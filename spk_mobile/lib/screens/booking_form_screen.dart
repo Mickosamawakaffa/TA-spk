@@ -106,7 +106,10 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
               ),
               const SizedBox(height: 16),
               ListTile(
-                leading: const Icon(Icons.photo_library, color: Color(0xFF667eea)),
+                leading: const Icon(
+                  Icons.photo_library,
+                  color: Color(0xFF667eea),
+                ),
                 title: const Text('Pilih dari Galeri'),
                 onTap: () => Navigator.pop(ctx, ImageSource.gallery),
               ),
@@ -252,79 +255,79 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       setState(() => _isSubmitting = false);
 
       if (result['success'] == true) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.check_circle,
-                  color: Colors.green,
-                  size: 64,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Booking Berhasil!',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Booking Anda sedang menunggu konfirmasi dari pemilik kontrakan.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-          actions: [
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(ctx); // Close dialog
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const ImprovedHomeScreen(),
-                    ),
-                    (route) => false,
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF667eea),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 64,
                   ),
                 ),
-                child: const Text('OK'),
-              ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Booking Berhasil!',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Booking Anda sedang menunggu konfirmasi dari pemilik kontrakan.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 8),
+              ],
             ),
-          ],
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message'] ?? 'Gagal membuat booking'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+            actions: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx); // Close dialog
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ImprovedHomeScreen(),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF667eea),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('OK'),
+                ),
+              ),
+            ],
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Gagal membuat booking'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);
@@ -584,7 +587,8 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                   _buildFormCard(
                     icon: Icons.receipt,
                     title: 'Bukti Pembayaran',
-                    subtitle: 'Upload foto struk/bukti transfer pembayaran (Wajib)',
+                    subtitle:
+                        'Upload foto struk/bukti transfer pembayaran (Wajib)',
                     child: Column(
                       children: [
                         if (_paymentProofImage != null) ...[
@@ -603,14 +607,19 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                                 top: 8,
                                 right: 8,
                                 child: InkWell(
-                                  onTap: () => setState(() => _paymentProofImage = null),
+                                  onTap: () =>
+                                      setState(() => _paymentProofImage = null),
                                   child: Container(
                                     padding: const EdgeInsets.all(6),
                                     decoration: const BoxDecoration(
                                       color: Colors.red,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const Icon(Icons.close, color: Colors.white, size: 18),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -623,11 +632,15 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                           child: OutlinedButton.icon(
                             onPressed: _pickPaymentProof,
                             icon: Icon(
-                              _paymentProofImage != null ? Icons.change_circle : Icons.upload_file,
+                              _paymentProofImage != null
+                                  ? Icons.change_circle
+                                  : Icons.upload_file,
                               color: const Color(0xFF667eea),
                             ),
                             label: Text(
-                              _paymentProofImage != null ? 'Ganti Foto' : 'Pilih Foto Bukti Pembayaran',
+                              _paymentProofImage != null
+                                  ? 'Ganti Foto'
+                                  : 'Pilih Foto Bukti Pembayaran',
                               style: const TextStyle(color: Color(0xFF667eea)),
                             ),
                             style: OutlinedButton.styleFrom(

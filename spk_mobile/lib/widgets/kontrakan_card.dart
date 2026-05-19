@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/kontrakan.dart';
 import '../screens/kontrakan_detail_screen.dart';
+import 'app_placeholder.dart';
 
 class KontrakanCard extends StatelessWidget {
   final Kontrakan kontrakan;
@@ -110,11 +111,8 @@ class KontrakanCard extends StatelessWidget {
                           ),
                           errorWidget: (context, url, error) => Container(
                             height: 180,
-                            color: Colors.grey[300],
-                            child: const Icon(
-                              Icons.image_not_supported,
-                              size: 50,
-                            ),
+                            width: double.infinity,
+                            color: Colors.transparent,
                           ),
                         )
                       : _buildMissingPhoto(),
@@ -289,18 +287,7 @@ class KontrakanCard extends StatelessWidget {
     return Container(
       height: 180,
       width: double.infinity,
-      color: Colors.grey[300],
-      child: const Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
-          SizedBox(height: 8),
-          Text(
-            'Foto tidak tersedia',
-            style: TextStyle(color: Colors.grey, fontSize: 12),
-          ),
-        ],
-      ),
+      color: Colors.transparent,
     );
   }
 

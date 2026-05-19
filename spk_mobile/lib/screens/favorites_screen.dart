@@ -6,6 +6,7 @@ import '../models/laundry.dart';
 import '../services/favorite_service.dart';
 import 'kontrakan_detail_screen.dart';
 import 'laundry_detail_screen.dart';
+import '../widgets/app_placeholder.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -370,36 +371,49 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                 topLeft: Radius.circular(18),
                 bottomLeft: Radius.circular(18),
               ),
-              child: CachedNetworkImage(
-                imageUrl: kontrakan.primaryPhoto,
-                width: 110,
-                height: 120,
-                fit: BoxFit.cover,
-                placeholder: (_, __) => Container(
-                  width: 110,
-                  height: 120,
-                  color: const Color(0xFFE3F2FD),
-                  child: const Center(
-                    child: Icon(
-                      Icons.home_work_rounded,
-                      color: Color(0xFF90CAF9),
-                      size: 32,
+              child: kontrakan.hasPhoto && kontrakan.primaryPhoto.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: kontrakan.primaryPhoto,
+                      width: 110,
+                      height: 120,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => Container(
+                        width: 110,
+                        height: 120,
+                        color: const Color(0xFFE3F2FD),
+                        child: const Center(
+                          child: AppPlaceholder(
+                            height: 48,
+                            width: 48,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                      errorWidget: (_, __, ___) => Container(
+                        width: 110,
+                        height: 120,
+                        color: const Color(0xFFE3F2FD),
+                        child: const Center(
+                          child: AppPlaceholder(
+                            height: 48,
+                            width: 48,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    )
+                  : Container(
+                      width: 110,
+                      height: 120,
+                      color: const Color(0xFFE3F2FD),
+                      child: const Center(
+                        child: AppPlaceholder(
+                          height: 48,
+                          width: 48,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                errorWidget: (_, __, ___) => Container(
-                  width: 110,
-                  height: 120,
-                  color: const Color(0xFFE3F2FD),
-                  child: const Center(
-                    child: Icon(
-                      Icons.home_work_rounded,
-                      color: Color(0xFF90CAF9),
-                      size: 32,
-                    ),
-                  ),
-                ),
-              ),
             ),
             // Info
             Expanded(

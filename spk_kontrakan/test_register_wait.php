@@ -5,7 +5,7 @@ sleep(5);
 
 echo "=== TESTING REGISTER WITH bagas@gmail.com (Attempt 2) ===\n\n";
 
-$url = "http://10.192.233.99:8000/api/register";
+$url = "http://10.119.236.99:8000/api/register";
 $data = [
     'name' => 'Bagas Test',
     'email' => 'bagas' . time() . '@gmail.com',

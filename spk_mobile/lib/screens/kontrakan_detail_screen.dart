@@ -6,6 +6,7 @@ import '../services/location_service.dart';
 import '../services/auth_service.dart';
 import '../services/favorite_service.dart';
 import 'booking_form_screen.dart';
+import '../widgets/app_placeholder.dart';
 
 // Koordinat resmi Kampus Polije (Politeknik Negeri Jember)
 const double _polije_lat = -8.1599551;
@@ -140,10 +141,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image Gallery
-            SizedBox(
-              height: 250,
-              child: _buildGallery(),
-            ),
+            SizedBox(height: 250, child: _buildGallery()),
 
             // Info Section
             Padding(
@@ -487,12 +485,9 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.image_not_supported, size: 72, color: Colors.grey),
+            AppPlaceholder(height: 96, width: 96, fit: BoxFit.contain),
             SizedBox(height: 8),
-            Text(
-              'Foto tidak tersedia',
-              style: TextStyle(color: Colors.grey),
-            ),
+            Text('Foto tidak tersedia', style: TextStyle(color: Colors.grey)),
           ],
         ),
       ),

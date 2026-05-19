@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/laundry.dart';
 import '../screens/laundry_detail_screen.dart';
 import '../services/location_service.dart';
+import 'app_placeholder.dart';
 
 class LaundryCard extends StatelessWidget {
   final Laundry laundry;
@@ -100,22 +101,30 @@ class LaundryCard extends StatelessWidget {
                       showRanking && ranking != null ? 0 : 16,
                     ),
                   ),
-                  child: CachedNetworkImage(
-                    imageUrl: laundry.primaryPhoto,
-                    height: 180,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      height: 180,
-                      color: Colors.grey[300],
-                      child: const Center(child: CircularProgressIndicator()),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      height: 180,
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.local_laundry_service, size: 50),
-                    ),
-                  ),
+                  child: laundry.hasPhoto && laundry.primaryPhoto.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: laundry.primaryPhoto,
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            height: 180,
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            height: 180,
+                            width: double.infinity,
+                            color: Colors.transparent,
+                          ),
+                        )
+                      : Container(
+                          height: 180,
+                          width: double.infinity,
+                          color: Colors.transparent,
+                        ),
                 ),
                 Positioned(
                   top: 10,

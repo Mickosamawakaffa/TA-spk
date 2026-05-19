@@ -133,9 +133,7 @@ class APITestHelper {
         if (ranking != null && ranking.isNotEmpty) {
           print('  Top 3 recommendations:');
           for (var item in ranking.take(3)) {
-            print(
-              '  - ${item['name']} (Score: ${item['score']})',
-            );
+            print('  - ${item['name']} (Score: ${item['score']})');
           }
         }
       } else {
@@ -306,19 +304,13 @@ class APITestHelper {
     await testLoadToken();
     await testGetKontrakan();
     await testGetKontrakanDetail(1);
-    await testSearchKontrakan(
-      hargaMax: 1000000,
-      jumlahKamar: 2,
-    );
+    await testSearchKontrakan(hargaMax: 1000000, jumlahKamar: 2);
     await testGetRecommendations(hargaMax: 1500000);
     await testGetLaundry();
 
     // Test protected endpoints (need login)
     if (testEmail != null && testPassword != null) {
-      await testLogin(
-        email: testEmail,
-        password: testPassword,
-      );
+      await testLogin(email: testEmail, password: testPassword);
       await testGetBookingHistory();
       await testToggleFavorite(1);
       await testGetFavorites();

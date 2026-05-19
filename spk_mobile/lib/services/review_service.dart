@@ -29,17 +29,17 @@ class ReviewService {
       final response = await http.post(
         Uri.parse('${AppConfig.baseUrl}/reviews/kontrakan/$kontrakanId'),
         headers: _headers,
-        body: jsonEncode({
-          'rating': rating,
-          'comment': comment,
-        }),
+        body: jsonEncode({'rating': rating, 'comment': comment}),
       );
 
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 401) {
         await _authService.handleUnauthorized(response.statusCode);
-        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+        return {
+          'success': false,
+          'message': 'Sesi expired, silakan login ulang',
+        };
       }
 
       if (response.statusCode == 201 && data['success'] == true) {
@@ -70,17 +70,17 @@ class ReviewService {
       final response = await http.post(
         Uri.parse('${AppConfig.baseUrl}/reviews/laundry/$laundryId'),
         headers: _headers,
-        body: jsonEncode({
-          'rating': rating,
-          'comment': comment,
-        }),
+        body: jsonEncode({'rating': rating, 'comment': comment}),
       );
 
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 401) {
         await _authService.handleUnauthorized(response.statusCode);
-        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+        return {
+          'success': false,
+          'message': 'Sesi expired, silakan login ulang',
+        };
       }
 
       if (response.statusCode == 201 && data['success'] == true) {
@@ -111,17 +111,17 @@ class ReviewService {
       final response = await http.put(
         Uri.parse('${AppConfig.baseUrl}/reviews/$reviewId'),
         headers: _headers,
-        body: jsonEncode({
-          'rating': rating,
-          'comment': comment,
-        }),
+        body: jsonEncode({'rating': rating, 'comment': comment}),
       );
 
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 401) {
         await _authService.handleUnauthorized(response.statusCode);
-        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+        return {
+          'success': false,
+          'message': 'Sesi expired, silakan login ulang',
+        };
       }
 
       if (response.statusCode == 200 && data['success'] == true) {
@@ -154,7 +154,10 @@ class ReviewService {
 
       if (response.statusCode == 401) {
         await _authService.handleUnauthorized(response.statusCode);
-        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+        return {
+          'success': false,
+          'message': 'Sesi expired, silakan login ulang',
+        };
       }
 
       if (response.statusCode == 200 && data['success'] == true) {

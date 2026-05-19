@@ -193,7 +193,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             : const Text(
                                 'Simpan Perubahan',
                                 style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.w600),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                       ),
                     ),
@@ -235,8 +237,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: Color(0xFF1565C0), width: 2),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
       ),
     );
   }

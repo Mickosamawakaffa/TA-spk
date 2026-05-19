@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../widgets/app_placeholder.dart';
 import '../models/kontrakan.dart';
 import '../models/laundry.dart';
 import '../services/kontrakan_service.dart';
@@ -487,7 +488,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 errorWidget: (context, url, error) => Container(
                   color: Colors.grey[300],
-                  child: const Icon(Icons.image, size: 50),
+                  child: const Center(
+                    child: AppPlaceholder(
+                      height: 56,
+                      width: 56,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
               ),
             ),

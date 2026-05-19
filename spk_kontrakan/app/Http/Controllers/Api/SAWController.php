@@ -43,6 +43,66 @@ class SAWController extends Controller
     }
 
     /**
+     * Get range data for laundry (min/max harga from layanan, jarak, rating, jenis_layanan, fasilitas)
+     */
+    public function getRangeLaundry()
+    {
+        try {
+            // Harga: min/max dari layanan_laundry.harga
+            $hargaMin = (int) \App\Models\LayananLaundry::min('harga') ?? 0;
+            $hargaMax = (int) \App\Models\LayananLaundry::max('harga') ?? 1000000;
+
+            // Jarak: dari laundry.jarak (stored in meters)
+            $jarakMinMeter = \App\Models\Laundry::min('jarak') ?? 0;
+            $jarakMaxMeter = \App\Models\Laundry::max('jarak') ?? 50000;
+            $jarakMin = (int) ($jarakMinMeter / 1000);
+            $jarakMax = (int) ($jarakMaxMeter / 1000);
+
+            // Rating: from reviews (type = 'laundry')
+            $ratingMin = (float) \App\Models\Review::where('type', 'laundry')->min('rating') ?? 0;
+            $ratingMax = (float) \App\Models\Review::where('type', 'laundry')->max('rating') ?? 5;
+
+            // Jenis layanan: distinct values from layanan_laundry.jenis_layanan
+            $jenisLayanan = \App\Models\LayananLaundry::select('jenis_layanan')
+                ->distinct()
+                ->pluck('jenis_layanan')
+                ->filter()
+                ->values()
+                ->toArray();
+
+            // Fasilitas: reuse laundry.fasilitas similar to kontrakan
+            $allItems = \App\Models\Laundry::whereNotNull('fasilitas')->get(['fasilitas']);
+            $fasilitasCount = [];
+            foreach ($allItems as $item) {
+                $facilities = array_map('trim', explode(',', $item->fasilitas));
+                foreach ($facilities as $f) {
+                    if (!isset($fasilitasCount[$f])) $fasilitasCount[$f] = 0;
+                    $fasilitasCount[$f]++;
+                }
+            }
+            $filteredFasilitas = array_keys(array_filter($fasilitasCount, function($c) { return $c >= 1; }));
+            sort($filteredFasilitas);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'harga' => ['min' => $hargaMin, 'max' => $hargaMax],
+                    'jarak' => ['min' => $jarakMin, 'max' => $jarakMax],
+                    'rating' => ['min' => $ratingMin, 'max' => $ratingMax],
+                    'jenis_layanan' => $jenisLayanan,
+                    'fasilitas' => $filteredFasilitas,
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal ambil range laundry',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Calculate SAW untuk kontrakan
      * Supports custom bobot from mobile (like UserSAWController presets)
      */
@@ -54,12 +114,26 @@ class SAWController extends Controller
             'jumlah_kamar' => 'nullable|integer',
             'jarak_max' => 'nullable|numeric',
             'fasilitas' => 'nullable|string',
-            // Custom bobot support (in percentage, total must be 100)
-            'bobot_harga' => 'nullable|integer|min:10|max:70',
-            'bobot_jarak' => 'nullable|integer|min:10|max:70',
-            'bobot_jumlah_kamar' => 'nullable|integer|min:10|max:70',
-            'bobot_fasilitas' => 'nullable|integer|min:10|max:70',
+            'selected_facilities' => 'nullable|array',  // Array of selected facilities from questionnaire
+            'selected_facilities.*' => 'nullable|string',
+            // Custom bobot support (in percentage, each can be 0-100%, total must be 100)
+            'bobot_harga' => 'nullable|integer|min:0|max:100',
+            'bobot_jarak' => 'nullable|integer|min:0|max:100',
+            'bobot_jumlah_kamar' => 'nullable|integer|min:0|max:100',
+            'bobot_fasilitas' => 'nullable|integer|min:0|max:100',
         ]);
+
+        // Additional validation: if custom bobot provided, total must be 100
+        if ($request->filled('bobot_harga') && $request->filled('bobot_jarak') && 
+            $request->filled('bobot_jumlah_kamar') && $request->filled('bobot_fasilitas')) {
+            $totalBobot = $request->bobot_harga + $request->bobot_jarak + 
+                          $request->bobot_jumlah_kamar + $request->bobot_fasilitas;
+            if ($totalBobot != 100) {
+                $validator->after(function ($validator) use ($totalBobot) {
+                    $validator->errors()->add('bobot_total', 'Total bobot harus 100%. Saat ini: ' . $totalBobot . '%');
+                });
+            }
+        }
 
         if ($validator->fails()) {
             return response()->json([
@@ -121,6 +195,25 @@ class SAWController extends Controller
 
         $kontrakan = $query->get();
 
+        // Filter by selected_facilities from questionnaire (user must have ALL selected facilities)
+        if ($request->has('selected_facilities') && is_array($request->selected_facilities) && !empty($request->selected_facilities)) {
+            $selectedFacilities = array_filter(array_map('trim', $request->selected_facilities));
+            
+            if (!empty($selectedFacilities)) {
+                // Filter: kontrakan must have ALL selected facilities
+                $kontrakan = $kontrakan->filter(function($k) use ($selectedFacilities) {
+                    $kontrakanFasilitas = array_map('trim', explode(',', $k->fasilitas));
+                    // Check if kontrakan has ALL selected facilities
+                    foreach ($selectedFacilities as $facility) {
+                        if (!in_array($facility, $kontrakanFasilitas, true)) {
+                            return false;  // Missing this facility
+                        }
+                    }
+                    return true;  // Has all selected facilities
+                });
+            }
+        }
+
         if ($kontrakan->isEmpty()) {
             if ($totalAvailable === 0) {
                 return response()->json([
@@ -174,12 +267,24 @@ class SAWController extends Controller
             'rating_min' => 'nullable|numeric|min:0|max:5',
             'user_lat' => 'nullable|numeric',
             'user_lng' => 'nullable|numeric',
-            // Custom bobot support
-            'bobot_harga' => 'nullable|integer|min:10|max:70',
-            'bobot_jarak' => 'nullable|integer|min:10|max:70',
-            'bobot_kecepatan' => 'nullable|integer|min:10|max:70',
-            'bobot_layanan' => 'nullable|integer|min:10|max:70',
+            // Custom bobot support (in percentage, each can be 0-100%, total must be 100)
+            'bobot_harga' => 'nullable|integer|min:0|max:100',
+            'bobot_jarak' => 'nullable|integer|min:0|max:100',
+            'bobot_kecepatan' => 'nullable|integer|min:0|max:100',
+            'bobot_layanan' => 'nullable|integer|min:0|max:100',
         ]);
+
+        // Additional validation: if custom bobot provided, total must be 100
+        if ($request->filled('bobot_harga') && $request->filled('bobot_jarak') && 
+            $request->filled('bobot_kecepatan') && $request->filled('bobot_layanan')) {
+            $totalBobot = $request->bobot_harga + $request->bobot_jarak + 
+                          $request->bobot_kecepatan + $request->bobot_layanan;
+            if ($totalBobot != 100) {
+                $validator->after(function ($validator) use ($totalBobot) {
+                    $validator->errors()->add('bobot_total', 'Total bobot harus 100%. Saat ini: ' . $totalBobot . '%');
+                });
+            }
+        }
 
         if ($validator->fails()) {
             return response()->json([
@@ -362,8 +467,8 @@ class SAWController extends Controller
             }
             $row['skor'] = $skor;
             
-            // Add full item data for mobile app
-            $row['data'] = $item;
+            // Add full item data for mobile app (sanitize image URLs)
+            $row['data'] = $this->sanitizeItemForMobile($item);
 
             $data[] = $row;
         }
@@ -443,8 +548,8 @@ class SAWController extends Controller
             $row['skor'] = round($skor, 6);
             $row['skor_akhir'] = round($skor, 4);
             
-            // Add full item data for mobile app
-            $row['data'] = $item;
+            // Add full item data for mobile app (sanitize image URLs)
+            $row['data'] = $this->sanitizeItemForMobile($item);
 
             $data[] = $row;
         }
@@ -521,5 +626,30 @@ class SAWController extends Controller
                 $value = $item->{$field} ?? 0;
                 return is_numeric($value) ? $value : 0;
         }
+    }
+
+    /**
+     * Sanitize any image URLs in the item array/object by removing external placeholders
+     * to avoid mobile clients attempting TLS connections to via.placeholder.com.
+     */
+    private function sanitizeItemForMobile($item)
+    {
+        // Convert model to array if needed
+        $arr = is_array($item) ? $item : (method_exists($item, 'toArray') ? $item->toArray() : (array)$item);
+
+        $sanitize = function (&$value) use (&$sanitize) {
+            if (is_array($value)) {
+                foreach ($value as &$v) {
+                    $sanitize($v);
+                }
+            } elseif (is_string($value)) {
+                if (stripos($value, 'via.placeholder.com') !== false) {
+                    $value = ''; // remove external placeholder
+                }
+            }
+        };
+
+        $sanitize($arr);
+        return $arr;
     }
 }

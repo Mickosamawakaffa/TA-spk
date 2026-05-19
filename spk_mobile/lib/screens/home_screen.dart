@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../widgets/app_placeholder.dart';
 import '../models/kontrakan.dart';
 import '../models/laundry.dart';
 import '../services/kontrakan_service.dart';
@@ -695,12 +696,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(18),
                   ),
-                  child:
-                      kontrakan.fotoUtama != null &&
-                          kontrakan.fotoUtama!.isNotEmpty
+                  child: kontrakan.hasPhoto && kontrakan.primaryPhoto.isNotEmpty
                       ? CachedNetworkImage(
-                          imageUrl:
-                              '${AppConfig.baseUrl.replaceAll('/api', '')}/storage/${kontrakan.fotoUtama}',
+                          imageUrl: kontrakan.primaryPhoto,
                           height: 130,
                           width: double.infinity,
                           fit: BoxFit.cover,
@@ -717,20 +715,24 @@ class _HomeScreenState extends State<HomeScreen> {
                           errorWidget: (context, url, error) => Container(
                             height: 130,
                             color: Colors.grey[100],
-                            child: Icon(
-                              Icons.home_work_rounded,
-                              size: 40,
-                              color: Colors.grey[400],
+                            child: const Center(
+                              child: AppPlaceholder(
+                                height: 56,
+                                width: 56,
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
                         )
                       : Container(
                           height: 130,
                           color: Colors.grey[100],
-                          child: Icon(
-                            Icons.home_work_rounded,
-                            size: 40,
-                            color: Colors.grey[400],
+                          child: const Center(
+                            child: AppPlaceholder(
+                              height: 56,
+                              width: 56,
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
                 ),
@@ -898,8 +900,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: const Color(0xFF00BFA5).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child:
-                    laundry.fotoUtama != null && laundry.fotoUtama!.isNotEmpty
+                child: laundry.hasPhoto && laundry.primaryPhoto.isNotEmpty
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(14),
                         child: CachedNetworkImage(
@@ -907,17 +908,21 @@ class _HomeScreenState extends State<HomeScreen> {
                           width: 70,
                           height: 70,
                           fit: BoxFit.cover,
-                          errorWidget: (context, url, error) => const Icon(
-                            Icons.local_laundry_service_rounded,
-                            color: Color(0xFF00BFA5),
-                            size: 32,
+                          errorWidget: (context, url, error) => const Center(
+                            child: AppPlaceholder(
+                              height: 40,
+                              width: 40,
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
                       )
-                    : const Icon(
-                        Icons.local_laundry_service_rounded,
-                        color: Color(0xFF00BFA5),
-                        size: 32,
+                    : const Center(
+                        child: AppPlaceholder(
+                          height: 40,
+                          width: 40,
+                          fit: BoxFit.contain,
+                        ),
                       ),
               ),
               const SizedBox(width: 14),

@@ -169,4 +169,99 @@ class KontrakanController extends Controller
             'data' => $reviews
         ], 200);
     }
+
+    /**
+     * Get range data for questionnaire (min/max harga, jarak, jumlah_kamar)
+     * Used by mobile app for smart questions
+     */
+    public function getRange()
+    {
+        try {
+            $kontrakan = Kontrakan::query();
+
+            // Get min/max harga
+            $hargaMin = (int) $kontrakan->min('harga') ?? 0;
+            $hargaMax = (int) $kontrakan->max('harga') ?? 10000000;
+
+            // Get min/max jarak (convert dari meter ke km)
+            $jarakMinMeter = $kontrakan->min('jarak') ?? 0;
+            $jarakMaxMeter = $kontrakan->max('jarak') ?? 50000;
+            $jarakMin = (int) ($jarakMinMeter / 1000);
+            $jarakMax = (int) ($jarakMaxMeter / 1000);
+
+            // Get min/max jumlah_kamar
+            $kamarMin = (int) $kontrakan->min('jumlah_kamar') ?? 1;
+            $kamarMax = (int) $kontrakan->max('jumlah_kamar') ?? 20;
+
+            // Get available fasilitas options (hanya yang relevan untuk mahasiswa)
+            // Hilangkan: kamar mandi (pasti ada), AC, duplikat
+            $allItems = $kontrakan->whereNotNull('fasilitas')->get(['fasilitas']);
+            $fasilitasCount = [];
+            
+            foreach ($allItems as $item) {
+                $facilities = array_map('trim', explode(',', $item->fasilitas));
+                foreach ($facilities as $f) {
+                    if (!isset($fasilitasCount[$f])) {
+                        $fasilitasCount[$f] = 0;
+                    }
+                    $fasilitasCount[$f]++;
+                }
+            }
+            
+            // Facilities yang tidak relevan untuk mahasiswa (remove from list)
+            $excludeFacilities = [
+                'Kamar Mandi',           // Pasti ada
+                'Kamar Mandi Dalam',     // Pasti ada
+                'Kamar Mandi Luar',      // Pasti ada
+                'AC',                    // Tidak penting
+                'Dapur Bersama',         // Duplikat - gunakan hanya "Dapur"
+            ];
+            
+            // Filter: hilangkan facilities yang tidak relevan
+            foreach ($excludeFacilities as $exclude) {
+                unset($fasilitasCount[$exclude]);
+            }
+            
+            // Filter: hanya fasilitas yang digunakan 2+ kontrakan
+            $minUsage = 2;
+            $filteredFasilitas = array_keys(array_filter($fasilitasCount, function($count) use ($minUsage) {
+                return $count >= $minUsage;
+            }));
+            
+            // If less than 10 facilities found, lower threshold to 1+
+            if (count($filteredFasilitas) < 10) {
+                $filteredFasilitas = array_keys(array_filter($fasilitasCount, function($count) {
+                    return $count >= 1;
+                }));
+            }
+            
+            // Sort alphabetically for consistency
+            sort($filteredFasilitas);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'harga' => [
+                        'min' => $hargaMin,
+                        'max' => $hargaMax,
+                    ],
+                    'jarak' => [
+                        'min' => $jarakMin,
+                        'max' => $jarakMax,
+                    ],
+                    'jumlah_kamar' => [
+                        'min' => $kamarMin,
+                        'max' => $kamarMax,
+                    ],
+                    'fasilitas' => $filteredFasilitas,
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal ambil range data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

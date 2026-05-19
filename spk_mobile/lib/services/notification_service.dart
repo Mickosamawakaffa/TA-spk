@@ -29,7 +29,10 @@ class NotificationService {
     if (_isAdminUser(user)) {
       await _registerToken(authService);
       _messaging.onTokenRefresh.listen((token) {
-        authService.registerDeviceToken(token: token, platform: _platformName());
+        authService.registerDeviceToken(
+          token: token,
+          platform: _platformName(),
+        );
       });
     }
 
@@ -54,7 +57,9 @@ class NotificationService {
   }
 
   Future<void> _initLocalNotifications() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings();
     const settings = InitializationSettings(
       android: androidSettings,
@@ -65,7 +70,8 @@ class NotificationService {
 
     await _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(_channel);
   }
 

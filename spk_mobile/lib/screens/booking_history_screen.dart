@@ -71,7 +71,9 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
           content: const Text('Gagal memuat riwayat booking'),
           backgroundColor: Colors.red[700],
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -155,7 +157,9 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
           content: Text('Gagal membatalkan booking: $e'),
           backgroundColor: const Color(0xFFC62828),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -300,7 +304,9 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
           content: Text('Gagal upload bukti pembayaran: $e'),
           backgroundColor: const Color(0xFFC62828),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );

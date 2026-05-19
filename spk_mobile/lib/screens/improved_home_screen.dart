@@ -14,6 +14,7 @@ import 'kontrakan_detail_screen.dart';
 import 'laundry_detail_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import '../widgets/app_placeholder.dart';
 
 class ImprovedHomeScreen extends StatefulWidget {
   const ImprovedHomeScreen({super.key});
@@ -982,10 +983,10 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                       width: 200,
                       color: const Color(0xFFE3F2FD),
                       child: const Center(
-                        child: Icon(
-                          Icons.home_work_rounded,
-                          size: 36,
-                          color: Color(0xFF90CAF9),
+                        child: AppPlaceholder(
+                          height: 48,
+                          width: 48,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),
@@ -994,10 +995,10 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                       width: 200,
                       color: const Color(0xFFE3F2FD),
                       child: const Center(
-                        child: Icon(
-                          Icons.home_work_rounded,
-                          size: 36,
-                          color: Color(0xFF90CAF9),
+                        child: AppPlaceholder(
+                          height: 48,
+                          width: 48,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),

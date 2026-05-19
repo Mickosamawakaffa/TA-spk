@@ -306,6 +306,8 @@ class SAWController extends Controller
     }
     
     // Hitung SAW
+
+    
     private function calculateSAW($dataWithFasilitas, $kriteria, $maxMin, $tipe)
     {
         $hasil = [];

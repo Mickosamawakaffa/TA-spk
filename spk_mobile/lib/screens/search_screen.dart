@@ -9,6 +9,7 @@ import '../services/favorite_service.dart';
 import '../utils/currency_formatter.dart';
 import 'kontrakan_detail_screen.dart';
 import 'laundry_detail_screen.dart';
+import '../widgets/app_placeholder.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -33,7 +34,30 @@ class _SearchScreenState extends State<SearchScreen> {
   bool _isLoading = true;
   String _selectedCategory = 'Kontrakan';
   String _selectedFilter = 'Semua';
-  RangeValues _priceRange = const RangeValues(0, 20000000);
+  // Range harga berbeda untuk kontrakan (per bulan) dan laundry (per kg)
+  RangeValues _kontrakanPriceRange = const RangeValues(
+    0,
+    50000000,
+  ); // Rp 0 - Rp 50juta/bulan
+  RangeValues _laundryPriceRange = const RangeValues(
+    0,
+    500000,
+  ); // Rp 0 - Rp 500ribu/kg
+
+  // Getter untuk kompatibilitas dengan kode yang ada
+  RangeValues get _priceRange {
+    return _selectedCategory == 'Laundry'
+        ? _laundryPriceRange
+        : _kontrakanPriceRange;
+  }
+
+  set _priceRange(RangeValues value) {
+    if (_selectedCategory == 'Laundry') {
+      _laundryPriceRange = value;
+    } else {
+      _kontrakanPriceRange = value;
+    }
+  }
 
   @override
   void initState() {
@@ -302,23 +326,25 @@ class _SearchScreenState extends State<SearchScreen> {
                           ],
                         ),
                       ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.2),
+                      // Filter button - hanya tampil untuk Kontrakan
+                      if (_selectedCategory == 'Kontrakan')
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.2),
+                            ),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.tune_rounded,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                            onPressed: _showFilterDialog,
                           ),
                         ),
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.tune_rounded,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                          onPressed: _showFilterDialog,
-                        ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -1076,6 +1102,13 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _showFilterDialog() {
+    // Tentukan max value berdasarkan kategori
+    final double maxPrice = _selectedCategory == 'Laundry' ? 500000 : 50000000;
+    final String dialogTitle = _selectedCategory == 'Laundry'
+        ? 'Filter Harga Laundry'
+        : 'Filter Harga Kontrakan';
+    final int divisions = _selectedCategory == 'Laundry' ? 50 : 50;
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -1083,9 +1116,9 @@ class _SearchScreenState extends State<SearchScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text(
-            'Filter Harga',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          title: Text(
+            dialogTitle,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1102,8 +1135,8 @@ class _SearchScreenState extends State<SearchScreen> {
               RangeSlider(
                 values: _priceRange,
                 min: 0,
-                max: 20000000,
-                divisions: 20,
+                max: maxPrice,
+                divisions: divisions,
                 activeColor: const Color(0xFF1565C0),
                 labels: RangeLabels(
                   CurrencyFormatter.formatCompact(_priceRange.start),
@@ -1119,10 +1152,18 @@ class _SearchScreenState extends State<SearchScreen> {
             TextButton(
               onPressed: () {
                 setState(() {
-                  _priceRange = const RangeValues(0, 20000000);
+                  if (_selectedCategory == 'Laundry') {
+                    _laundryPriceRange = const RangeValues(0, 500000);
+                  } else {
+                    _kontrakanPriceRange = const RangeValues(0, 50000000);
+                  }
                 });
                 Navigator.pop(context);
-                _applyFilters();
+                if (_selectedCategory == 'Laundry') {
+                  _applyLaundryFilters();
+                } else {
+                  _applyFilters();
+                }
               },
               child: const Text('Reset'),
             ),
@@ -1136,7 +1177,11 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               onPressed: () {
                 Navigator.pop(context);
-                _applyFilters();
+                if (_selectedCategory == 'Laundry') {
+                  _applyLaundryFilters();
+                } else {
+                  _applyFilters();
+                }
               },
               child: const Text('Terapkan'),
             ),
@@ -1151,10 +1196,8 @@ class _SearchScreenState extends State<SearchScreen> {
       width: 120,
       height: 140,
       color: Colors.grey[200],
-      child: Icon(
-        Icons.home_work,
-        size: 40,
-        color: Colors.grey[400],
+      child: const Center(
+        child: AppPlaceholder(height: 56, width: 56, fit: BoxFit.contain),
       ),
     );
   }
@@ -1170,10 +1213,8 @@ class _SearchScreenState extends State<SearchScreen> {
           colors: [Colors.cyan[400]!, Colors.cyan[600]!],
         ),
       ),
-      child: const Icon(
-        Icons.local_laundry_service,
-        size: 50,
-        color: Colors.white,
+      child: const Center(
+        child: AppPlaceholder(height: 56, width: 56, fit: BoxFit.contain),
       ),
     );
   }

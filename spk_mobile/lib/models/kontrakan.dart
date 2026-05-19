@@ -51,23 +51,25 @@ class Kontrakan {
 
     // Get foto from API and build gallery list
     final List<Galeri> galleryList = [];
-    
+
     // Parse galeri array if exists
     if (json['galeri'] != null && (json['galeri'] as List).isNotEmpty) {
       galleryList.addAll(
-        (json['galeri'] as List).map((g) => Galeri.fromJson(g)).toList()
+        (json['galeri'] as List).map((g) => Galeri.fromJson(g)).toList(),
       );
     }
-    
+
     // If gallery is empty but foto field exists, create a galeri item from it
-    if (galleryList.isEmpty && json['foto'] != null && json['foto'].toString().isNotEmpty) {
+    if (galleryList.isEmpty &&
+        json['foto'] != null &&
+        json['foto'].toString().isNotEmpty) {
       galleryList.add(
         Galeri(
           id: json['id'] ?? 0,
           foto: json['foto'].toString(),
           isPrimary: true,
           urutan: 0,
-        )
+        ),
       );
     }
 
@@ -102,8 +104,15 @@ class Kontrakan {
   bool get isAvailable => status == 'available' || status == 'tersedia';
 
   bool get hasPhoto {
-    if (foto != null && foto!.isNotEmpty) return true;
-    if (galeri.any((g) => g.foto.isNotEmpty)) return true;
+    bool isValidUrl(String? url) {
+      if (url == null || url.isEmpty) return false;
+      final lower = url.toLowerCase();
+      if (lower.contains('via.placeholder.com')) return false;
+      return true;
+    }
+
+    if (isValidUrl(foto)) return true;
+    if (galeri.any((g) => isValidUrl(g.foto))) return true;
     return false;
   }
 
@@ -131,7 +140,9 @@ class Kontrakan {
         return '${AppConfig.serverUrl}/uploads/Kontrakan/${primary.foto}';
       }
     }
-    return 'https://via.placeholder.com/300';
+    // Return empty string when no photo available to avoid unnecessary
+    // network requests to placeholder services (prevents TLS/handshake errors)
+    return '';
   }
 
   // Format harga dengan Rupiah

@@ -90,7 +90,10 @@ class BookingService {
 
       if (response.statusCode == 401) {
         await _authService.handleUnauthorized(response.statusCode);
-        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+        return {
+          'success': false,
+          'message': 'Sesi expired, silakan login ulang',
+        };
       }
 
       if (response.statusCode == 201 && data['success'] == true) {
@@ -123,7 +126,10 @@ class BookingService {
 
       if (response.statusCode == 401) {
         await _authService.handleUnauthorized(response.statusCode);
-        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+        return {
+          'success': false,
+          'message': 'Sesi expired, silakan login ulang',
+        };
       }
 
       if (response.statusCode == 200 && data['success'] == true) {
@@ -195,7 +201,10 @@ class BookingService {
 
       if (response.statusCode == 401) {
         await _authService.handleUnauthorized(response.statusCode);
-        return {'success': false, 'message': 'Sesi expired, silakan login ulang'};
+        return {
+          'success': false,
+          'message': 'Sesi expired, silakan login ulang',
+        };
       }
 
       if (response.statusCode == 200 && data['success'] == true) {

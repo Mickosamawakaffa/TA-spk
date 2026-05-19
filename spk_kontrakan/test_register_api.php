@@ -13,7 +13,7 @@ if ($conn->connect_error) {
 echo "=== TESTING REGISTER API ===\n\n";
 
 // Test dengan CURL
-$url = "http://10.192.233.99:8000/api/register";
+$url = "http://10.119.236.99:8000/api/register";
 $data = [
     'name' => 'Test User API',
     'email' => 'testapi' . time() . '@gmail.com',

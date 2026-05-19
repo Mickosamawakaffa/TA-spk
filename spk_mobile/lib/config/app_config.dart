@@ -22,7 +22,7 @@ class AppConfig {
   /// UPDATE INI SESUAI DENGAN BACKEND ANDA!
   /// Jika backend di: php artisan serve
   /// Maka gunakan: http://127.0.0.1:8000 (localhost) atau http://[IP]:8000 (network)
-  static const String _defaultServer = 'http://10.192.233.99:8000';
+  static const String _defaultServer = 'http://192.168.18.16:8000';
 
   // Runtime values — bisa di-override via setServerUrl() jika perlu
   static String _serverUrl = _defaultServer;

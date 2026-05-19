@@ -102,16 +102,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       color: Colors.white.withOpacity(0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.lock_outline,
-                        size: 48, color: Colors.white),
+                    child: const Icon(
+                      Icons.lock_outline,
+                      size: 48,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   const Text(
                     'Buat password baru',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.white70),
                   ),
                 ],
               ),
@@ -138,8 +138,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       },
                       decoration: InputDecoration(
                         labelText: 'Password Baru',
-                        prefixIcon: const Icon(Icons.lock_outline,
-                            color: Color(0xFF1565C0)),
+                        prefixIcon: const Icon(
+                          Icons.lock_outline,
+                          color: Color(0xFF1565C0),
+                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword
@@ -147,8 +149,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                 : Icons.visibility,
                             color: Colors.grey,
                           ),
-                          onPressed: () =>
-                              setState(() => _obscurePassword = !_obscurePassword),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
                         ),
                         filled: true,
                         fillColor: Colors.white,
@@ -163,7 +166,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                           borderSide: const BorderSide(
-                              color: Color(0xFF1565C0), width: 2),
+                            color: Color(0xFF1565C0),
+                            width: 2,
+                          ),
                         ),
                       ),
                     ),
@@ -182,8 +187,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       },
                       decoration: InputDecoration(
                         labelText: 'Konfirmasi Password',
-                        prefixIcon: const Icon(Icons.lock_outline,
-                            color: Color(0xFF1565C0)),
+                        prefixIcon: const Icon(
+                          Icons.lock_outline,
+                          color: Color(0xFF1565C0),
+                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscureConfirm
@@ -191,8 +198,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                 : Icons.visibility,
                             color: Colors.grey,
                           ),
-                          onPressed: () =>
-                              setState(() => _obscureConfirm = !_obscureConfirm),
+                          onPressed: () => setState(
+                            () => _obscureConfirm = !_obscureConfirm,
+                          ),
                         ),
                         filled: true,
                         fillColor: Colors.white,
@@ -207,7 +215,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                           borderSide: const BorderSide(
-                              color: Color(0xFF1565C0), width: 2),
+                            color: Color(0xFF1565C0),
+                            width: 2,
+                          ),
                         ),
                       ),
                     ),
@@ -237,7 +247,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                             : const Text(
                                 'Ubah Password',
                                 style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.w600),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                       ),
                     ),

@@ -144,8 +144,15 @@ class Laundry {
   }
 
   bool get hasPhoto {
-    if (foto != null && foto!.isNotEmpty) return true;
-    if (galeri.any((g) => g.foto.isNotEmpty)) return true;
+    bool isValidUrl(String? url) {
+      if (url == null || url.isEmpty) return false;
+      final lower = url.toLowerCase();
+      if (lower.contains('via.placeholder.com')) return false;
+      return true;
+    }
+
+    if (isValidUrl(foto)) return true;
+    if (galeri.any((g) => isValidUrl(g.foto))) return true;
     return false;
   }
 
@@ -173,7 +180,9 @@ class Laundry {
         return '${AppConfig.serverUrl}/uploads/Laundry/${primary.foto}';
       }
     }
-    return 'https://via.placeholder.com/300';
+    // Return empty string when no photo available to avoid unnecessary
+    // network requests to placeholder services (prevents TLS/handshake errors)
+    return '';
   }
 
   // Format harga dengan Rupiah

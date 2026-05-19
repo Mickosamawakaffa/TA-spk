@@ -120,6 +120,7 @@ Route::post('/login', [AuthController::class, 'login']);
 // KONTRAKAN ROUTES (PUBLIC - TANPA AUTH)
 // -------------------------------------------------
 Route::prefix('kontrakan')->group(function () {
+    Route::get('/range', [KontrakanController::class, 'getRange']); // HARUS SEBELUM /{id}
     Route::get('/', [KontrakanController::class, 'index']);
     Route::get('/{id}', [KontrakanController::class, 'show']);
     Route::get('/{id}/galeri', [KontrakanController::class, 'getGaleri']);
@@ -130,6 +131,7 @@ Route::prefix('kontrakan')->group(function () {
 // LAUNDRY ROUTES (PUBLIC - TANPA AUTH)
 // -------------------------------------------------
 Route::prefix('laundry')->group(function () {
+    Route::get('/range', [SAWController::class, 'getRangeLaundry']);
     Route::get('/', [LaundryController::class, 'index']);
     Route::get('/{id}', [LaundryController::class, 'show']);
     Route::get('/{id}/galeri', [LaundryController::class, 'getGaleri']);
