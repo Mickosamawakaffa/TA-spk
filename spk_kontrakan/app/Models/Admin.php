@@ -44,4 +44,32 @@ class Admin extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * ========== RELASI KONTRAKAN ==========
+     */
+
+    /**
+     * Relasi: 1 Admin punya banyak Kontrakan
+     */
+    public function kontrakans()
+    {
+        return $this->hasMany(Kontrakan::class);
+    }
+
+    /**
+     * Helper: Cek apakah admin adalah super_admin
+     */
+    public function isSuperAdmin()
+    {
+        return $this->role === 'super_admin';
+    }
+
+    /**
+     * Helper: Cek apakah admin adalah admin biasa
+     */
+    public function isAdmin()
+    {
+        return $this->role === 'admin';
+    }
 }

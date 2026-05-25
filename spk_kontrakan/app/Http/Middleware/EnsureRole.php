@@ -13,13 +13,13 @@ class EnsureRole
      */
     public function handle(Request $request, Closure $next, string ...$roles)
     {
-        if (!Auth::check()) {
+        if (!Auth::guard('admin')->check()) {
             return redirect()->route('admin.login');
         }
 
-        $user = Auth::user();
+        $admin = Auth::guard('admin')->user();
 
-        if (!in_array($user->role, $roles, true)) {
+        if (!in_array($admin->role, $roles, true)) {
             abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk halaman ini.');
         }
 

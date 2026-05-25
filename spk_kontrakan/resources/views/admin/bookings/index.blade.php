@@ -76,6 +76,18 @@
     {{-- Stats Cards --}}
     <div class="row g-3 mb-4">
         @php
+            // Filter stats berdasarkan admin yang login
+            $admin = auth()->guard('admin')->user();
+            $statsQuery = \App\Models\Booking::query();
+            
+            if ($admin && $admin->role !== 'super_admin') {
+                // Admin biasa: hanya lihat booking dari kontrakan milik mereka
+                $statsQuery->whereHas('kontrakan', function($q) use ($admin) {
+                    $q->where('admin_id', $admin->id);
+                });
+            }
+            // Super admin: lihat semua
+            
             $stats = [
                 ['status' => 'pending', 'label' => 'Menunggu', 'color' => 'warning', 'icon' => 'hourglass-split'],
                 ['status' => 'confirmed', 'label' => 'Dikonfirmasi', 'color' => 'info', 'icon' => 'check-circle'],
@@ -89,7 +101,7 @@
                 <div class="card-body text-center">
                     <i class="bi bi-{{ $stat['icon'] }} text-{{ $stat['color'] }} fs-3"></i>
                     <h4 class="fw-bold mb-0 mt-2">
-                        {{ \App\Models\Booking::where('status', $stat['status'])->count() }}
+                        {{ (clone $statsQuery)->where('status', $stat['status'])->count() }}
                     </h4>
                     <small class="text-muted">{{ $stat['label'] }}</small>
                 </div>

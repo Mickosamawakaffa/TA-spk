@@ -12,10 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Add role column with default 'user'
-            $table->string('role')->default('user')->after('password');
-            // Add phone column (nullable)
-            $table->string('phone')->nullable()->after('role');
+            // Add role column with default 'user' (if not already exists)
+            if (!Schema::hasColumn('users', 'role')) {
+                $table->string('role')->default('user')->after('password');
+            }
+            // Add phone column (nullable) (if not already exists)
+            if (!Schema::hasColumn('users', 'phone')) {
+                $table->string('phone')->nullable()->after('role');
+            }
         });
     }
 

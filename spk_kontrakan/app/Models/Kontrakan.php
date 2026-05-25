@@ -10,6 +10,7 @@ class Kontrakan extends Model
     use HasFactory;
 
     protected $fillable = [
+        'admin_id',
         'nama',
         'alamat',
         'no_whatsapp',
@@ -30,6 +31,18 @@ class Kontrakan extends Model
         'occupied_until' => 'date',
         'availability_confirmed_at' => 'datetime',
     ];
+
+    /**
+     * ========== RELASI ADMIN ==========
+     */
+
+    /**
+     * Relasi: 1 Kontrakan dimiliki oleh 1 Admin
+     */
+    public function admin()
+    {
+        return $this->belongsTo(Admin::class);
+    }
 
     /**
      * Generate Google Maps URL

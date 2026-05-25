@@ -19,6 +19,18 @@ class BookingController extends Controller
     {
         $query = Booking::with(['kontrakan', 'user'])->latest();
 
+        // ========== FILTER: ADMIN (Hanya booking dari kontrakan milik admin) ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin) {
+            if ($admin->role !== 'super_admin') {
+                // Admin biasa hanya bisa lihat booking dari kontrakan milik mereka
+                $query->whereHas('kontrakan', function($q) use ($admin) {
+                    $q->where('admin_id', $admin->id);
+                });
+            }
+            // Super admin bisa lihat semua booking
+        }
+
         // Filter by status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -30,7 +42,15 @@ class BookingController extends Controller
         }
 
         $bookings = $query->paginate(15);
-        $kontrakans = Kontrakan::orderBy('nama')->get();
+
+        // ========== GET KONTRAKANS (sesuai filter admin) ==========
+        $kontrakanQuery = Kontrakan::orderBy('nama');
+        
+        if ($admin && $admin->role !== 'super_admin') {
+            $kontrakanQuery->where('admin_id', $admin->id);
+        }
+        
+        $kontrakans = $kontrakanQuery->get();
 
         return view('admin.bookings.index', compact('bookings', 'kontrakans'));
     }
@@ -40,7 +60,15 @@ class BookingController extends Controller
      */
     public function create(Request $request)
     {
-        $kontrakans = Kontrakan::where('status', 'available')->orderBy('nama')->get();
+        $kontrakanQuery = Kontrakan::where('status', 'available')->orderBy('nama');
+
+        // ========== FILTER: ADMIN (Hanya kontrakan milik admin) ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin && $admin->role !== 'super_admin') {
+            $kontrakanQuery->where('admin_id', $admin->id);
+        }
+
+        $kontrakans = $kontrakanQuery->get();
         $selectedKontrakan = null;
 
         if ($request->filled('kontrakan_id')) {
@@ -78,6 +106,14 @@ class BookingController extends Controller
             $booking = DB::transaction(function () use ($request) {
                 // Lock kontrakan row untuk mencegah double booking
                 $kontrakan = Kontrakan::lockForUpdate()->findOrFail($request->kontrakan_id);
+
+                // ========== AUTHORIZATION: Cek apakah admin punya akses ke kontrakan ini ==========
+                $admin = auth()->guard('admin')->user();
+                if ($admin && $admin->role !== 'super_admin') {
+                    if ($kontrakan->admin_id !== $admin->id) {
+                        throw new Exception('Anda tidak memiliki akses ke kontrakan ini.');
+                    }
+                }
 
                 // Cek konflik dengan booking aktif lainnya
                 $hasConflict = Booking::hasConflict(
@@ -196,6 +232,15 @@ class BookingController extends Controller
      */
     public function show(Booking $booking)
     {
+        // ========== AUTHORIZATION: Cek apakah admin punya akses ke booking ini ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin && $admin->role !== 'super_admin') {
+            // Admin biasa hanya bisa lihat booking dari kontrakan milik mereka
+            if ($booking->kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses ke booking ini.');
+            }
+        }
+
         $booking->load(['kontrakan', 'user']);
         return view('admin.bookings.show', compact('booking'));
     }
@@ -205,11 +250,26 @@ class BookingController extends Controller
      */
     public function edit(Booking $booking)
     {
+        // ========== AUTHORIZATION: Cek apakah admin punya akses ke booking ini ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin && $admin->role !== 'super_admin') {
+            // Admin biasa hanya bisa edit booking dari kontrakan milik mereka
+            if ($booking->kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses ke booking ini.');
+            }
+        }
+
         if (!in_array($booking->status, [Booking::STATUS_PENDING, Booking::STATUS_CONFIRMED])) {
             return back()->with('error', 'Booking tidak bisa diedit karena statusnya: ' . $booking->status_label);
         }
 
-        $kontrakans = Kontrakan::orderBy('nama')->get();
+        $kontrakanQuery = Kontrakan::orderBy('nama');
+        
+        if ($admin && $admin->role !== 'super_admin') {
+            $kontrakanQuery->where('admin_id', $admin->id);
+        }
+        
+        $kontrakans = $kontrakanQuery->get();
         return view('admin.bookings.edit', compact('booking', 'kontrakans'));
     }
 
@@ -218,6 +278,14 @@ class BookingController extends Controller
      */
     public function update(Request $request, Booking $booking)
     {
+        // ========== AUTHORIZATION: Cek apakah admin punya akses ke booking ini ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin && $admin->role !== 'super_admin') {
+            if ($booking->kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses ke booking ini.');
+            }
+        }
+
         if (!in_array($booking->status, [Booking::STATUS_PENDING, Booking::STATUS_CONFIRMED])) {
             return back()->with('error', 'Booking tidak bisa diedit.');
         }
@@ -274,6 +342,14 @@ class BookingController extends Controller
      */
     public function confirm(Booking $booking)
     {
+        // ========== AUTHORIZATION ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin && $admin->role !== 'super_admin') {
+            if ($booking->kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses ke booking ini.');
+            }
+        }
+
         if ($booking->confirm()) {
             return back()->with('success', 'Booking berhasil dikonfirmasi! Status kontrakan diubah menjadi "Dipesan".');
         }
@@ -286,6 +362,14 @@ class BookingController extends Controller
      */
     public function checkIn(Booking $booking)
     {
+        // ========== AUTHORIZATION ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin && $admin->role !== 'super_admin') {
+            if ($booking->kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses ke booking ini.');
+            }
+        }
+
         if ($booking->checkIn()) {
             return back()->with('success', 'Check-in berhasil! Penyewa sudah masuk. Status kontrakan diubah menjadi "Terisi".');
         }
@@ -298,6 +382,14 @@ class BookingController extends Controller
      */
     public function checkOut(Booking $booking)
     {
+        // ========== AUTHORIZATION ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin && $admin->role !== 'super_admin') {
+            if ($booking->kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses ke booking ini.');
+            }
+        }
+
         if ($booking->checkOut()) {
             return back()->with('success', 'Check-out berhasil! Penyewa sudah keluar. Status kontrakan kembali tersedia.');
         }
@@ -310,6 +402,14 @@ class BookingController extends Controller
      */
     public function cancel(Request $request, Booking $booking)
     {
+        // ========== AUTHORIZATION ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin && $admin->role !== 'super_admin') {
+            if ($booking->kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses ke booking ini.');
+            }
+        }
+
         $reason = $request->input('cancellation_reason');
 
         if ($booking->cancel($reason)) {
@@ -324,6 +424,14 @@ class BookingController extends Controller
      */
     public function markPaid(Request $request, Booking $booking)
     {
+        // ========== AUTHORIZATION ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin && $admin->role !== 'super_admin') {
+            if ($booking->kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses ke booking ini.');
+            }
+        }
+
         $method = $request->input('payment_method', 'cash');
 
         if ($booking->markAsPaid($method)) {
@@ -338,6 +446,14 @@ class BookingController extends Controller
      */
     public function togglePaymentStatus(Request $request, Booking $booking)
     {
+        // ========== AUTHORIZATION ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin && $admin->role !== 'super_admin') {
+            if ($booking->kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses ke booking ini.');
+            }
+        }
+
         if ($booking->payment_status === 'paid') {
             // Set ke belum lunas
             $booking->update([
@@ -362,6 +478,14 @@ class BookingController extends Controller
      */
     public function destroy(Booking $booking)
     {
+        // ========== AUTHORIZATION ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin && $admin->role !== 'super_admin') {
+            if ($booking->kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses ke booking ini.');
+            }
+        }
+
         // delete() akan trigger boot()->deleted() yang auto sync status kontrakan
         $booking->delete();
 
@@ -382,6 +506,15 @@ class BookingController extends Controller
         ]);
 
         $query = Booking::query();
+
+        // ========== AUTHORIZATION: Filter berdasarkan admin ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin && $admin->role !== 'super_admin') {
+            // Admin biasa hanya bisa hapus booking dari kontrakan milik mereka
+            $query->whereHas('kontrakan', function($q) use ($admin) {
+                $q->where('admin_id', $admin->id);
+            });
+        }
 
         if ($request->action === 'selected') {
             $ids = $request->input('booking_ids', []);

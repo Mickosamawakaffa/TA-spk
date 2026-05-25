@@ -16,6 +16,16 @@ class KontrakanController extends Controller
     {
         // Query builder
         $query = Kontrakan::query();
+
+        // ========== FILTER: ADMIN (Hanya kontrakan milik admin yang login) ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin) {
+            if ($admin->role !== 'super_admin') {
+                // Admin biasa hanya bisa lihat kontrakan milik mereka
+                $query->where('admin_id', $admin->id);
+            }
+            // Super admin bisa lihat semua kontrakan
+        }
         
         // ========== FILTER: SEARCH (Nama, Alamat, Fasilitas) ==========
         if ($request->filled('search')) {
@@ -212,8 +222,9 @@ class KontrakanController extends Controller
             $file->move(public_path('uploads/kontrakan'), $filename);
         }
 
-        // Simpan data ke database (DENGAN WHATSAPP)
+        // Simpan data ke database (DENGAN WHATSAPP & ADMIN_ID)
         $kontrakan = Kontrakan::create([
+            'admin_id' => auth()->guard('admin')->id(),
             'nama' => $request->nama,
             'alamat' => $request->alamat,
             'no_whatsapp' => $request->no_whatsapp,
@@ -268,6 +279,14 @@ class KontrakanController extends Controller
                 ->with('error', 'Data kontrakan tidak ditemukan!');
         }
         
+        // ========== AUTHORIZATION: Cek apakah admin punya akses ke kontrakan ini ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin && $admin->role !== 'super_admin') {
+            if ($kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses ke kontrakan ini.');
+            }
+        }
+        
         return view('kontrakan.edit', compact('kontrakan'));
     }
 
@@ -281,6 +300,14 @@ class KontrakanController extends Controller
         if (!$kontrakan) {
             return redirect()->route('kontrakan.index')
                 ->with('error', 'Data kontrakan tidak ditemukan!');
+        }
+        
+        // ========== AUTHORIZATION: Cek apakah admin punya akses ke kontrakan ini ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin && $admin->role !== 'super_admin') {
+            if ($kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses ke kontrakan ini.');
+            }
         }
         
         // Validasi input (DENGAN WHATSAPP)
@@ -350,18 +377,20 @@ class KontrakanController extends Controller
      */
     public function destroy($id)
     {
-        // Proteksi Role - Hanya Admin dan Super Admin yang bisa hapus
-        if (!in_array(auth()->user()->role, ['admin', 'super_admin'])) {
-            return redirect()->route('kontrakan.index')
-                ->with('error', 'Anda tidak memiliki akses untuk menghapus data!');
-        }
-
         // Cari kontrakan berdasarkan ID
         $kontrakan = Kontrakan::find($id);
         
         if (!$kontrakan) {
             return redirect()->route('kontrakan.index')
                 ->with('error', 'Data kontrakan tidak ditemukan atau sudah dihapus sebelumnya!');
+        }
+        
+        // ========== AUTHORIZATION: Cek apakah admin punya akses ke kontrakan ini ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin && $admin->role !== 'super_admin') {
+            if ($kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses untuk menghapus kontrakan ini.');
+            }
         }
 
         // Hapus foto dari folder sebelum hapus data
@@ -387,12 +416,6 @@ class KontrakanController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
-        // Proteksi Role - Hanya Admin dan Super Admin yang bisa hapus
-        if (!in_array(auth()->user()->role, ['admin', 'super_admin'])) {
-            return redirect()->route('kontrakan.index')
-                ->with('error', 'Anda tidak memiliki akses untuk menghapus data!');
-        }
-
         // Handle both JSON string and array input
         $ids = $request->ids;
         if (is_string($ids)) {
@@ -409,12 +432,19 @@ class KontrakanController extends Controller
 
         $deletedCount = 0;
         $deletedNames = [];
+        $admin = auth()->guard('admin')->user();
 
         // Loop dan hapus satu per satu
         foreach ($request->ids as $id) {
             $kontrakan = Kontrakan::find($id);
             
             if ($kontrakan) {
+                // ========== AUTHORIZATION: Cek apakah admin punya akses ke kontrakan ini ==========
+                if ($admin && $admin->role !== 'super_admin') {
+                    if ($kontrakan->admin_id !== $admin->id) {
+                        continue; // Skip kontrakan yang bukan milik admin
+                    }
+                }
                 $deletedNames[] = $kontrakan->nama;
 
                 // Hapus foto jika ada
