@@ -38,16 +38,12 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   // ============================================================================
   // QUESTIONNAIRE STATE (Smart Questions untuk mahasiswa)
   // ============================================================================
-  bool _showQuestionnaire = true; // Show questionnaire first
+  bool _showQuestionnaire = false; // Show input view by default
   bool _loadingRange = true; // Loading range data
 
   // Range data dari database
   int _hargaMin = 0;
   int _hargaMax = 10000000;
-  int _jarakMin = 0;
-  int _jarakMax = 50;
-  int _kamarMin = 1;
-  int _kamarMax = 20;
   List<String> _availableFasilitas = [];
   // Laundry specific data
   List<String> _availableJenisLayanan = [];
@@ -88,8 +84,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
 
   String get _kriteria3Label =>
       widget.category == 'kontrakan' ? 'Jumlah Kamar' : 'Kecepatan Layanan';
-  String get _kriteria4Label =>
-      widget.category == 'kontrakan' ? 'Fasilitas' : 'Variasi Layanan';
+  String get _kriteria4Label => 'Fasilitas';
 
   int get _totalBobot =>
       _bobotHarga + _bobotJarak + _bobotKriteria3 + _bobotKriteria4;
@@ -102,6 +97,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   void initState() {
     super.initState();
     // Default bobot: profil mahasiswa (akan di-override oleh questionnaire)
+
     _bobotHarga = 50;
     _bobotJarak = 20;
     _bobotKriteria3 = 15;
@@ -112,7 +108,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
 
     // Load range data untuk questionnaire (kontrakan & laundry)
     if (widget.category == 'kontrakan' || widget.category == 'laundry') {
-      _showQuestionnaire = true;
       _loadRangeData();
 
       // Safety fallback: jika API lambat atau menggantung, paksa fallback setelah 5s
@@ -146,6 +141,404 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     }
   }
 
+  Widget _buildBobotStackedBar() {
+    final items = _getBobotItems();
+    final values = items.map((e) => e['value'] as int).toList();
+
+    final colors = [
+      _categoryColor.withOpacity(1.0),
+      _categoryColor.withOpacity(0.78),
+      _categoryColor.withOpacity(0.56),
+      _categoryColor.withOpacity(0.34),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LayoutBuilder(
+            builder: (ctx, constraints) {
+              final fullWidth = constraints.maxWidth;
+              final widths = <double>[];
+              double used = 0;
+              for (int i = 0; i < values.length; i++) {
+                if (i == values.length - 1) {
+                  widths.add((fullWidth - used).clamp(0, fullWidth));
+                } else {
+                  final w = fullWidth * (values[i] / 100.0);
+                  widths.add(w);
+                  used += w;
+                }
+              }
+
+              return SizedBox(
+                height: 14,
+                child: Row(
+                  children: List.generate(values.length, (i) {
+                    final isFirst = i == 0;
+                    return InkWell(
+                      onTap: () => _showBobotPicker(i),
+                      child: Container(
+                        width: widths[i],
+                        decoration: BoxDecoration(
+                          color: colors[i],
+                          border: isFirst
+                              ? null
+                              : const Border(
+                                  left: BorderSide(color: Colors.white, width: 2),
+                                ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Ringkasan bobot (tap segmen untuk edit)',
+          style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBobotRows() {
+    final items = _getBobotItems();
+
+    return Column(
+      children: List.generate(items.length, (i) {
+        final item = items[i];
+        return Padding(
+          padding: EdgeInsets.only(bottom: i == items.length - 1 ? 0 : 10),
+          child: _buildBobotRow(
+            index: i,
+            label: item['label'] as String,
+            icon: item['icon'] as IconData,
+            tipe: item['tipe'] as String,
+            tipeDesc: item['tipeDesc'] as String,
+            value: item['value'] as int,
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildBobotRow({
+    required int index,
+    required String label,
+    required IconData icon,
+    required String tipe,
+    required String tipeDesc,
+    required int value,
+  }) {
+    final isCost = tipe.toLowerCase() == 'cost';
+    final percent = value.clamp(0, 100);
+    final priorityColor = _getPriorityColor(value);
+
+    return InkWell(
+      onTap: () => _showBobotPicker(index),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE4EDF7)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _categoryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, size: 18, color: _categoryColor),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.grey[850],
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        tipeDesc,
+                        style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _categoryColor.withOpacity(0.3)),
+                  ),
+                  child: Text(
+                    '$percent%',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: _categoryColor,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(Icons.chevron_right, color: Colors.grey[400]),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: priorityColor.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'Prioritas ${_getPriorityLabel(value)}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: priorityColor,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: isCost
+                        ? Colors.orange.withOpacity(0.15)
+                        : Colors.green.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    isCost ? 'Cost' : 'Benefit',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: isCost ? Colors.orange[800] : Colors.green[800],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: Stack(
+                children: [
+                  Container(
+                    height: 10,
+                    color: _categoryColor.withOpacity(0.12),
+                  ),
+                  LayoutBuilder(
+                    builder: (ctx, c) {
+                      return Container(
+                        height: 10,
+                        width: c.maxWidth * (percent / 100.0),
+                        color: _categoryColor,
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Map<String, Object>> _getBobotItems() {
+    return [
+      {
+        'label': 'Harga',
+        'icon': Icons.payments_outlined,
+        'tipe': 'Cost',
+        'tipeDesc': 'Semakin murah semakin baik',
+        'value': _bobotHarga,
+      },
+      {
+        'label': 'Jarak',
+        'icon': Icons.location_on_outlined,
+        'tipe': 'Cost',
+        'tipeDesc': 'Semakin dekat semakin baik',
+        'value': _bobotJarak,
+      },
+      {
+        'label': _kriteria3Label,
+        'icon': widget.category == 'kontrakan'
+            ? Icons.bed_outlined
+            : Icons.speed_outlined,
+        'tipe': 'Benefit',
+        'tipeDesc': widget.category == 'kontrakan'
+            ? 'Semakin banyak semakin baik'
+            : 'Semakin cepat semakin baik',
+        'value': _bobotKriteria3,
+      },
+      {
+        'label': _kriteria4Label,
+        'icon': widget.category == 'kontrakan'
+            ? Icons.wifi_outlined
+            : Icons.local_laundry_service_outlined,
+        'tipe': 'Benefit',
+        'tipeDesc': widget.category == 'kontrakan'
+            ? 'Semakin lengkap semakin baik'
+            : 'Semakin lengkap semakin baik',
+        'value': _bobotKriteria4,
+      },
+    ];
+  }
+
+  void _showBobotPicker(int index) {
+    final items = _getBobotItems();
+    final item = items[index];
+    final label = item['label'] as String;
+    final icon = item['icon'] as IconData;
+    final tipeDesc = item['tipeDesc'] as String;
+
+    final currentValues = [
+      _bobotHarga,
+      _bobotJarak,
+      _bobotKriteria3,
+      _bobotKriteria4,
+    ];
+
+    final options = _getBobotOptionsFor(index);
+    final selected = currentValues[index];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: _categoryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(icon, color: _categoryColor),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            label,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            tipeDesc,
+                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: _categoryColor.withOpacity(0.3)),
+                      ),
+                      child: Text(
+                        '$selected%',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: _categoryColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Pilih bobot. Total otomatis diseimbangkan menjadi 100%.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: options.map((v) {
+                    final isSel = v == selected;
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () {
+                        _updateBobot(index, v);
+                        Navigator.of(ctx).pop();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isSel ? _categoryColor : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isSel
+                                ? _categoryColor
+                                : const Color(0xFFE4EDF7),
+                            width: isSel ? 2 : 1,
+                          ),
+                        ),
+                        child: Text(
+                          '$v%',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: isSel ? Colors.white : Colors.grey[800],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   /// Load range data (min/max harga, jarak, kamar) dari API
   Future<void> _loadRangeData() async {
     try {
@@ -161,12 +554,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
             setState(() {
               _hargaMin = data['harga']['min'] ?? 0;
               _hargaMax = data['harga']['max'] ?? 10000000;
-              _jarakMin = data['jarak']['min'] ?? 0;
-              _jarakMax = data['jarak']['max'] ?? 50;
-              if (widget.category == 'kontrakan') {
-                _kamarMin = data['jumlah_kamar']['min'] ?? 1;
-                _kamarMax = data['jumlah_kamar']['max'] ?? 20;
-              } else {
+              if (widget.category != 'kontrakan') {
                 _availableJenisLayanan = List<String>.from(data['jenis_layanan'] ?? []);
               }
 
@@ -457,12 +845,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     return List.generate(((max - 10) ~/ 5) + 1, (i) => 10 + i * 5);
   }
 
-  int _closestOption(List<int> options, int target) {
-    return options.reduce(
-      (a, b) => (a - target).abs() <= (b - target).abs() ? a : b,
-    );
-  }
-
   String _getPriorityLabel(int value) {
     if (value <= 20) return 'Rendah';
     if (value <= 35) return 'Sedang';
@@ -571,6 +953,9 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         // CRITICAL: Send selected facilities to API for filtering
         bodyParams['selected_facilities'] = _selectedFacilities.toList();
       } else {
+        final hasAntarJemput = _selectedFacilities.any(
+          (f) => f.toLowerCase().contains('antar'),
+        );
         bodyParams['bobot_kecepatan'] = _bobotKriteria3;
         bodyParams['bobot_layanan'] = _bobotKriteria4;
         // Choose selected jenis_layanan, or fall back to a sensible default
@@ -582,7 +967,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         bodyParams['selected_facilities'] = _selectedFacilities.toList();
         // send preset and antar/jemput preferences
         bodyParams['preset'] = _selectedPreset;
-        bodyParams['antar_jemput'] = _antarJemput ? 1 : 0;
+        bodyParams['antar_jemput'] = hasAntarJemput ? 1 : 0;
         // rating filter removed
       }
 
@@ -662,9 +1047,14 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         if (!mounted) return;
+        // Offer user to open location settings
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Aktifkan GPS Anda terlebih dahulu'),
+          SnackBar(
+            content: const Text('GPS mati. Buka pengaturan lokasi?'),
+            action: SnackBarAction(
+              label: 'Buka',
+              onPressed: () => Geolocator.openLocationSettings(),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -700,18 +1090,61 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         return;
       }
 
-      Position position =
-          await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.high,
-          ).timeout(
-            const Duration(seconds: 15),
-            onTimeout: () => throw TimeoutException('Deteksi lokasi timeout'),
+      // Primary attempt: get current position with timeout
+      Position? position;
+      try {
+        position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        ).timeout(
+          const Duration(seconds: 15),
+          onTimeout: () => throw TimeoutException('Deteksi lokasi timeout'),
+        );
+      } catch (e) {
+        debugPrint('getCurrentPosition failed: $e');
+      }
+
+      // Fallback: try last known position
+      if (position == null) {
+        try {
+          position = await Geolocator.getLastKnownPosition();
+          debugPrint('getLastKnownPosition result: $position');
+        } catch (e) {
+          debugPrint('getLastKnownPosition failed: $e');
+        }
+      }
+
+      // Further fallback: subscribe briefly to position stream
+      if (position == null) {
+        try {
+          final stream = Geolocator.getPositionStream(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+              distanceFilter: 10,
+            ),
           );
+          position = await stream.first.timeout(const Duration(seconds: 10));
+          debugPrint('getPositionStream first: $position');
+        } catch (e) {
+          debugPrint('getPositionStream failed: $e');
+        }
+      }
+
+      if (position == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gagal mendapatkan lokasi. Pastikan GPS dan izin sudah aktif.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() => _isDetectingLocation = false);
+        return;
+      }
 
       if (!mounted) return;
       setState(() {
-        _userLatitude = position.latitude;
-        _userLongitude = position.longitude;
+        _userLatitude = position!.latitude;
+        _userLongitude = position!.longitude;
         _isDetectingLocation = false;
       });
 
@@ -827,9 +1260,13 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     }
 
     // Show as a single-line select field that opens a modal multi-select
+    final placeholder = widget.category == 'laundry'
+      ? 'Pilih Fasilitas (termasuk antar jemput)'
+      : 'Pilih Fasilitas...';
+
     final summary = _selectedFacilities.isEmpty
-        ? 'Pilih Fasilitas...'
-        : _selectedFacilities.join(', ');
+      ? placeholder
+      : _selectedFacilities.join(', ');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1327,11 +1764,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               ),
               const SizedBox(height: 12),
               _buildQuestionCard(
-                title: '🚚 Antar / Jemput',
-                child: _buildAntarJemputToggle(),
-              ),
-              const SizedBox(height: 16),
-              _buildQuestionCard(
                 title: '💰 Berapa Budget?',
                 child: _buildBudgetDropdown(),
               ),
@@ -1343,7 +1775,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               const SizedBox(height: 16),
               // rating removed per UX feedback
               _buildQuestionCard(
-                title: '🔸 Fasilitas / Layanan Tambahan (opsional)',
+                title: '🔸 Fasilitas (termasuk antar jemput)',
                 child: _buildFacilitiesDropdown(),
               ),
             ],
@@ -1410,30 +1842,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     );
   }
 
-  /// Helper: Generate budget buttons dynamically dari database range
-  List<Widget> _buildDynamicBudgetButtons() {
-    final buttons = <Widget>[];
-
-    // Hitung range dan buat 6 range buttons
-    final interval = (_hargaMax - _hargaMin) / 6;
-
-    for (int i = 0; i < 6; i++) {
-      final minRange = _hargaMin + (i * interval).toInt();
-      final maxRange = _hargaMin + ((i + 1) * interval).toInt();
-      final midpoint = ((minRange + maxRange) / 2).toInt();
-
-      // Format range label
-      final minLabel = _formatCurrency(minRange);
-      final maxLabel = _formatCurrency(maxRange);
-
-      buttons.add(
-        _buildBudgetButton('$minLabel - $maxLabel', midpoint.toDouble()),
-      );
-    }
-
-    return buttons;
-  }
-
   /// Helper: Format currency to readable format
   String _formatCurrency(int value) {
     if (value >= 1000000) {
@@ -1443,166 +1851,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     } else {
       return 'Rp $value';
     }
-  }
-
-  /// Helper: Get emoji untuk fasilitas berdasarkan nama
-  String _getFasilitasEmoji(String fasilitas) {
-    final name = fasilitas.toLowerCase();
-    if (name.contains('wifi')) return '📡';
-    if (name.contains('ac') || name.contains('pendingin')) return '❄️';
-    if (name.contains('dapur') || name.contains('kitchen')) return '🍳';
-    if (name.contains('parkir') || name.contains('parking')) return '🚗';
-    if (name.contains('air') || name.contains('water')) return '💧';
-    if (name.contains('tv')) return '📺';
-    if (name.contains('garden')) return '🌿';
-    if (name.contains('pool') || name.contains('kolam')) return '🏊';
-    return '⭐'; // Default
-  }
-
-  Widget _buildBudgetButton(String label, double amount) {
-    final isSelected = _budgetSelected == amount;
-    return GestureDetector(
-      onTap: () => setState(() => _budgetSelected = amount),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isSelected ? _categoryColor : Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected ? _categoryColor : const Color(0xFFE4EDF7),
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: isSelected ? Colors.white : Colors.black,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFacilityCheckbox(String facility, String emoji) {
-    final isSelected = _selectedFacilities.contains(facility);
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          if (isSelected) {
-            _selectedFacilities.remove(facility);
-          } else {
-            _selectedFacilities.add(facility);
-          }
-        });
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isSelected ? _categoryColor.withOpacity(0.1) : Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected ? _categoryColor : const Color(0xFFE4EDF7),
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              isSelected ? Icons.check_circle : Icons.circle_outlined,
-              color: isSelected ? _categoryColor : Colors.grey,
-              size: 20,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              '$emoji $facility',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? _categoryColor : Colors.black,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDistanceRadio(String label, String value) {
-    final isSelected = _distancePreference == value;
-    return GestureDetector(
-      onTap: () => setState(() => _distancePreference = value),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isSelected ? _categoryColor.withOpacity(0.1) : Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected ? _categoryColor : const Color(0xFFE4EDF7),
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              isSelected
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_unchecked,
-              color: isSelected ? _categoryColor : Colors.grey,
-              size: 20,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? _categoryColor : Colors.black,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRoomRadio(String label, String value) {
-    final isSelected = _roomPreference == value;
-    return GestureDetector(
-      onTap: () => setState(() => _roomPreference = value),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isSelected ? _categoryColor.withOpacity(0.1) : Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected ? _categoryColor : const Color(0xFFE4EDF7),
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              isSelected
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_unchecked,
-              color: isSelected ? _categoryColor : Colors.grey,
-              size: 20,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? _categoryColor : Colors.black,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   // ===================== INPUT VIEW =====================
@@ -1850,9 +2098,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     final kriteria3 = widget.category == 'kontrakan'
         ? 'jumlah kamar'
         : 'kecepatan layanan';
-    final kriteria4 = widget.category == 'kontrakan'
-        ? 'fasilitas'
-        : 'variasi layanan';
+    final kriteria4 = 'fasilitas';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -2174,59 +2420,13 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Bobot otomatis disesuaikan agar total selalu 100%',
+            'Tap salah satu kriteria untuk mengubah bobot. Total akan disesuaikan otomatis menjadi 100%.',
             style: TextStyle(fontSize: 11, color: Colors.grey[500]),
           ),
-          const SizedBox(height: 10),
-          _buildPriorityGuide(),
-          const SizedBox(height: 16),
-          _buildBobotDropdown(
-            label: 'Harga',
-            icon: Icons.payments_outlined,
-            tipe: 'Cost',
-            tipeDesc: 'Semakin murah semakin baik',
-            value: _bobotHarga,
-            options: _getBobotOptionsFor(0),
-            onChanged: (val) => _updateBobot(0, val!),
-          ),
           const SizedBox(height: 12),
-          _buildBobotDropdown(
-            label: 'Jarak',
-            icon: Icons.location_on_outlined,
-            tipe: 'Cost',
-            tipeDesc: 'Semakin dekat semakin baik',
-            value: _bobotJarak,
-            options: _getBobotOptionsFor(1),
-            onChanged: (val) => _updateBobot(1, val!),
-          ),
+          _buildBobotStackedBar(),
           const SizedBox(height: 12),
-          _buildBobotDropdown(
-            label: _kriteria3Label,
-            icon: widget.category == 'kontrakan'
-                ? Icons.bed_outlined
-                : Icons.speed_outlined,
-            tipe: 'Benefit',
-            tipeDesc: widget.category == 'kontrakan'
-                ? 'Semakin banyak semakin baik'
-                : 'Semakin cepat semakin baik',
-            value: _bobotKriteria3,
-            options: _getBobotOptionsFor(2),
-            onChanged: (val) => _updateBobot(2, val!),
-          ),
-          const SizedBox(height: 12),
-          _buildBobotDropdown(
-            label: _kriteria4Label,
-            icon: widget.category == 'kontrakan'
-                ? Icons.wifi_outlined
-                : Icons.local_laundry_service_outlined,
-            tipe: 'Benefit',
-            tipeDesc: widget.category == 'kontrakan'
-                ? 'Semakin lengkap semakin baik'
-                : 'Semakin bervariasi semakin baik',
-            value: _bobotKriteria4,
-            options: _getBobotOptionsFor(3),
-            onChanged: (val) => _updateBobot(3, val!),
-          ),
+          _buildBobotRows(),
           if (!isValid) ...[
             const SizedBox(height: 12),
             Container(
@@ -2257,303 +2457,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     );
   }
 
-  Widget _buildPriorityGuide() {
-    final items = [
-      {
-        'label': 'Rendah',
-        'range': '10-20%',
-        'desc': 'Pengaruh kecil pada hasil.',
-        'color': const Color(0xFF8E8E93),
-      },
-      {
-        'label': 'Sedang',
-        'range': '25-35%',
-        'desc': 'Cukup penting.',
-        'color': const Color(0xFF00A389),
-      },
-      {
-        'label': 'Tinggi',
-        'range': '40-50%',
-        'desc': 'Sangat berpengaruh pada hasil.',
-        'color': const Color(0xFF2F80ED),
-      },
-      {
-        'label': 'Prioritas',
-        'range': '55-70%',
-        'desc': 'Faktor utama penentu hasil.',
-        'color': const Color(0xFF7B61FF),
-      },
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.blueGrey.withOpacity(0.06),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.blueGrey.withOpacity(0.16)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Arti level prioritas',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Colors.grey[800],
-            ),
-          ),
-          const SizedBox(height: 8),
-          ...items.map((item) {
-            final color = item['color'] as Color;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(top: 2),
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: RichText(
-                      text: TextSpan(
-                        style: TextStyle(fontSize: 11, color: Colors.grey[700]),
-                        children: [
-                          TextSpan(
-                            text: '${item['label']} (${item['range']}): ',
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                          TextSpan(text: item['desc'] as String),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBobotDropdown({
-    if (_availableJenisLayanan.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(10),
-        child: Text(
-          'Jenis layanan tidak tersedia',
-          style: TextStyle(color: Colors.grey[600]),
-        ),
-      );
-    }
-
-    // Build an ordered short list for chips: prefer any that contain 'cuci'
-    final preferred = _availableJenisLayanan.firstWhere(
-        (e) => e.toLowerCase().contains('cuci'),
-        orElse: () => _availableJenisLayanan.first);
-
-    final others = _availableJenisLayanan.where((e) => e != preferred).toList();
-    final chipList = [preferred, ...others].take(4).toList();
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFFBDBDBD)),
-        borderRadius: BorderRadius.circular(4),
-        color: Colors.white,
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            ...chipList.map((opt) {
-              final isSelected = (_selectedJenisLayanan.isNotEmpty ? _selectedJenisLayanan : preferred) == opt;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  label: Text(opt),
-                  selected: isSelected,
-                  onSelected: (_) => setState(() => _selectedJenisLayanan = opt),
-                  selectedColor: _categoryColor,
-                ),
-              );
-            }).toList(),
-            // 'Lainnya' button opens full modal
-            OutlinedButton(
-              onPressed: () => _showSingleChoiceModal('Pilih Jenis Layanan',
-                  _availableJenisLayanan.map((e) => {'label': e, 'value': e}).toList(), _selectedJenisLayanan,
-                  (val) => setState(() => _selectedJenisLayanan = val)),
-              child: const Text('Lainnya'),
-            ),
-          ],
-        ),
-      ),
-    );
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: _categoryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, size: 20, color: _categoryColor),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[800],
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isCost
-                                ? Colors.orange.withOpacity(0.15)
-                                : Colors.green.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            isCost ? 'Minimalkan' : 'Utamakan',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: isCost
-                                  ? Colors.orange[800]
-                                  : Colors.green[800],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            tipeDesc,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey[500],
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: _categoryColor.withOpacity(0.3)),
-                ),
-                child: Text(
-                  '$safeValue%',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: _categoryColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: priorityColor.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  'Prioritas ${_getPriorityLabel(safeValue)}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: priorityColor,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '${options.first}% - ${options.last}%',
-                style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-              ),
-            ],
-          ),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: _categoryColor,
-              inactiveTrackColor: _categoryColor.withOpacity(0.2),
-              thumbColor: _categoryColor,
-              overlayColor: _categoryColor.withOpacity(0.15),
-              trackHeight: 4,
-            ),
-            child: Slider(
-              min: options.first.toDouble(),
-              max: options.last.toDouble(),
-              divisions: options.length > 1 ? options.length - 1 : null,
-              value: safeValue.toDouble(),
-              label: '$safeValue%',
-              onChanged: (double newValue) {
-                onChanged(_closestOption(options, newValue.round()));
-              },
-            ),
-          ),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: quickPresets.map((preset) {
-              final presetValue = preset['value'] as int;
-              final selected = presetValue == safeValue;
-              return ChoiceChip(
-                label: Text('${preset['label']} ($presetValue%)'),
-                selected: selected,
-                onSelected: (_) => onChanged(presetValue),
-                selectedColor: _categoryColor.withOpacity(0.15),
-                side: BorderSide(
-                  color: selected
-                      ? _categoryColor.withOpacity(0.5)
-                      : Colors.grey[300]!,
-                ),
-                labelStyle: TextStyle(
-                  fontSize: 11,
-                  color: selected ? _categoryColor : Colors.grey[700],
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildLocationSection() {
     return Container(
