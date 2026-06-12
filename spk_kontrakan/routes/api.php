@@ -70,6 +70,7 @@ Route::get('/docs', function () {
             'bookings' => [
                 'GET /api/bookings' => 'History booking [AUTH]',
                 'GET /api/bookings/{id}' => 'Detail booking [AUTH]',
+                'GET /api/bookings/{id}/payment-proof' => 'Lihat bukti bayar (secure) [AUTH]',
                 'POST /api/bookings' => 'Create booking [AUTH]',
                 'POST /api/bookings/{id}/cancel' => 'Cancel booking [AUTH]',
                 'POST /api/bookings/{id}/extend' => 'Extend booking [AUTH]',
@@ -111,10 +112,11 @@ Route::get('/docs', function () {
 });
 
 // -------------------------------------------------
-// AUTH ROUTES (PUBLIC - DEVELOPMENT MODE - NO RATE LIMITING)
+// AUTH ROUTES (PUBLIC - WITH RATE LIMITING)
 // -------------------------------------------------
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+// ✅ FIXED: Added rate limiting to prevent brute force attacks
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:3,1'); // 3 attempts per 1 minute
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1'); // 5 attempts per 1 minute
 
 // -------------------------------------------------
 // KONTRAKAN ROUTES (PUBLIC - TANPA AUTH)
@@ -170,6 +172,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('bookings')->group(function () {
         Route::get('/', [BookingController::class, 'index']);
         Route::get('/{id}', [BookingController::class, 'show']);
+        // ✅ Secure access to payment proof (no public storage URL)
+        Route::get('/{id}/payment-proof', [BookingController::class, 'getPaymentProof']);
         Route::post('/', [BookingController::class, 'store']);
         Route::post('/{id}/cancel', [BookingController::class, 'cancel']);
         Route::post('/{id}/extend', [BookingController::class, 'extend']);

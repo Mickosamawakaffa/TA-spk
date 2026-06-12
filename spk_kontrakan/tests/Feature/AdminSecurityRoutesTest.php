@@ -19,7 +19,9 @@ class AdminSecurityRoutesTest extends TestCase
 
     public function test_ensure_role_redirects_guest_to_login(): void
     {
-        Auth::shouldReceive('check')->once()->andReturn(false);
+        $guard = \Mockery::mock(\Illuminate\Contracts\Auth\StatefulGuard::class);
+        Auth::shouldReceive('guard')->once()->with('admin')->andReturn($guard);
+        $guard->shouldReceive('check')->once()->andReturn(false);
 
         $middleware = new EnsureRole();
         $response = $middleware->handle(Request::create('/admin/register', 'GET'), fn () => response('ok'), 'super_admin');
@@ -30,8 +32,10 @@ class AdminSecurityRoutesTest extends TestCase
 
     public function test_ensure_role_forbids_non_matching_role(): void
     {
-        Auth::shouldReceive('check')->once()->andReturn(true);
-        Auth::shouldReceive('user')->once()->andReturn((object) ['role' => 'admin']);
+        $guard = \Mockery::mock(\Illuminate\Contracts\Auth\StatefulGuard::class);
+        Auth::shouldReceive('guard')->twice()->with('admin')->andReturn($guard);
+        $guard->shouldReceive('check')->once()->andReturn(true);
+        $guard->shouldReceive('user')->once()->andReturn((object) ['role' => 'admin']);
 
         $this->expectException(HttpException::class);
         $this->expectExceptionMessage('Akses ditolak. Anda tidak memiliki izin untuk halaman ini.');
@@ -42,8 +46,10 @@ class AdminSecurityRoutesTest extends TestCase
 
     public function test_ensure_role_allows_matching_role(): void
     {
-        Auth::shouldReceive('check')->once()->andReturn(true);
-        Auth::shouldReceive('user')->once()->andReturn((object) ['role' => 'super_admin']);
+        $guard = \Mockery::mock(\Illuminate\Contracts\Auth\StatefulGuard::class);
+        Auth::shouldReceive('guard')->twice()->with('admin')->andReturn($guard);
+        $guard->shouldReceive('check')->once()->andReturn(true);
+        $guard->shouldReceive('user')->once()->andReturn((object) ['role' => 'super_admin']);
 
         $middleware = new EnsureRole();
         $response = $middleware->handle(Request::create('/admin/register', 'GET'), fn () => response('ok'), 'super_admin');

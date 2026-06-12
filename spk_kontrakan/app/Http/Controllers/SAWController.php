@@ -165,7 +165,7 @@ class SAWController extends Controller
             ]);
             
             return redirect()->route('saw.index')
-                ->with('error', 'Terjadi kesalahan saat memproses data: ' . $e->getMessage());
+                ->with('error', 'Terjadi kesalahan saat memproses data. Silakan coba lagi.');
         }
     }
     

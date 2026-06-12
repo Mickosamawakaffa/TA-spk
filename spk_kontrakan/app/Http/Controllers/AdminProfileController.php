@@ -20,7 +20,7 @@ class AdminProfileController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|min:3|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'email' => 'required|email|unique:admins,email,' . $user->id,
             'phone' => 'nullable|string|min:8|max:20',
             'password' => 'nullable|string|min:8|confirmed',
         ], [

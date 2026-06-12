@@ -6,7 +6,6 @@ import '../models/laundry.dart';
 import '../services/kontrakan_service.dart';
 import '../services/laundry_service.dart';
 import '../services/auth_service.dart';
-import '../config/app_config.dart';
 import 'search_screen.dart';
 import 'kontrakan_detail_screen.dart';
 import 'laundry_list_screen.dart';

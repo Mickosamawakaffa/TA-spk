@@ -8,12 +8,12 @@ class Environment {
   // Pilih sesuai platform dan environment saat development
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.119.236.99:8000', // Default IP lokal - Updated
+    defaultValue: 'http://10.133.61.99:8000',
   );
 
   static const String storageBaseUrl = String.fromEnvironment(
     'STORAGE_BASE_URL',
-    defaultValue: 'http://10.119.236.99:8000/storage',
+    defaultValue: 'http://10.133.61.99:8000/storage',
   );
 
   // Mode debugging

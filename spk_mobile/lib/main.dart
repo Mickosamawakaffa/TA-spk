@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'login.dart';
 import 'screens/improved_home_screen.dart';
 import 'services/auth_service.dart';
+import 'services/server_discovery_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +13,11 @@ Future<void> main() async {
       statusBarIconBrightness: Brightness.light,
     ),
   );
+
+  // ✅ Load persisted auth session (token/user) from secure storage
+  final authService = AuthService();
+  await authService.loadToken();
+
   runApp(const MyApp());
 }
 
@@ -284,24 +290,19 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _checkAuth() async {
-    // ⚠️ DISABLED: Auto-discovery scanning wrong ports
-    // Sekarang menggunakan fixed IP dari AppConfig
-    // Jika perlu auto-discovery, uncomment kode di bawah dan configure timeout
-
-    /*
-    // 🔍 Auto-detect server IP (disabled - causing port scan issues)
+    // 🔍 Auto-detect server IP dengan fallback ke konfigurasi default.
+    // Ini membantu APK tetap bisa konek saat IP LAN berubah.
     await ServerDiscoveryService.discover(
       onStatus: (status) {
         if (mounted) setState(() => _statusText = status);
       },
     ).timeout(
-      const Duration(seconds: 5),
+      const Duration(seconds: 8),
       onTimeout: () {
-        debugPrint('Server discovery timeout, using configured IP');
+        debugPrint('Server discovery timeout, using configured server URL');
         return false;
       },
     );
-    */
 
     if (mounted) setState(() => _statusText = 'Memeriksa sesi...');
     await _authService.loadToken();

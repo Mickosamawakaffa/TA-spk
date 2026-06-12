@@ -21,6 +21,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isLoading = false;
   final _authService = AuthService();
 
+  // ✅ NEW: Helper function to check password strength
+  bool _isPasswordStrong(String password) {
+    // Requirements: 8+ chars + mix of letters and numbers
+    bool hasLetters = password.contains(RegExp(r'[a-zA-Z]'));
+    bool hasNumbers = password.contains(RegExp(r'[0-9]'));
+    return hasLetters && hasNumbers;
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -159,7 +167,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       validator: (v) {
                         if (v == null || v.isEmpty)
                           return 'Password tidak boleh kosong';
-                        if (v.length < 6) return 'Password minimal 6 karakter';
+                        if (v.length < 8) return 'Password minimal 8 karakter'; // ✅ Updated to 8
+                        if (!_isPasswordStrong(v)) {
+                          return 'Password harus kombinasi huruf dan angka';
+                        }
                         return null;
                       },
                     ),

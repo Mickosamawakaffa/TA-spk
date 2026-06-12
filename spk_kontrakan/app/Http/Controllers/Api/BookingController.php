@@ -7,11 +7,16 @@ use App\Models\Booking;
 use App\Models\Kontrakan;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class BookingController extends Controller
 {
+    private const PAYMENT_PROOF_DIR = 'payment_proofs';
+    private const PAYMENT_PROOF_PRIVATE_DISK = 'private';
+    private const PAYMENT_PROOF_PUBLIC_DISK = 'public';
+
     /**
      * List bookings user (history)
      */
@@ -110,7 +115,8 @@ class BookingController extends Controller
 
         // Handle payment proof upload
         if ($request->hasFile('payment_proof')) {
-            $path = $request->file('payment_proof')->store('payment_proofs', 'public');
+            // ✅ Store sensitive payment proof in PRIVATE storage
+            $path = $request->file('payment_proof')->store(self::PAYMENT_PROOF_DIR, self::PAYMENT_PROOF_PRIVATE_DISK);
             $bookingData['payment_proof'] = $path;
             $bookingData['payment_status'] = 'paid';
             $bookingData['payment_method'] = 'transfer';
@@ -283,11 +289,14 @@ class BookingController extends Controller
 
         // Hapus bukti lama jika ada
         if ($booking->payment_proof) {
-            Storage::disk('public')->delete($booking->payment_proof);
+            // ✅ Delete from both disks to support migration from old public storage
+            Storage::disk(self::PAYMENT_PROOF_PUBLIC_DISK)->delete($booking->payment_proof);
+            Storage::disk(self::PAYMENT_PROOF_PRIVATE_DISK)->delete($booking->payment_proof);
         }
 
         // Simpan gambar baru
-        $path = $request->file('payment_proof')->store('payment_proofs', 'public');
+        // ✅ Store sensitive payment proof in PRIVATE storage
+        $path = $request->file('payment_proof')->store(self::PAYMENT_PROOF_DIR, self::PAYMENT_PROOF_PRIVATE_DISK);
 
         // Update booking
         $booking->update([
@@ -302,5 +311,73 @@ class BookingController extends Controller
             'message' => 'Bukti pembayaran berhasil diunggah. Pembayaran Anda telah dikonfirmasi.',
             'data'    => $booking->fresh()->load('kontrakan'),
         ], 200);
+    }
+
+    /**
+     * Securely stream payment proof file (AUTH required).
+     * - Only booking owner can access.
+     * - Migrates legacy public-stored files to private storage on first access.
+     */
+    public function getPaymentProof(Request $request, $id)
+    {
+        $booking = Booking::query()
+            ->where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->first();
+
+        if (!$booking) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking tidak ditemukan',
+                'error_code' => 'NOT_FOUND',
+            ], 404);
+        }
+
+        if (!$booking->payment_proof) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bukti pembayaran tidak tersedia',
+                'error_code' => 'NO_PAYMENT_PROOF',
+            ], 404);
+        }
+
+        $path = $booking->payment_proof;
+
+        // If file is still on public disk (legacy), migrate to private.
+        if (!Storage::disk(self::PAYMENT_PROOF_PRIVATE_DISK)->exists($path) && Storage::disk(self::PAYMENT_PROOF_PUBLIC_DISK)->exists($path)) {
+            try {
+                $readStream = Storage::disk(self::PAYMENT_PROOF_PUBLIC_DISK)->readStream($path);
+                if ($readStream !== false) {
+                    Storage::disk(self::PAYMENT_PROOF_PRIVATE_DISK)->writeStream($path, $readStream);
+                    if (is_resource($readStream)) {
+                        fclose($readStream);
+                    }
+                    Storage::disk(self::PAYMENT_PROOF_PUBLIC_DISK)->delete($path);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to migrate payment proof to private storage', [
+                    'booking_id' => $booking->id,
+                    'path' => $path,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if (!Storage::disk(self::PAYMENT_PROOF_PRIVATE_DISK)->exists($path)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File bukti pembayaran tidak ditemukan',
+                'error_code' => 'FILE_NOT_FOUND',
+            ], 404);
+        }
+
+        $absolutePath = Storage::disk(self::PAYMENT_PROOF_PRIVATE_DISK)->path($path);
+
+        // Stream file. Browser/app will infer mime.
+        return response()->file($absolutePath, [
+            'Content-Disposition' => 'inline; filename="payment-proof-' . $booking->id . '"',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+        ]);
     }
 }

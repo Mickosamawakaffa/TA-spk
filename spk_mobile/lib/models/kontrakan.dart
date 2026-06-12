@@ -11,7 +11,7 @@ class Kontrakan {
   final String? deskripsi;
   final String status;
   final String? fotoUtama;
-  final String? foto; // Field foto dari API
+  final String? foto;
   final String? noWhatsapp;
   final List<Galeri> galeri;
   final double? avgRating;
@@ -40,26 +40,22 @@ class Kontrakan {
   });
 
   factory Kontrakan.fromJson(Map<String, dynamic> json) {
-    // Try to get jarak from different possible field names
     double jarak = 0;
+
     if (json['jarak_kampus'] != null) {
       jarak = double.tryParse(json['jarak_kampus'].toString()) ?? 0;
     } else if (json['jarak'] != null) {
-      // Backend uses 'jarak' column, convert meters to km
       jarak = (double.tryParse(json['jarak'].toString()) ?? 0) / 1000;
     }
 
-    // Get foto from API and build gallery list
     final List<Galeri> galleryList = [];
 
-    // Parse galeri array if exists
     if (json['galeri'] != null && (json['galeri'] as List).isNotEmpty) {
       galleryList.addAll(
         (json['galeri'] as List).map((g) => Galeri.fromJson(g)).toList(),
       );
     }
 
-    // If gallery is empty but foto field exists, create a galeri item from it
     if (galleryList.isEmpty &&
         json['foto'] != null &&
         json['foto'].toString().isNotEmpty) {
@@ -84,7 +80,7 @@ class Kontrakan {
       deskripsi: json['deskripsi'],
       status: json['status'] ?? 'tersedia',
       fotoUtama: json['foto_utama'],
-      foto: json['foto'], // Store raw foto field
+      foto: json['foto'],
       noWhatsapp: json['no_whatsapp'],
       galeri: galleryList,
       avgRating: json['avg_rating'] != null
@@ -100,7 +96,6 @@ class Kontrakan {
     );
   }
 
-  // Check if kontrakan is available
   bool get isAvailable => status == 'available' || status == 'tersedia';
 
   bool get hasPhoto {
@@ -113,44 +108,49 @@ class Kontrakan {
 
     if (isValidUrl(foto)) return true;
     if (galeri.any((g) => isValidUrl(g.foto))) return true;
+
     return false;
   }
 
-  // Get primary photo URL
-  // Prioritize 'foto' field (Admin-set primary photo) over galeri entries,
-  // because galeri items may reference files that have been deleted/replaced.
   String get primaryPhoto {
-    // 1. Prefer the explicit 'foto' field (most up-to-date primary photo)
     if (foto != null && foto!.isNotEmpty) {
       if (foto!.startsWith('http')) {
         return foto!;
       }
-      return '${AppConfig.serverUrl}/uploads/Kontrakan/$foto';
+
+      if (foto!.startsWith('uploads/')) {
+        return '${AppConfig.serverUrl}/$foto';
+      }
+
+      return '${AppConfig.serverUrl}/uploads/kontrakan/$foto';
     }
-    // 2. Fall back to galeri items if foto is not set
+
     if (galeri.isNotEmpty) {
       final primary = galeri.firstWhere(
         (g) => g.isPrimary,
         orElse: () => galeri.first,
       );
+
       if (primary.foto.isNotEmpty && primary.foto.startsWith('http')) {
         return primary.foto;
       }
+
       if (primary.foto.isNotEmpty) {
-        return '${AppConfig.serverUrl}/uploads/Kontrakan/${primary.foto}';
+        if (primary.foto.startsWith('uploads/')) {
+          return '${AppConfig.serverUrl}/${primary.foto}';
+        }
+
+        return '${AppConfig.serverUrl}/uploads/kontrakan/${primary.foto}';
       }
     }
-    // Return empty string when no photo available to avoid unnecessary
-    // network requests to placeholder services (prevents TLS/handshake errors)
+
     return '';
   }
 
-  // Format harga dengan Rupiah
   String get formattedHarga {
     return 'Rp ${harga.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}';
   }
 
-  // Get fasilitas as list
   List<String> get fasilitasList {
     return fasilitas.split(',').map((f) => f.trim()).toList();
   }
@@ -178,13 +178,15 @@ class Galeri {
     );
   }
 
-  // Get full photo URL
   String get photoUrl {
-    // Check if it's already a full URL
     if (foto.startsWith('http')) {
       return foto;
     }
-    // Build full URL from uploads
-    return '${AppConfig.serverUrl}/uploads/Kontrakan/$foto';
+
+    if (foto.startsWith('uploads/')) {
+      return '${AppConfig.serverUrl}/$foto';
+    }
+
+    return '${AppConfig.serverUrl}/uploads/kontrakan/$foto';
   }
 }

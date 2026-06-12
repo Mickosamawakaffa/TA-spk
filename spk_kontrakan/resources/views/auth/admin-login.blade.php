@@ -197,7 +197,7 @@
 
         <div class="auth-footer">
             <p>Belum punya akun bisnis?</p>
-            <a class="btn-register-link" href="/admin/register" onclick="window.location.href='/admin/register'; return false;">Daftar di sini</a>
+            <a class="btn-register-link" href="/admin/register">Daftar di sini</a>
         </div>
     </div>
 </div>

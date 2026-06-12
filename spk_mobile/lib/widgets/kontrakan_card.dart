@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/kontrakan.dart';
 import '../screens/kontrakan_detail_screen.dart';
-import 'app_placeholder.dart';
 
 class KontrakanCard extends StatelessWidget {
   final Kontrakan kontrakan;

@@ -1,7 +1,7 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../config/app_config.dart';
 import '../services/booking_service.dart';
 import '../models/booking.dart';
 
@@ -726,8 +726,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                   const SizedBox(height: 12),
                   GestureDetector(
                     onTap: () {
-                      final url =
-                          '${AppConfig.storageUrl}/${booking.paymentProof}';
+                      final Future<Uint8List?> future =
+                          _bookingService.getPaymentProofBytes(booking.id);
                       showDialog(
                         context: context,
                         builder: (ctx) => Dialog(
@@ -792,7 +792,38 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                                   bottomLeft: Radius.circular(16),
                                   bottomRight: Radius.circular(16),
                                 ),
-                                child: Image.network(url, fit: BoxFit.contain),
+                                child: FutureBuilder<Uint8List?>(
+                                  future: future,
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return const Padding(
+                                        padding: EdgeInsets.all(24),
+                                        child: Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      );
+                                    }
+
+                                    final bytes = snapshot.data;
+                                    if (bytes == null || bytes.isEmpty) {
+                                      return const Padding(
+                                        padding: EdgeInsets.all(24),
+                                        child: Center(
+                                          child: Text(
+                                            'Gagal memuat bukti pembayaran',
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      );
+                                    }
+
+                                    return Image.memory(
+                                      bytes,
+                                      fit: BoxFit.contain,
+                                    );
+                                  },
+                                ),
                               ),
                             ],
                           ),

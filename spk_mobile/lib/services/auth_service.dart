@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
+import '../services/server_discovery_service.dart';
 import '../models/user.dart';
 
 class AuthService {
@@ -19,6 +21,14 @@ class AuthService {
   // HttpClient - lazy initialization
   HttpClient? _httpClient;
 
+  // ✅ Secure storage for sensitive data (token & user)
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(
+      accessibility: KeychainAccessibility.first_unlock_this_device,
+    ),
+  );
+
   AuthService._internal() {
     _token = null;
     _currentUser = null;
@@ -28,11 +38,46 @@ class AuthService {
   HttpClient _getHttpClient() {
     if (_httpClient == null) {
       _httpClient = HttpClient();
-      _httpClient!.badCertificateCallback = (cert, host, port) =>
-          true; // Accept all certs (development only)
+
+      // ✅ Security: NEVER bypass certificate validation in release builds.
+      // In debug builds, allow self-signed certs only for local dev hosts.
+      if (kDebugMode) {
+        _httpClient!.badCertificateCallback = (cert, host, port) {
+          return host == 'localhost' ||
+              host == '127.0.0.1' ||
+              host.startsWith('192.168.') ||
+              host.startsWith('10.') ||
+              host.startsWith('172.16.') ||
+              host.startsWith('172.17.') ||
+              host.startsWith('172.18.') ||
+              host.startsWith('172.19.') ||
+              host.startsWith('172.2') ||
+              host.startsWith('172.30.') ||
+              host.startsWith('172.31.');
+        };
+      }
+
       _httpClient!.connectionTimeout = const Duration(seconds: 30);
     }
     return _httpClient!;
+  }
+
+  String _redactSensitive(String input) {
+    // Redact common sensitive fields from JSON-ish strings.
+    var out = input;
+    out = out.replaceAll(
+      RegExp(r'("token"\s*:\s*")([^"]+)(")', caseSensitive: false),
+      r'$1***$3',
+    );
+    out = out.replaceAll(
+      RegExp(r'("password"\s*:\s*")([^"]+)(")', caseSensitive: false),
+      r'$1***$3',
+    );
+    out = out.replaceAll(
+      RegExp(r'("authorization"\s*:\s*")([^"]+)(")', caseSensitive: false),
+      r'$1***$3',
+    );
+    return out;
   }
 
   String? get token => _token;
@@ -41,42 +86,85 @@ class AuthService {
 
   // Load token from local storage
   Future<void> loadToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    _token = prefs.getString(AppConfig.tokenKey);
+    try {
+      _token = await _secureStorage.read(key: AppConfig.tokenKey);
+      final userJson = await _secureStorage.read(key: AppConfig.userKey);
+      if (userJson != null) {
+        _currentUser = User.fromJson(jsonDecode(userJson));
+      }
 
-    final userJson = prefs.getString(AppConfig.userKey);
-    if (userJson != null) {
-      _currentUser = User.fromJson(jsonDecode(userJson));
+      // ✅ Migration: if secure storage empty, try legacy SharedPreferences once.
+      if (_token == null) {
+        final prefs = await SharedPreferences.getInstance();
+        final legacyToken = prefs.getString(AppConfig.tokenKey);
+        final legacyUserJson = prefs.getString(AppConfig.userKey);
+
+        if (legacyToken != null) {
+          await _secureStorage.write(
+            key: AppConfig.tokenKey,
+            value: legacyToken,
+          );
+          await prefs.remove(AppConfig.tokenKey);
+          _token = legacyToken;
+        }
+
+        if (legacyUserJson != null) {
+          await _secureStorage.write(
+            key: AppConfig.userKey,
+            value: legacyUserJson,
+          );
+          await prefs.remove(AppConfig.userKey);
+          try {
+            _currentUser = User.fromJson(jsonDecode(legacyUserJson));
+          } catch (_) {
+            // ignore parse errors
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to load auth session: $e');
+      _token = null;
+      _currentUser = null;
     }
   }
 
   // Save token to local storage
   Future<void> _saveToken(String token, User user) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(AppConfig.tokenKey, token);
-    await prefs.setString(AppConfig.userKey, jsonEncode(user.toJson()));
-    _token = token;
-    _currentUser = user;
+    try {
+      await _secureStorage.write(key: AppConfig.tokenKey, value: token);
+      await _secureStorage.write(
+        key: AppConfig.userKey,
+        value: jsonEncode(user.toJson()),
+      );
+      _token = token;
+      _currentUser = user;
+    } catch (e) {
+      debugPrint('Failed to save auth session: $e');
+      _token = token;
+      _currentUser = user;
+    }
   }
 
   // Clear token (logout)
   Future<void> clearToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(AppConfig.tokenKey);
-    await prefs.remove(AppConfig.userKey);
-    await prefs.remove(AppConfig.deviceTokenKey);
-    _token = null;
-    _currentUser = null;
+    try {
+      await _secureStorage.delete(key: AppConfig.tokenKey);
+      await _secureStorage.delete(key: AppConfig.userKey);
+      await _secureStorage.delete(key: AppConfig.deviceTokenKey);
+    } catch (e) {
+      debugPrint('Failed to clear auth session: $e');
+    } finally {
+      _token = null;
+      _currentUser = null;
+    }
   }
 
   Future<void> saveDeviceToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(AppConfig.deviceTokenKey, token);
+    await _secureStorage.write(key: AppConfig.deviceTokenKey, value: token);
   }
 
   Future<String?> loadDeviceToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(AppConfig.deviceTokenKey);
+    return _secureStorage.read(key: AppConfig.deviceTokenKey);
   }
 
   /// Tangani response 401 secara terpusat.
@@ -96,8 +184,11 @@ class AuthService {
     required String body,
   }) async {
     debugPrint('[HTTP] POST $uri');
-    debugPrint('[HTTP] Headers: $headers');
-    debugPrint('[HTTP] Body: $body');
+    if (kDebugMode) {
+      // Avoid printing secrets in logs.
+      debugPrint('[HTTP] Headers: $headers');
+      debugPrint('[HTTP] Body: (redacted)');
+    }
 
     try {
       final client = _getHttpClient();
@@ -113,7 +204,13 @@ class AuthService {
       final responseBody = await response.transform(utf8.decoder).join();
 
       debugPrint('[HTTP] Status: ${response.statusCode}');
-      debugPrint('[HTTP] Response: $responseBody');
+      if (kDebugMode) {
+        final preview = responseBody.substring(
+          0,
+          math.min(responseBody.length, 500),
+        );
+        debugPrint('[HTTP] Response: ${_redactSensitive(preview)}');
+      }
 
       return http.Response(responseBody, response.statusCode);
     } on SocketException catch (e) {
@@ -135,6 +232,7 @@ class AuthService {
     required String password,
     required String passwordConfirmation,
     String? phone,
+    bool allowRetry = true,
   }) async {
     try {
       final url = '${AppConfig.baseUrl}/register';
@@ -156,9 +254,13 @@ class AuthService {
       );
 
       debugPrint('Register response status: ${response.statusCode}');
-      debugPrint(
-        'Register response body: ${response.body.substring(0, math.min(response.body.length, 300))}',
-      );
+      if (kDebugMode) {
+        final preview = response.body.substring(
+          0,
+          math.min(response.body.length, 300),
+        );
+        debugPrint('Register response preview: ${_redactSensitive(preview)}');
+      }
 
       Map<String, dynamic>? data;
       String? rawBody;
@@ -214,12 +316,41 @@ class AuthService {
       };
     } on SocketException catch (e) {
       debugPrint('SocketException in register: $e');
+
+      // Coba temukan server lagi lalu retry sekali.
+      if (allowRetry && await _rediscoverServer()) {
+        try {
+          return await register(
+            name: name,
+            email: email,
+            password: password,
+            passwordConfirmation: passwordConfirmation,
+            phone: phone,
+            allowRetry: false,
+          );
+        } catch (_) {}
+      }
+
       return {
         'success': false,
         'message': 'Gagal terhubung ke server. Periksa koneksi internet.',
       };
     } on TimeoutException catch (e) {
       debugPrint('TimeoutException in register: $e');
+
+      if (allowRetry && await _rediscoverServer()) {
+        try {
+          return await register(
+            name: name,
+            email: email,
+            password: password,
+            passwordConfirmation: passwordConfirmation,
+            phone: phone,
+            allowRetry: false,
+          );
+        } catch (_) {}
+      }
+
       return {
         'success': false,
         'message': 'Registrasi timeout. Server tidak merespons.',
@@ -236,6 +367,7 @@ class AuthService {
   Future<Map<String, dynamic>> login({
     required String email,
     required String password,
+    bool allowRetry = true,
   }) async {
     try {
       final url = '${AppConfig.baseUrl}/login';
@@ -251,9 +383,13 @@ class AuthService {
       );
 
       debugPrint('Login response status: ${response.statusCode}');
-      debugPrint(
-        'Login response body: ${response.body.substring(0, math.min(response.body.length, 300))}',
-      );
+      if (kDebugMode) {
+        final preview = response.body.substring(
+          0,
+          math.min(response.body.length, 300),
+        );
+        debugPrint('Login response preview: ${_redactSensitive(preview)}');
+      }
 
       Map<String, dynamic>? data;
       try {
@@ -300,11 +436,19 @@ class AuthService {
         };
       }
     } on SocketException {
+      if (allowRetry && await _rediscoverServer()) {
+        return login(email: email, password: password, allowRetry: false);
+      }
+
       return {
         'success': false,
         'message': 'Gagal terhubung ke server. Periksa koneksi internet.',
       };
     } on TimeoutException {
+      if (allowRetry && await _rediscoverServer()) {
+        return login(email: email, password: password, allowRetry: false);
+      }
+
       return {
         'success': false,
         'message': 'Login timeout. Server tidak merespons.',
@@ -312,6 +456,17 @@ class AuthService {
     } catch (e) {
       debugPrint('Login exception: $e');
       return {'success': false, 'message': 'Terjadi kesalahan: $e'};
+    }
+  }
+
+  /// Coba temukan kembali server lokal/LAN jika URL tersimpan sudah tidak valid.
+  Future<bool> _rediscoverServer() async {
+    try {
+      await ServerDiscoveryService.resetCache();
+      return await ServerDiscoveryService.discover();
+    } catch (e) {
+      debugPrint('Server rediscovery failed: $e');
+      return false;
     }
   }
 

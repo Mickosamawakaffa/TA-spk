@@ -27,6 +27,7 @@ class Kernel extends ConsoleKernel
             \App\Console\Commands\SyncAdminsFromUsers::class,
             \App\Console\Commands\DedupeAdmins::class,
             \App\Console\Commands\AdminSetPassword::class,
+            \App\Console\Commands\MigratePaymentProofsToPrivate::class,
         ]);
 
         require base_path('routes/console.php');

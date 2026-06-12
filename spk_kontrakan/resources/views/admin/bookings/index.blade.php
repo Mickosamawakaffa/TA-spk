@@ -190,7 +190,7 @@
                                     {{ $booking->payment_status_label }}
                                 </span>
                                 @if($booking->payment_proof)
-                                <a href="{{ asset('storage/' . $booking->payment_proof) }}" target="_blank" class="btn btn-sm btn-outline-success ms-1" title="Lihat Bukti Transfer">
+                                <a href="{{ route('admin.bookings.payment-proof', $booking->id) }}" target="_blank" class="btn btn-sm btn-outline-success ms-1" title="Lihat Bukti Transfer">
                                     <i class="bi bi-image"></i>
                                 </a>
                                 @endif

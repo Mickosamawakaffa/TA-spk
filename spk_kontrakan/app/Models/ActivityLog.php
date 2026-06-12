@@ -62,8 +62,14 @@ class ActivityLog extends Model
 
     public static function log($action, $description, $modelType = null, $modelId = null, $oldValues = null, $newValues = null)
     {
+        $userId = auth()->id();
+
+        if ($userId && ! User::query()->whereKey($userId)->exists()) {
+            $userId = null;
+        }
+
         return self::create([
-            'user_id' => auth()->id(),
+            'user_id' => $userId,
             'action' => $action,
             'description' => $description,
             'model_type' => $modelType,

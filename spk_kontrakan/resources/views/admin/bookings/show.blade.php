@@ -216,14 +216,14 @@
                     @if($booking->payment_proof)
                     <div class="mt-3">
                         <p class="text-muted small mb-2"><i class="bi bi-image me-1"></i>Bukti Pembayaran:</p>
-                        <a href="{{ asset('storage/' . $booking->payment_proof) }}" target="_blank">
-                            <img src="{{ asset('storage/' . $booking->payment_proof) }}"
+                            <a href="{{ route('admin.bookings.payment-proof', $booking->id) }}" target="_blank">
+                                <img src="{{ route('admin.bookings.payment-proof', $booking->id) }}"
                                  alt="Bukti Pembayaran"
                                  class="img-fluid rounded border"
                                  style="max-height: 250px; object-fit: contain; width: 100%;">
                         </a>
                         <div class="text-center mt-1">
-                            <a href="{{ asset('storage/' . $booking->payment_proof) }}" target="_blank"
+                               <a href="{{ route('admin.bookings.payment-proof', $booking->id) }}" target="_blank"
                                class="btn btn-sm btn-outline-success mt-1">
                                 <i class="bi bi-arrows-fullscreen me-1"></i>Lihat Full
                             </a>

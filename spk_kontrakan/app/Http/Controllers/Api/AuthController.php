@@ -53,7 +53,8 @@ class AuthController extends Controller
             ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Database error: ' . $e->getMessage(),
+                // ✅ Do not leak DB details to clients
+                'message' => 'Terjadi kesalahan saat registrasi. Silakan coba lagi.',
                 'error_code' => 'DB_ERROR',
             ], 500);
         } catch (\Exception $e) {
@@ -65,7 +66,8 @@ class AuthController extends Controller
             ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat registrasi: ' . $e->getMessage(),
+                // ✅ Do not leak internal exception details to clients
+                'message' => 'Terjadi kesalahan saat registrasi. Silakan coba lagi.',
                 'error_code' => 'REGISTRATION_FAILED',
             ], 500);
         }

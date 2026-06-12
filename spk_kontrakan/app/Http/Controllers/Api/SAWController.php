@@ -260,7 +260,9 @@ class SAWController extends Controller
     public function calculateLaundry(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'jenis_layanan' => 'nullable|string|in:harian,jam,reguler,express,kiloan,satuan,kilat',
+            // NOTE: Mobile app can send dynamic values sourced from DB.
+            // We accept any short string and normalize it in mapJenisLayananQueryValues().
+            'jenis_layanan' => 'nullable|string|max:50',
             'harga_min' => 'nullable|numeric',
             'harga_max' => 'nullable|numeric',
             'jarak_max' => 'nullable|numeric',

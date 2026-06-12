@@ -1,45 +1,74 @@
+import 'package:flutter/foundation.dart';
+
 class AppConfig {
   // ============================================================================
-  // 🔧 BASE URL CONFIGURATION - FIXED IP (NOT AUTO-DETECT)
-  // ============================================================================
-  // PENTING: Update IP ini sesuai dengan server backend Anda!
-  // Format: http://[IP_ADDRESS]:[PORT]
-  //
-  // Contoh:
-  // - Local: http://localhost:8000
-  // - Network: http://192.168.1.100:8000
-  // - Remote: http://your-server.com
-  //
-  // ⚠️ JIKA CONNECTION TIMEOUT:
-  // - Pastikan backend server running
-  // - Pastikan device/emulator connect ke WiFi yang sama
-  // - Pastikan port sudah benar
+  // BASE URL CONFIGURATION
   // ============================================================================
 
-  /// Backend server URL - DIUBAH MENJADI FIXED (tidak auto-detect)
-  /// Alasan: ServerDiscoveryService scanning port yang salah
-  ///
-  /// UPDATE INI SESUAI DENGAN BACKEND ANDA!
-  /// Jika backend di: php artisan serve
-  /// Maka gunakan: http://127.0.0.1:8000 (localhost) atau http://[IP]:8000 (network)
-  static const String _defaultServer = 'http://192.168.18.16:8000';
+  /// Host server untuk production (override via --dart-define=PROD_SERVER_URL=...).
+  static const String _productionServer = String.fromEnvironment(
+    'PROD_SERVER_URL',
+    // defaultValue: 'http://10.133.61.99:8000',
+    defaultValue: 'https://spk-kontrakan.taskbuddy.web.id',
+  );
 
-  // Runtime values — bisa di-override via setServerUrl() jika perlu
-  static String _serverUrl = _defaultServer;
+  /// Host server untuk development (override via --dart-define=DEV_SERVER_URL=...).
+  static const String _developmentServer = String.fromEnvironment(
+    'DEV_SERVER_URL',
+    // defaultValue: 'http://10.133.61.99:8000',
+    defaultValue: 'https://spk-kontrakan.taskbuddy.web.id',
+  );
+
+  static String _serverUrl = _normalizeServerUrl(
+    kReleaseMode ? _productionServer : _developmentServer,
+  );
 
   static String get serverUrl => _serverUrl;
-  static String get baseUrl => '$_serverUrl/api';
-  static String get storageUrl => '$_serverUrl/storage';
 
-  /// Override server URL jika perlu (untuk testing atau switching server)
+  /// API Laravel
+  static String get baseUrl => '$_serverUrl/api';
+
+  /// URL gambar/file public
+  static String get storageUrl => _serverUrl;
+
+  /// Override server URL jika perlu
   static void setServerUrl(String url) {
-    _serverUrl = url;
+    _serverUrl = _normalizeServerUrl(url);
   }
 
-  // Timeouts - Increased untuk network yang lambat dan operations yang heavy (password hashing, db insert)
-  static const Duration connectionTimeout = Duration(seconds: 30);
+  /// Normalisasi URL agar selalu konsisten untuk request API.
+  static String _normalizeServerUrl(String url) {
+    final raw = url.trim();
+    if (raw.isEmpty) return _developmentServer;
 
-  // ✅ UPDATED: Backend base URL sesuai IP hotspot HP (10.119.236.99:8000)
+    var normalized = raw;
+
+    // Default ke HTTP jika skema tidak dicantumkan.
+    if (!normalized.startsWith('http://') &&
+        !normalized.startsWith('https://')) {
+      normalized = 'http://$normalized';
+    }
+
+    // Hilangkan trailing slash agar baseUrl tidak menjadi //api.
+    while (normalized.endsWith('/')) {
+      normalized = normalized.substring(0, normalized.length - 1);
+    }
+
+    final uri = Uri.tryParse(normalized);
+    if (uri == null) return _developmentServer;
+
+    // Untuk host lokal/IP tanpa port, default ke 8000.
+    if (!uri.hasPort &&
+        (uri.host == 'localhost' ||
+            RegExp(r'^\d+\.\d+\.\d+\.\d+$').hasMatch(uri.host))) {
+      normalized = '${uri.scheme}://${uri.host}:8000';
+    }
+
+    return normalized;
+  }
+
+  // Timeouts
+  static const Duration connectionTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
 
   // Local Storage Keys

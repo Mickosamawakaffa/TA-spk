@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/booking.dart';
@@ -221,6 +222,39 @@ class BookingService {
       }
     } catch (e) {
       return {'success': false, 'message': 'Error: $e'};
+    }
+  }
+
+  // Fetch payment proof image bytes (secure, authenticated)
+  Future<Uint8List?> getPaymentProofBytes(int bookingId) async {
+    try {
+      final headers = <String, String>{
+        'Accept': 'image/*',
+      };
+
+      if (_authService.token != null) {
+        headers['Authorization'] = 'Bearer ${_authService.token}';
+      }
+
+      final response = await http
+          .get(
+            Uri.parse('${AppConfig.baseUrl}/bookings/$bookingId/payment-proof'),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 401) {
+        await _authService.handleUnauthorized(response.statusCode);
+        return null;
+      }
+
+      if (response.statusCode == 200) {
+        return response.bodyBytes;
+      }
+
+      return null;
+    } catch (e) {
+      return null;
     }
   }
 }

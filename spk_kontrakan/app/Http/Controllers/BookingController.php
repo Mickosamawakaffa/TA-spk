@@ -8,10 +8,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Exception;
 
 class BookingController extends Controller
 {
+    private const PAYMENT_PROOF_PRIVATE_DISK = 'private';
+    private const PAYMENT_PROOF_PUBLIC_DISK = 'public';
+
     /**
      * Tampilkan daftar semua booking (admin)
      */
@@ -243,6 +247,59 @@ class BookingController extends Controller
 
         $booking->load(['kontrakan', 'user']);
         return view('admin.bookings.show', compact('booking'));
+    }
+
+    /**
+     * Stream payment proof securely for admin (NOT public storage link).
+     * Also migrates legacy public-stored files to private storage on first access.
+     */
+    public function paymentProof(Booking $booking)
+    {
+        // ========== AUTHORIZATION: Cek apakah admin punya akses ke booking ini ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin && $admin->role !== 'super_admin') {
+            if ($booking->kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses ke booking ini.');
+            }
+        }
+
+        if (!$booking->payment_proof) {
+            abort(404, 'Bukti pembayaran tidak tersedia.');
+        }
+
+        $path = $booking->payment_proof;
+
+        // Migrate legacy public file to private storage
+        if (!Storage::disk(self::PAYMENT_PROOF_PRIVATE_DISK)->exists($path) && Storage::disk(self::PAYMENT_PROOF_PUBLIC_DISK)->exists($path)) {
+            try {
+                $readStream = Storage::disk(self::PAYMENT_PROOF_PUBLIC_DISK)->readStream($path);
+                if ($readStream !== false) {
+                    Storage::disk(self::PAYMENT_PROOF_PRIVATE_DISK)->writeStream($path, $readStream);
+                    if (is_resource($readStream)) {
+                        fclose($readStream);
+                    }
+                    Storage::disk(self::PAYMENT_PROOF_PUBLIC_DISK)->delete($path);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to migrate admin payment proof to private storage', [
+                    'booking_id' => $booking->id,
+                    'path' => $path,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if (!Storage::disk(self::PAYMENT_PROOF_PRIVATE_DISK)->exists($path)) {
+            abort(404, 'File bukti pembayaran tidak ditemukan.');
+        }
+
+        $absolutePath = Storage::disk(self::PAYMENT_PROOF_PRIVATE_DISK)->path($path);
+
+        return response()->file($absolutePath, [
+            'Content-Disposition' => 'inline; filename="payment-proof-' . $booking->id . '"',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+        ]);
     }
 
     /**

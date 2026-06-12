@@ -35,8 +35,15 @@ Route::get('/pemilik', function () {
 // -------------------------------------------------
 Route::get('/admin/login', [AdminAuthController::class, 'loginPage'])->name('admin.login');
 Route::post('/admin/login', [AdminAuthController::class, 'login'])->middleware('throttle:10,1')->name('admin.login.post');
-Route::get('/admin/register', [AdminAuthController::class, 'registerPage'])->name('admin.register');
-Route::post('/admin/register', [AdminAuthController::class, 'register'])->middleware('throttle:10,1')->name('admin.register.post');
+
+// Admin register:
+// - Default: disabled in production (security)
+// - Enabled for local dev or when ENABLE_ADMIN_SELF_REGISTER=true
+if (app()->environment('local') || env('ENABLE_ADMIN_SELF_REGISTER', false)) {
+    Route::get('/admin/register', [AdminAuthController::class, 'registerPage'])->name('admin.register');
+    Route::post('/admin/register', [AdminAuthController::class, 'register'])->middleware('throttle:3,1')->name('admin.register.post');
+}
+
 
 // Local-only helper: reset demo admin passwords
 Route::get('/admin/reset-demo-passwords', function () {
@@ -124,6 +131,8 @@ Route::middleware('auth:admin')->group(function () {
         Route::post('/', [BookingController::class, 'store'])->name('store');
         Route::post('/bulk-destroy', [BookingController::class, 'bulkDestroy'])->name('bulk-destroy');
         Route::get('/{booking}', [BookingController::class, 'show'])->name('show');
+        // ✅ Secure payment proof view (not public storage link)
+        Route::get('/{booking}/payment-proof', [BookingController::class, 'paymentProof'])->name('payment-proof');
         Route::get('/{booking}/edit', [BookingController::class, 'edit'])->name('edit');
         Route::put('/{booking}', [BookingController::class, 'update'])->name('update');
         Route::delete('/{booking}', [BookingController::class, 'destroy'])->name('destroy');

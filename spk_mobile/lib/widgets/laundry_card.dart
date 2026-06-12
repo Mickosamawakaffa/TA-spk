@@ -3,7 +3,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/laundry.dart';
 import '../screens/laundry_detail_screen.dart';
 import '../services/location_service.dart';
-import 'app_placeholder.dart';
 
 class LaundryCard extends StatelessWidget {
   final Laundry laundry;
