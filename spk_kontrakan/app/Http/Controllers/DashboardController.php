@@ -8,6 +8,7 @@ use App\Models\Kriteria;
 use App\Models\Booking;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
@@ -19,17 +20,22 @@ class DashboardController extends Controller
      */
     public function index()
     {
+        $admin = auth('admin')->user() ?? Auth::user();
+        $adminId = $admin->id;
+        $isSuperAdmin = $admin->role === 'super_admin';
+
         // ========== CACHE STATISTIK (5 menit) ==========
-        $stats = Cache::remember('dashboard_stats', 300, function () {
+        $stats = Cache::remember('dashboard_stats_admin_' . $adminId, 300, function () use ($adminId, $isSuperAdmin) {
             return [
-                'jumlahKontrakan' => Kontrakan::count(),
-                'jumlahLaundry' => Laundry::count(),
-                'jumlahKriteria' => Kriteria::count(),
+                'jumlahKontrakan' => Kontrakan::where('admin_id', $adminId)->count(),
+                'jumlahLaundry' => $isSuperAdmin ? Laundry::count() : 0,
+                'jumlahKriteria' => $isSuperAdmin ? Kriteria::count() : 0,
             ];
         });
         
         // ========== DATA TERBARU (No Cache) ==========
-        $recentKontrakan = Kontrakan::latest()
+        $recentKontrakan = Kontrakan::where('admin_id', $adminId)
+            ->latest()
             ->select('id', 'nama', 'alamat', 'harga', 'jarak', 'jumlah_kamar', 'created_at') // Only needed columns
             ->take(5)
             ->get();
@@ -45,10 +51,10 @@ class DashboardController extends Controller
             ->get();
 
         // ========== DATA CHART (Cache 10 menit) ==========
-        $chartData = Cache::remember('dashboard_charts', 600, function () {
+        $chartData = Cache::remember('dashboard_charts_admin_' . $adminId, 600, function () use ($adminId, $isSuperAdmin) {
             
             // 1. Harga Kontrakan (Top 5)
-            $hargaKontrakan = Kontrakan::select('nama', 'harga')
+            $hargaKontrakan = Kontrakan::where('admin_id', $adminId)->select('nama', 'harga')
                 ->orderBy('harga', 'desc')
                 ->take(5)
                 ->get();
@@ -67,6 +73,7 @@ class DashboardController extends Controller
             
             // 3. Distribusi Jarak (Single Query dengan CASE)
             $jarakKontrakan = DB::table('kontrakans')
+                ->where('admin_id', $adminId)
                 ->selectRaw("
                     SUM(CASE WHEN jarak <= 500 THEN 1 ELSE 0 END) as dekat,
                     SUM(CASE WHEN jarak > 500 AND jarak <= 1000 THEN 1 ELSE 0 END) as sedang,
@@ -84,6 +91,7 @@ class DashboardController extends Controller
             
             // 4. Statistik Aggregate (Single Query)
             $kontrakanStats = DB::table('kontrakans')
+                ->where('admin_id', $adminId)
                 ->selectRaw('
                     AVG(harga) as avg_harga,
                     AVG(jarak) as avg_jarak,
@@ -94,7 +102,7 @@ class DashboardController extends Controller
                 ->first();
             
             // 5. Top Kontrakan by Harga
-            $topKontrakan = Kontrakan::select('nama', 'harga', 'jumlah_kamar', 'jarak')
+            $topKontrakan = Kontrakan::where('admin_id', $adminId)->select('nama', 'harga', 'jumlah_kamar', 'jarak')
                 ->orderBy('harga', 'desc')
                 ->take(5)
                 ->get();
@@ -147,6 +155,7 @@ class DashboardController extends Controller
 
         // ========== INSIGHT REAL-TIME (No Cache) ==========
         $realtimeJarakKontrakan = DB::table('kontrakans')
+            ->where('admin_id', $adminId)
             ->selectRaw("
                 SUM(CASE WHEN jarak <= 500 THEN 1 ELSE 0 END) as dekat,
                 SUM(CASE WHEN jarak > 500 AND jarak <= 1000 THEN 1 ELSE 0 END) as sedang,
@@ -155,6 +164,7 @@ class DashboardController extends Controller
             ->first();
 
         $realtimeKontrakanStats = DB::table('kontrakans')
+            ->where('admin_id', $adminId)
             ->selectRaw('
                 AVG(harga) as avg_harga,
                 AVG(jarak) as avg_jarak,
@@ -167,7 +177,17 @@ class DashboardController extends Controller
         // ========== TAMBAHAN DATA YANG HILANG ==========
         $additionalData = [
             // Data booking
-            'totalBookings' => Booking::count() ?? 0,
+            'totalBookings' => Booking::whereHas('kontrakan', function ($query) use ($adminId) {
+                $query->where('admin_id', $adminId);
+            })->count(),
+
+            'bookingMenunggu' => Booking::whereHas('kontrakan', function ($query) use ($adminId) {
+                $query->where('admin_id', $adminId);
+            })->whereRaw('LOWER(status) = ?', ['menunggu'])->count(),
+
+            'bookingSelesai' => Booking::whereHas('kontrakan', function ($query) use ($adminId) {
+                $query->where('admin_id', $adminId);
+            })->whereRaw('LOWER(status) = ?', ['selesai'])->count(),
             
             // Data admin (dari tabel admins)
             'totalAdmins' => \App\Models\Admin::where('role', 'admin')->count() ?? 1,
@@ -190,6 +210,13 @@ class DashboardController extends Controller
             'avgKamarKontrakan' => $realtimeKontrakanStats->avg_kamar ?? 0,
             'minHargaKontrakan' => $realtimeKontrakanStats->min_harga ?? 0,
             'maxHargaKontrakan' => $realtimeKontrakanStats->max_harga ?? 0,
+            'recentBookings' => Booking::whereHas('kontrakan', function ($query) use ($adminId) {
+                $query->where('admin_id', $adminId);
+            })
+            ->with('kontrakan:id,nama,admin_id')
+            ->latest()
+            ->take(5)
+            ->get(),
             'recentKontrakan' => $recentKontrakan,
             'recentLaundry' => $recentLaundry,
         ]);

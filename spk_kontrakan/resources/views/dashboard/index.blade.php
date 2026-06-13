@@ -395,8 +395,8 @@
     
     <!-- Header Section -->
     <div class="header-dashboard">
-        <h2 class="mb-2">📊 Dashboard Analytics</h2>
-        <p class="mb-0">Selamat datang, <strong>{{ Auth::user()->name }}!</strong> 👋</p>
+        <h2 class="mb-2">Dashboard Admin</h2>
+        <p class="mb-0">Selamat datang, <strong>{{ Auth::user()->name }}!</strong> Kelola data kontrakan dan booking dengan lebih mudah.</p>
         <div class="header-meta">
             <div class="meta-chip"><i class="bi bi-calendar-event"></i>{{ now()->format('d M Y') }}</div>
             <div class="meta-chip"><i class="bi bi-building"></i>{{ $jumlahKontrakan }} kontrakan</div>
@@ -421,7 +421,7 @@
     <!-- Statistics Cards -->
     <div class="row g-3 g-md-4 mb-4 mb-md-5" id="statsContainer">
         <!-- Card Kontrakan - Purple Theme -->
-        <div class="{{ $isSuperAdmin ? 'col-6 col-lg-3' : 'col-12 col-lg-6' }}">
+        <div class="{{ $isSuperAdmin ? 'col-6 col-lg-3' : 'col-6 col-lg-3' }}">
             <div class="card stats-card h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none !important; box-shadow: 0 8px 25px rgba(102, 126, 234, 0.35); position: relative; z-index: 1;">
                 <div class="card-body text-white p-3 p-md-4" style="position: relative; z-index: 2;">
                     <div class="d-flex justify-content-between align-items-start mb-3">
@@ -446,7 +446,7 @@
 
         @if(!$isSuperAdmin)
         <!-- Card Booking - Blue Theme -->
-        <div class="col-12 col-lg-6">
+        <div class="col-6 col-lg-3">
             <div class="card stats-card h-100" style="background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%); border: none !important; box-shadow: 0 8px 25px rgba(37, 99, 235, 0.25); position: relative; z-index: 1;">
                 <div class="card-body text-white p-3 p-md-4" style="position: relative; z-index: 2;">
                     <div class="d-flex justify-content-between align-items-start mb-3">
@@ -454,7 +454,7 @@
                             <p class="mb-2 opacity-75 small fw-semibold"><i class="bi bi-calendar-check me-1"></i>Total Booking</p>
                             <h2 class="mb-2 mb-md-3 fw-bold display-6">{{ $totalBookings }}</h2>
                             <p class="mb-0 opacity-85 small d-none d-md-block">
-                                <i class="bi bi-clock me-1"></i>Update real-time
+                                <i class="bi bi-clock me-1"></i>Data booking terbaru
                             </p>
                         </div>
                         <div class="rounded-circle p-2 p-md-3 d-flex align-items-center justify-content-center d-none d-sm-flex" style="min-width: 50px; min-height: 50px; background: rgba(255,255,255,0.25);">
@@ -469,6 +469,48 @@
         </div>
 
         @endif
+
+        <!-- Card Booking Menunggu -->
+        <div class="col-6 col-lg-3">
+            <div class="card stats-card h-100" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none !important; box-shadow: 0 8px 25px rgba(245, 158, 11, 0.25); position: relative; z-index: 1;">
+                <div class="card-body text-white p-3 p-md-4" style="position: relative; z-index: 2;">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="flex-grow-1">
+                            <p class="mb-2 opacity-75 small fw-semibold"><i class="bi bi-hourglass-split me-1"></i>Booking Menunggu</p>
+                            <h2 class="mb-2 mb-md-3 fw-bold display-6">{{ $bookingMenunggu ?? 0 }}</h2>
+                            <p class="mb-0 opacity-85 small d-none d-md-block">Perlu dikonfirmasi</p>
+                        </div>
+                        <div class="rounded-circle p-2 p-md-3 d-flex align-items-center justify-content-center d-none d-sm-flex" style="min-width: 50px; min-height: 50px; background: rgba(255,255,255,0.25);">
+                            <i class="bi bi-clock-history" style="font-size: 1.5rem;"></i>
+                        </div>
+                    </div>
+                    <a href="{{ route('admin.bookings.index') }}" class="btn btn-light btn-sm w-100 fw-semibold d-none d-md-block" style="color: #b45309;">
+                        <i class="bi bi-arrow-right me-2"></i>Cek Booking
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Booking Selesai -->
+        <div class="col-6 col-lg-3">
+            <div class="card stats-card h-100" style="background: linear-gradient(135deg, #22c55e 0%, #15803d 100%); border: none !important; box-shadow: 0 8px 25px rgba(34, 197, 94, 0.25); position: relative; z-index: 1;">
+                <div class="card-body text-white p-3 p-md-4" style="position: relative; z-index: 2;">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="flex-grow-1">
+                            <p class="mb-2 opacity-75 small fw-semibold"><i class="bi bi-check-circle me-1"></i>Booking Selesai</p>
+                            <h2 class="mb-2 mb-md-3 fw-bold display-6">{{ $bookingSelesai ?? 0 }}</h2>
+                            <p class="mb-0 opacity-85 small d-none d-md-block">Transaksi selesai</p>
+                        </div>
+                        <div class="rounded-circle p-2 p-md-3 d-flex align-items-center justify-content-center d-none d-sm-flex" style="min-width: 50px; min-height: 50px; background: rgba(255,255,255,0.25);">
+                            <i class="bi bi-check2-circle" style="font-size: 1.5rem;"></i>
+                        </div>
+                    </div>
+                    <a href="{{ route('admin.bookings.index') }}" class="btn btn-light btn-sm w-100 fw-semibold d-none d-md-block" style="color: #15803d;">
+                        <i class="bi bi-arrow-right me-2"></i>Lihat Riwayat
+                    </a>
+                </div>
+            </div>
+        </div>
 
         @if($isSuperAdmin)
         <!-- Card Laundry - Purple Theme -->
@@ -787,7 +829,78 @@
     <!-- Additional Stats Section -->
     @if($isSuperAdmin)
     <div class="row g-4 mb-4">
-        <div class="col-12">
+        
+            <!-- Booking Terbaru -->
+            <div class="col-12 mb-4">
+                <div class="card chart-card border-0 shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1 fw-bold text-admin-primary">
+                                <i class="bi bi-calendar-check me-2"></i>Booking Terbaru
+                            </h5>
+                            <small class="text-muted">Menampilkan booking terbaru dari kontrakan milik admin yang login.</small>
+                        </div>
+                        <a href="{{ route('admin.bookings.index') }}" class="btn btn-admin-outline btn-sm">
+                            Lihat Semua
+                        </a>
+                    </div>
+
+                    <div class="card-body">
+                        @if(isset($recentBookings) && $recentBookings->count() > 0)
+                            <div class="table-responsive">
+                                <table class="table align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Nama Penyewa</th>
+                                            <th>Kontrakan</th>
+                                            <th>Status</th>
+                                            <th>Tanggal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($recentBookings as $booking)
+                                            <tr>
+                                                <td class="fw-semibold">
+                                                    {{ $booking->user->name ?? $booking->nama_penyewa ?? 'Mahasiswa' }}
+                                                </td>
+                                                <td>
+                                                    {{ $booking->kontrakan->nama ?? '-' }}
+                                                </td>
+                                                <td>
+                                                    @php
+                                                        $status = strtolower($booking->status ?? 'menunggu');
+                                                        $badgeClass = match($status) {
+                                                            'selesai' => 'success',
+                                                            'dikonfirmasi' => 'primary',
+                                                            'ditempati' => 'info',
+                                                            'ditolak' => 'danger',
+                                                            default => 'warning'
+                                                        };
+                                                    @endphp
+                                                    <span class="badge bg-{{ $badgeClass }}">
+                                                        {{ ucfirst($booking->status ?? 'Menunggu') }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {{ $booking->created_at ? $booking->created_at->format('d M Y') : '-' }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="text-center py-5">
+                                <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                                <h6 class="mt-3 mb-1 fw-bold">Belum ada booking masuk</h6>
+                                <p class="text-muted mb-0">Booking dari mahasiswa akan tampil di bagian ini.</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+<div class="col-12">
             <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #fd7e14 0%, #fd7e14 100%); color: white; border-radius: 12px;">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -1014,6 +1127,7 @@
 
 @if($isSuperAdmin)
 <!-- Modal Laundry -->
+@if($isSuperAdmin)
 <div class="modal fade" id="laundryModal" tabindex="-1" aria-labelledby="laundryModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
@@ -1096,6 +1210,8 @@
 </div>
 
 <!-- Modal Kriteria -->
+@endif
+
 <div class="modal fade" id="kriteriaModal" tabindex="-1" aria-labelledby="kriteriaModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
