@@ -732,10 +732,12 @@
                     <i class="bi bi-building"></i>
                     <span>Data Kontrakan</span>
                 </a>
-                <a href="{{ route('laundry.index') }}" class="menu-item menu-laundry {{ request()->routeIs('laundry.*') ? 'active' : '' }}">
+                @if(auth('admin')->user()->role === 'super_admin')
+<a href="{{ route('laundry.index') }}" class="menu-item menu-laundry {{ request()->routeIs('laundry.*') ? 'active' : '' }}">
                     <i class="bi bi-water"></i>
                     <span>Data Laundry</span>
                 </a>
+@endif
                 <a href="{{ route('admin.bookings.index') }}" class="menu-item {{ request()->routeIs('admin.bookings.*') ? 'active' : '' }}">
                     <i class="bi bi-calendar-check"></i>
                     <span>Data Booking</span>
@@ -743,34 +745,44 @@
             </div>
 
             <!-- Kriteria & SAW -->
+            @if(auth('admin')->user()->role === 'super_admin')
             <div class="menu-section">
                 <div class="menu-section-title">Sistem SPK</div>
                 <a href="{{ route('kriteria.index') }}" class="menu-item {{ request()->routeIs('kriteria.*') ? 'active' : '' }}">
                     <i class="bi bi-list-check"></i>
-                    <span>Kriteria</span>
+                    <span>Master Kriteria SAW</span>
                 </a>
-                <a href="{{ route('saw.index') }}" class="menu-item {{ request()->routeIs('saw.index') || request()->routeIs('saw.hasil') ? 'active' : '' }}">
+                @if(auth('admin')->user()->role === 'super_admin')
+<a href="{{ route('saw.index') }}" class="menu-item {{ request()->routeIs('saw.index') || request()->routeIs('saw.hasil') ? 'active' : '' }}">
                     <i class="bi bi-bar-chart-line"></i>
-                    <span>Hasil Perhitungan</span>
+                    <span>Validasi Perhitungan SAW</span>
                 </a>
+@endif
             </div>
+            @endif
 
             @if(Auth::user()->role === 'super_admin')
             <!-- Super Admin Only -->
             <div class="menu-section">
                 <div class="menu-section-title">Super Admin</div>
-                <a href="{{ route('admin.users.index') }}" class="menu-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                @if(auth('admin')->user()->role === 'super_admin')
+<a href="{{ route('admin.users.index') }}" class="menu-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                     <i class="bi bi-people"></i>
                     <span>Manajemen User</span>
                 </a>
-                <a href="{{ route('admin.activity-logs.index') }}" class="menu-item {{ request()->routeIs('admin.activity-logs.*') ? 'active' : '' }}">
+@endif
+                @if(auth('admin')->user()->role === 'super_admin')
+<a href="{{ route('admin.activity-logs.index') }}" class="menu-item {{ request()->routeIs('admin.activity-logs.*') ? 'active' : '' }}">
                     <i class="bi bi-clock-history"></i>
                     <span>Activity Logs</span>
                 </a>
-                <a href="{{ route('admin.backup.index') }}" class="menu-item {{ request()->routeIs('admin.backup.*') ? 'active' : '' }}">
+@endif
+                @if(auth('admin')->user()->role === 'super_admin')
+<a href="{{ route('admin.backup.index') }}" class="menu-item {{ request()->routeIs('admin.backup.*') ? 'active' : '' }}">
                     <i class="bi bi-database"></i>
                     <span>Backup Database</span>
                 </a>
+@endif
             </div>
             @endif
 

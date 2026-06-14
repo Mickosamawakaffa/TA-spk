@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Kelola Kriteria SAW')
+@section('title', 'Master Kriteria SAW')
 
 @section('content')
 <div class="container-fluid px-2 px-md-4 page-kriteria">
@@ -309,7 +309,7 @@
             <div class="col-12 col-md-8">
                 <h2 class="mb-2 fw-bold">
                     <i class="bi bi-diagram-3 me-2 me-md-3"></i>
-                    <span class="d-none d-sm-inline">📊 Kelola Kriteria SAW</span>
+                    <span class="d-none d-sm-inline">📊 Master Kriteria SAW</span>
                     <span class="d-sm-none">📊 Kriteria</span>
                 </h2>
                 <p class="mb-0 opacity-90">
@@ -320,7 +320,7 @@
             <div class="col-12 col-md-4 text-md-end mt-3 mt-md-0">
                 <a href="{{ route('kriteria.create') }}" class="btn btn-kriteria">
                     <i class="bi bi-plus-circle me-2"></i>
-                    <span class="d-none d-sm-inline">Tambah Kriteria</span>
+                    <span class="d-none d-sm-inline">Tambah Master Kriteria</span>
                     <span class="d-sm-none">Tambah</span>
                 </a>
             </div>
@@ -444,7 +444,7 @@
                     <h5 class="mb-3" style="color: var(--text-secondary); font-weight: 600;">Belum ada kriteria</h5>
                     <p class="text-muted mb-4 px-md-5">Mulai tambahkan kriteria untuk penilaian SAW (Simple Additive Weighting) agar dapat melakukan perhitungan rekomendasi yang akurat.</p>
                     <a href="{{ route('kriteria.create') }}" class="btn btn-primary btn-lg rounded-3 px-4" style="box-shadow: 0 6px 20px rgba(var(--primary-color-rgb), 0.3); border: none; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));">
-                        <i class="bi bi-plus-circle me-2"></i>Tambah Kriteria Pertama
+                        <i class="bi bi-plus-circle me-2"></i>Tambah Master Kriteria Pertama
                     </a>
                 </div>
             @else
@@ -629,7 +629,7 @@
                                             <a href="{{ route('kriteria.edit', $item->id) }}" 
                                                class="btn btn-sm rounded-3 me-2" 
                                                style="background: rgba(var(--warning-color-rgb), 0.15); color: var(--warning-color); border: 1px solid rgba(var(--warning-color-rgb), 0.3); font-weight: 600; transition: all 0.2s ease;"
-                                               data-bs-toggle="tooltip" title="Edit Kriteria"
+                                               data-bs-toggle="tooltip" title="Edit Master Kriteria"
                                                onmouseover="this.style.background='var(--warning-color)'; this.style.color='white';"
                                                onmouseout="this.style.background='rgba(var(--warning-color-rgb), 0.15)'; this.style.color='var(--warning-color)';">
                                                 <i class="bi bi-pencil-square"></i>
@@ -749,7 +749,7 @@
                         <div class="avatar-sm d-flex align-items-center justify-content-center me-3 rounded-3" style="background: rgba(var(--info-color-rgb), 0.15); color: var(--info-color);">
                             <i class="bi bi-info-circle-fill" style="font-size: 1.2rem;"></i>
                         </div>
-                        <h6 class="mb-0 fw-bold" style="color: var(--text-primary);">📋 Informasi Kriteria SAW</h6>
+                        <h6 class="mb-0 fw-bold" style="color: var(--text-primary);">📋 Informasi Master Kriteria SAW</h6>
                     </div>
                     <div class="ps-3 border-start border-3" style="border-color: var(--info-color) !important;">
                         <ul class="mb-0 small" style="color: var(--text-secondary); line-height: 1.6;">

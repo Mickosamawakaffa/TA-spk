@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Tambah Kriteria')
+@section('title', 'Tambah Master Kriteria')
 
 @section('content')
 <div class="container-fluid px-4">
@@ -79,7 +79,7 @@
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('kriteria.index') }}">Kriteria</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('kriteria.index') }}">Master Kriteria SAW</a></li>
             <li class="breadcrumb-item active">Tambah Data</li>
         </ol>
     </nav>
@@ -87,7 +87,7 @@
     <!-- Page Header -->
     <div class="page-header mb-4">
         <h2 class="mb-2">
-            <i class="bi bi-plus-circle me-2"></i>Tambah Kriteria SAW
+            <i class="bi bi-plus-circle me-2"></i>Tambah Master Kriteria SAW
         </h2>
         <p class="mb-0 fs-6">Lengkapi formulir untuk menambahkan kriteria penilaian baru</p>
     </div>
@@ -165,7 +165,7 @@
                                 <!-- Bobot -->
                                 <div class="col-md-6">
                                     <label for="bobot" class="form-label fw-semibold">
-                                        Bobot Kriteria <span class="text-danger">*</span>
+                                        Bobot Default / Simulasi <span class="text-danger">*</span>
                                     </label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light border-end-0">
@@ -187,7 +187,7 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                    <small class="text-muted">Nilai bobot antara 0 - 1 (contoh: 0.25 atau 0.3)</small>
+                                    <small class="text-muted">Bobot ini hanya digunakan sebagai bobot default/simulasi untuk validasi perhitungan di web. Bobot utama rekomendasi tetap dipilih oleh user melalui aplikasi mobile.</small>
                                 </div>
 
                                 <!-- Tipe -->

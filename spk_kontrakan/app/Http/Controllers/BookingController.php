@@ -26,13 +26,11 @@ class BookingController extends Controller
         // ========== FILTER: ADMIN (Hanya booking dari kontrakan milik admin) ==========
         $admin = auth()->guard('admin')->user();
         if ($admin) {
-            if ($admin->role !== 'super_admin') {
-                // Admin biasa hanya bisa lihat booking dari kontrakan milik mereka
-                $query->whereHas('kontrakan', function($q) use ($admin) {
-                    $q->where('admin_id', $admin->id);
-                });
-            }
-            // Super admin bisa lihat semua booking
+            // Semua admin, termasuk super admin, hanya melihat booking
+            // dari kontrakan yang mereka input sendiri.
+            $query->whereHas('kontrakan', function($q) use ($admin) {
+                $q->where('admin_id', $admin->id);
+            });
         }
 
         // Filter by status
@@ -50,7 +48,7 @@ class BookingController extends Controller
         // ========== GET KONTRAKANS (sesuai filter admin) ==========
         $kontrakanQuery = Kontrakan::orderBy('nama');
         
-        if ($admin && $admin->role !== 'super_admin') {
+        if ($admin) {
             $kontrakanQuery->where('admin_id', $admin->id);
         }
         
@@ -68,7 +66,7 @@ class BookingController extends Controller
 
         // ========== FILTER: ADMIN (Hanya kontrakan milik admin) ==========
         $admin = auth()->guard('admin')->user();
-        if ($admin && $admin->role !== 'super_admin') {
+        if ($admin) {
             $kontrakanQuery->where('admin_id', $admin->id);
         }
 
@@ -113,7 +111,7 @@ class BookingController extends Controller
 
                 // ========== AUTHORIZATION: Cek apakah admin punya akses ke kontrakan ini ==========
                 $admin = auth()->guard('admin')->user();
-                if ($admin && $admin->role !== 'super_admin') {
+                if ($admin) {
                     if ($kontrakan->admin_id !== $admin->id) {
                         throw new Exception('Anda tidak memiliki akses ke kontrakan ini.');
                     }
@@ -238,7 +236,7 @@ class BookingController extends Controller
     {
         // ========== AUTHORIZATION: Cek apakah admin punya akses ke booking ini ==========
         $admin = auth()->guard('admin')->user();
-        if ($admin && $admin->role !== 'super_admin') {
+        if ($admin) {
             // Admin biasa hanya bisa lihat booking dari kontrakan milik mereka
             if ($booking->kontrakan->admin_id !== $admin->id) {
                 abort(403, 'Anda tidak memiliki akses ke booking ini.');
@@ -257,7 +255,7 @@ class BookingController extends Controller
     {
         // ========== AUTHORIZATION: Cek apakah admin punya akses ke booking ini ==========
         $admin = auth()->guard('admin')->user();
-        if ($admin && $admin->role !== 'super_admin') {
+        if ($admin) {
             if ($booking->kontrakan->admin_id !== $admin->id) {
                 abort(403, 'Anda tidak memiliki akses ke booking ini.');
             }
@@ -309,7 +307,7 @@ class BookingController extends Controller
     {
         // ========== AUTHORIZATION: Cek apakah admin punya akses ke booking ini ==========
         $admin = auth()->guard('admin')->user();
-        if ($admin && $admin->role !== 'super_admin') {
+        if ($admin) {
             // Admin biasa hanya bisa edit booking dari kontrakan milik mereka
             if ($booking->kontrakan->admin_id !== $admin->id) {
                 abort(403, 'Anda tidak memiliki akses ke booking ini.');
@@ -322,7 +320,7 @@ class BookingController extends Controller
 
         $kontrakanQuery = Kontrakan::orderBy('nama');
         
-        if ($admin && $admin->role !== 'super_admin') {
+        if ($admin) {
             $kontrakanQuery->where('admin_id', $admin->id);
         }
         
@@ -337,7 +335,7 @@ class BookingController extends Controller
     {
         // ========== AUTHORIZATION: Cek apakah admin punya akses ke booking ini ==========
         $admin = auth()->guard('admin')->user();
-        if ($admin && $admin->role !== 'super_admin') {
+        if ($admin) {
             if ($booking->kontrakan->admin_id !== $admin->id) {
                 abort(403, 'Anda tidak memiliki akses ke booking ini.');
             }
@@ -401,7 +399,7 @@ class BookingController extends Controller
     {
         // ========== AUTHORIZATION ==========
         $admin = auth()->guard('admin')->user();
-        if ($admin && $admin->role !== 'super_admin') {
+        if ($admin) {
             if ($booking->kontrakan->admin_id !== $admin->id) {
                 abort(403, 'Anda tidak memiliki akses ke booking ini.');
             }
@@ -421,7 +419,7 @@ class BookingController extends Controller
     {
         // ========== AUTHORIZATION ==========
         $admin = auth()->guard('admin')->user();
-        if ($admin && $admin->role !== 'super_admin') {
+        if ($admin) {
             if ($booking->kontrakan->admin_id !== $admin->id) {
                 abort(403, 'Anda tidak memiliki akses ke booking ini.');
             }
@@ -441,7 +439,7 @@ class BookingController extends Controller
     {
         // ========== AUTHORIZATION ==========
         $admin = auth()->guard('admin')->user();
-        if ($admin && $admin->role !== 'super_admin') {
+        if ($admin) {
             if ($booking->kontrakan->admin_id !== $admin->id) {
                 abort(403, 'Anda tidak memiliki akses ke booking ini.');
             }
@@ -461,7 +459,7 @@ class BookingController extends Controller
     {
         // ========== AUTHORIZATION ==========
         $admin = auth()->guard('admin')->user();
-        if ($admin && $admin->role !== 'super_admin') {
+        if ($admin) {
             if ($booking->kontrakan->admin_id !== $admin->id) {
                 abort(403, 'Anda tidak memiliki akses ke booking ini.');
             }
@@ -483,7 +481,7 @@ class BookingController extends Controller
     {
         // ========== AUTHORIZATION ==========
         $admin = auth()->guard('admin')->user();
-        if ($admin && $admin->role !== 'super_admin') {
+        if ($admin) {
             if ($booking->kontrakan->admin_id !== $admin->id) {
                 abort(403, 'Anda tidak memiliki akses ke booking ini.');
             }
@@ -505,7 +503,7 @@ class BookingController extends Controller
     {
         // ========== AUTHORIZATION ==========
         $admin = auth()->guard('admin')->user();
-        if ($admin && $admin->role !== 'super_admin') {
+        if ($admin) {
             if ($booking->kontrakan->admin_id !== $admin->id) {
                 abort(403, 'Anda tidak memiliki akses ke booking ini.');
             }
@@ -537,7 +535,7 @@ class BookingController extends Controller
     {
         // ========== AUTHORIZATION ==========
         $admin = auth()->guard('admin')->user();
-        if ($admin && $admin->role !== 'super_admin') {
+        if ($admin) {
             if ($booking->kontrakan->admin_id !== $admin->id) {
                 abort(403, 'Anda tidak memiliki akses ke booking ini.');
             }
@@ -566,7 +564,7 @@ class BookingController extends Controller
 
         // ========== AUTHORIZATION: Filter berdasarkan admin ==========
         $admin = auth()->guard('admin')->user();
-        if ($admin && $admin->role !== 'super_admin') {
+        if ($admin) {
             // Admin biasa hanya bisa hapus booking dari kontrakan milik mereka
             $query->whereHas('kontrakan', function($q) use ($admin) {
                 $q->where('admin_id', $admin->id);

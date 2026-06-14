@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Detail Kriteria')
+@section('title', 'Detail Master Kriteria')
 
 @section('content')
 <div class="container-fluid px-4">
@@ -75,7 +75,7 @@
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('kriteria.index') }}">Kriteria</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('kriteria.index') }}">Master Kriteria SAW</a></li>
             <li class="breadcrumb-item active">Detail</li>
         </ol>
     </nav>
@@ -129,7 +129,7 @@
                                     <i class="bi bi-speedometer text-info fs-4"></i>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <small class="text-muted d-block mb-1">Bobot Kriteria</small>
+                                    <small class="text-muted d-block mb-1">Bobot Default / Simulasi</small>
                                     <h5 class="mb-0 fw-semibold text-info">
                                         {{ $kriteria->bobot }}
                                     </h5>

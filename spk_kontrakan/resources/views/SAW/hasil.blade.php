@@ -350,7 +350,7 @@
         </div>
     </div>
 
-    <!-- Enhanced Kriteria & Bobot Card -->
+    <!-- Enhanced Kriteria & Bobot Simulasi Card -->
     <div class="glass-card mb-4">
         <div class="card-header border-0 py-3 py-md-4" style="background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);">
             <div class="d-flex align-items-center justify-content-between">
@@ -359,8 +359,8 @@
                         <i class="bi bi-star-fill"></i>
                     </div>
                     <h6 class="mb-0 fw-bold" style="color: var(--text-primary);">
-                        <span class="d-none d-sm-inline">Kriteria dan Bobot yang Digunakan</span>
-                        <span class="d-sm-none">Kriteria & Bobot</span>
+                        <span class="d-none d-sm-inline">Kriteria dan Bobot Simulasi yang Digunakan</span>
+                        <span class="d-sm-none">Kriteria & Bobot Simulasi</span>
                     </h6>
                 </div>
                 <span class="badge rounded-pill px-3 py-2" style="background: rgba(var(--primary-color-rgb), 0.15); color: var(--primary-color); font-weight: 700;">
@@ -663,7 +663,7 @@
                     <!-- Achievement Badge -->
                     @if($index == 0)
                         <div class="alert border-0 mb-3 py-2" style="background: rgba(var(--success-color-rgb), 0.1); border-left: 4px solid var(--success-color) !important;">
-                            <small class="fw-bold" style="color: var(--success-color);">✨ Rekomendasi Terbaik Berdasarkan Kriteria Anda</small>
+                            <small class="fw-bold" style="color: var(--success-color);">✨ Rekomendasi Terbaik Berdasarkan Bobot Simulasi</small>
                         </div>
                     @elseif($index == 1)
                         <div class="alert border-0 mb-3 py-2" style="background: rgba(var(--info-color-rgb), 0.1); border-left: 4px solid var(--info-color) !important;">

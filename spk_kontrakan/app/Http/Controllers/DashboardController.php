@@ -27,14 +27,14 @@ class DashboardController extends Controller
         // ========== CACHE STATISTIK (5 menit) ==========
         $stats = Cache::remember('dashboard_stats_admin_' . $adminId, 300, function () use ($adminId, $isSuperAdmin) {
             return [
-                'jumlahKontrakan' => Kontrakan::where('admin_id', $adminId)->count(),
+                'jumlahKontrakan' => $isSuperAdmin ? Kontrakan::count() : Kontrakan::where('admin_id', $adminId)->count(),
                 'jumlahLaundry' => $isSuperAdmin ? Laundry::count() : 0,
                 'jumlahKriteria' => $isSuperAdmin ? Kriteria::count() : 0,
             ];
         });
         
         // ========== DATA TERBARU (No Cache) ==========
-        $recentKontrakan = Kontrakan::where('admin_id', $adminId)
+        $recentKontrakan = ($isSuperAdmin ? Kontrakan::query() : Kontrakan::where('admin_id', $adminId))
             ->latest()
             ->select('id', 'nama', 'alamat', 'harga', 'jarak', 'jumlah_kamar', 'created_at') // Only needed columns
             ->take(5)
@@ -54,7 +54,7 @@ class DashboardController extends Controller
         $chartData = Cache::remember('dashboard_charts_admin_' . $adminId, 600, function () use ($adminId, $isSuperAdmin) {
             
             // 1. Harga Kontrakan (Top 5)
-            $hargaKontrakan = Kontrakan::where('admin_id', $adminId)->select('nama', 'harga')
+            $hargaKontrakan = ($isSuperAdmin ? Kontrakan::query() : Kontrakan::where('admin_id', $adminId))->select('nama', 'harga')
                 ->orderBy('harga', 'desc')
                 ->take(5)
                 ->get();
@@ -73,7 +73,7 @@ class DashboardController extends Controller
             
             // 3. Distribusi Jarak (Single Query dengan CASE)
             $jarakKontrakan = DB::table('kontrakans')
-                ->where('admin_id', $adminId)
+                ->when(!$isSuperAdmin, function ($q) use ($adminId) { return $q->where('admin_id', $adminId); })
                 ->selectRaw("
                     SUM(CASE WHEN jarak <= 500 THEN 1 ELSE 0 END) as dekat,
                     SUM(CASE WHEN jarak > 500 AND jarak <= 1000 THEN 1 ELSE 0 END) as sedang,
@@ -91,7 +91,7 @@ class DashboardController extends Controller
             
             // 4. Statistik Aggregate (Single Query)
             $kontrakanStats = DB::table('kontrakans')
-                ->where('admin_id', $adminId)
+                ->when(!$isSuperAdmin, function ($q) use ($adminId) { return $q->where('admin_id', $adminId); })
                 ->selectRaw('
                     AVG(harga) as avg_harga,
                     AVG(jarak) as avg_jarak,
@@ -102,7 +102,7 @@ class DashboardController extends Controller
                 ->first();
             
             // 5. Top Kontrakan by Harga
-            $topKontrakan = Kontrakan::where('admin_id', $adminId)->select('nama', 'harga', 'jumlah_kamar', 'jarak')
+            $topKontrakan = ($isSuperAdmin ? Kontrakan::query() : Kontrakan::where('admin_id', $adminId))->select('nama', 'harga', 'jumlah_kamar', 'jarak')
                 ->orderBy('harga', 'desc')
                 ->take(5)
                 ->get();
@@ -155,7 +155,7 @@ class DashboardController extends Controller
 
         // ========== INSIGHT REAL-TIME (No Cache) ==========
         $realtimeJarakKontrakan = DB::table('kontrakans')
-            ->where('admin_id', $adminId)
+            ->when(!$isSuperAdmin, function ($q) use ($adminId) { return $q->where('admin_id', $adminId); })
             ->selectRaw("
                 SUM(CASE WHEN jarak <= 500 THEN 1 ELSE 0 END) as dekat,
                 SUM(CASE WHEN jarak > 500 AND jarak <= 1000 THEN 1 ELSE 0 END) as sedang,
@@ -164,7 +164,7 @@ class DashboardController extends Controller
             ->first();
 
         $realtimeKontrakanStats = DB::table('kontrakans')
-            ->where('admin_id', $adminId)
+            ->when(!$isSuperAdmin, function ($q) use ($adminId) { return $q->where('admin_id', $adminId); })
             ->selectRaw('
                 AVG(harga) as avg_harga,
                 AVG(jarak) as avg_jarak,

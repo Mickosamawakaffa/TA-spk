@@ -391,6 +391,146 @@
         .border-admin {
             border-color: #667eea !important;
         }
+    
+        .modern-section-card {
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+            overflow: hidden;
+            background: #ffffff;
+            height: 100%;
+        }
+
+        .modern-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            padding: 18px 22px;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(255, 255, 255, 0.95));
+        }
+
+        .modern-section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 1.05rem;
+            color: #4f46e5;
+            margin: 0;
+        }
+
+        .modern-count-badge {
+            background: rgba(99, 102, 241, 0.12);
+            color: #4f46e5;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        .modern-list {
+            padding: 16px 18px 8px 18px;
+        }
+
+        .modern-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 14px 12px;
+            border-radius: 14px;
+            transition: all 0.25s ease;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            margin-bottom: 10px;
+            background: #fafbff;
+        }
+
+        .modern-item:hover {
+            background: #f4f6ff;
+            border-color: rgba(99, 102, 241, 0.28);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+        }
+
+        .modern-item-left {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .modern-item-title {
+            font-weight: 800;
+            font-size: 0.96rem;
+            color: #111827;
+            margin-bottom: 6px;
+        }
+
+        .modern-item-subtitle {
+            font-size: 0.82rem;
+            color: #64748b;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .modern-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .modern-meta-badge {
+            font-size: 0.72rem;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-weight: 700;
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .modern-price {
+            min-width: 115px;
+            text-align: center;
+            padding: 9px 12px;
+            border-radius: 12px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            white-space: nowrap;
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .modern-price.kontrakan {
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .modern-empty {
+            text-align: center;
+            padding: 36px 20px;
+            color: #94a3b8;
+        }
+
+        .modern-footer {
+            padding: 4px 18px 18px 18px;
+        }
+
+        .modern-btn {
+            border-radius: 12px;
+            font-weight: 700;
+            padding: 9px 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: #fff;
+        }
+
+        .modern-btn:hover {
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.25);
+        }
+
     </style>
     
     <!-- Header Section -->

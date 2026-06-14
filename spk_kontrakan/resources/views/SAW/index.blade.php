@@ -266,7 +266,7 @@
                                     <table class="table table-sm mb-0 small" id="kriteriaTable">
                                         <thead>
                                             <tr>
-                                                <th>Kriteria</th>
+                                                <th>Master Kriteria SAW</th>
                                                 <th class="text-center">Bobot</th>
                                                 <th class="text-center">Tipe</th>
                                             </tr>

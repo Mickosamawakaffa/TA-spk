@@ -114,24 +114,31 @@ class KontrakanController extends Controller
         
         // ========== STATISTIK & DATA UNTUK FILTER UI ==========
         
-        // Total kontrakan (semua data, tanpa filter)
-        $totalKontrakan = Kontrakan::count();
-        
+        // Statistik hanya berdasarkan kontrakan milik admin yang sedang login
+        $statQuery = Kontrakan::query();
+
+        if ($admin && $admin->role !== 'super_admin') {
+            $statQuery->where('admin_id', $admin->id);
+        }
+
+        $totalKontrakan = $statQuery->count();
+
         // Jumlah hasil setelah filter
         $filteredCount = $kontrakan->total();
-        
-        // Range harga untuk slider (min & max dari database)
-        $hasData = Kontrakan::count() > 0;
-        $hargaMin = $hasData ? (Kontrakan::min('harga') ?? 0) : 0;
-        $hargaMax = $hasData ? (Kontrakan::max('harga') ?? 0) : 10000000;
-        
-        // Range jarak untuk slider (dalam km)
-        $jarakMaxDb = $hasData ? (Kontrakan::max('jarak') ?? 0) : 0; // dalam meter
-        $jarakMaxKm = $jarakMaxDb > 0 ? ceil($jarakMaxDb / 1000) : 0; // konversi ke km, bulatkan ke atas
-        
-        // Range jumlah_kamar untuk input
-        $jumlah_kamarMin = $hasData ? (Kontrakan::min('jumlah_kamar') ?? 0) : 0;
-        $jumlah_kamarMax = $hasData ? (Kontrakan::max('jumlah_kamar') ?? 0) : 0;
+
+        $hasData = $totalKontrakan > 0;
+
+        // Range harga untuk slider/statistik
+        $hargaMin = $hasData ? ($statQuery->min('harga') ?? 0) : 0;
+        $hargaMax = $hasData ? ($statQuery->max('harga') ?? 0) : 0;
+
+        // Range jarak untuk slider/statistik
+        $jarakMaxDb = $hasData ? ($statQuery->max('jarak') ?? 0) : 0;
+        $jarakMaxKm = $jarakMaxDb > 0 ? ceil($jarakMaxDb / 1000) : 0;
+
+        // Range jumlah kamar untuk statistik
+        $jumlah_kamarMin = $hasData ? ($statQuery->min('jumlah_kamar') ?? 0) : 0;
+        $jumlah_kamarMax = $hasData ? ($statQuery->max('jumlah_kamar') ?? 0) : 0;
         
         // Daftar fasilitas unik untuk checkbox (extract dari semua kontrakan)
         // Daftar fasilitas unik untuk checkbox (extract dari semua kontrakan)
