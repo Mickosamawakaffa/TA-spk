@@ -22,9 +22,9 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'] ?? 0,
-      name: json['name'] ?? '',
-      email: json['email'] ?? '',
-      phone: json['phone'],
+      name: (json['name'] ?? json['nama'] ?? json['username'] ?? '').toString(),
+      email: (json['email'] ?? json['email_address'] ?? '').toString(),
+      phone: (json['phone'] ?? json['no_hp'] ?? json['no_telepon'])?.toString(),
       role: json['role'] ?? 'user',
       roleLabel: json['role_label'],
       userType: json['user_type'],

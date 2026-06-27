@@ -43,3 +43,16 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Backup files
+*.bak
+*.bak-*
+
+# PowerShell scripts
+*.ps1
+
+# Build output
+build_output.txt
+
+# IDE metadata
+.metadata

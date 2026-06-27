@@ -395,28 +395,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: widget.kontrakan.isAvailable
-                      ? () {
-                          final authService = AuthService();
-                          if (!authService.isAuthenticated) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Silakan login terlebih dahulu untuk booking',
-                                ),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                            return;
-                          }
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => BookingFormScreen(
-                                kontrakan: widget.kontrakan,
-                              ),
-                            ),
-                          );
-                        }
+                      ? _showPengajuanOptions
                       : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: widget.kontrakan.isAvailable
@@ -433,7 +412,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                   ),
                   child: Text(
                     widget.kontrakan.isAvailable
-                        ? 'Ajukan Booking'
+                        ? 'Ajukan Pengajuan'
                         : 'Sedang Penuh',
                     style: const TextStyle(
                       fontSize: 15,
@@ -444,6 +423,159 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showPengajuanOptions() {
+    final authService = AuthService();
+
+    if (!authService.isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Silakan login terlebih dahulu untuk mengajukan survei atau sewa',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Pilih Jenis Pengajuan',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Pilih sesuai kebutuhan Anda.',
+                  style: TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+                _buildPengajuanOption(
+                  icon: Icons.event_available,
+                  color: const Color(0xFF2E7D32),
+                  title: 'Ajukan Survei',
+                  subtitle:
+                      'Atur jadwal untuk melihat kontrakan. Tanpa pembayaran.',
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BookingFormScreen(
+                          kontrakan: widget.kontrakan,
+                          jenisPengajuan: 'survei',
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildPengajuanOption(
+                  icon: Icons.home_work_outlined,
+                  color: const Color(0xFF1565C0),
+                  title: 'Ajukan Sewa',
+                  subtitle:
+                      'Ajukan untuk menempati kontrakan. Bayar setelah disetujui.',
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BookingFormScreen(
+                          kontrakan: widget.kontrakan,
+                          jenisPengajuan: 'sewa',
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPengajuanOption({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withOpacity(0.25)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(11),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF5A6B85),
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 16, color: color),
+          ],
         ),
       ),
     );

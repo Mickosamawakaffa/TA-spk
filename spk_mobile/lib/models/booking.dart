@@ -1,4 +1,4 @@
-class Booking {
+﻿class Booking {
   final int id;
   final int userId;
   final int kontrakanId;
@@ -7,7 +7,15 @@ class Booking {
   final double totalBiaya;
   final String status;
   final String? catatan;
-  final dynamic kontrakan; // Can be Map or Kontrakan object
+  final dynamic kontrakan;
+
+  // Pembeda pengajuan survei dan sewa.
+  final String jenisPengajuan;
+  final DateTime? tanggalSurvei;
+  final String? jamSurvei;
+  final DateTime? surveyFollowUpExpiresAt;
+
+  // Pembayaran hanya digunakan pada pengajuan sewa.
   final String paymentStatus;
   final String? paymentProof;
 
@@ -21,53 +29,107 @@ class Booking {
     required this.status,
     this.catatan,
     this.kontrakan,
+    this.jenisPengajuan = 'sewa',
+    this.tanggalSurvei,
+    this.jamSurvei,
+    this.surveyFollowUpExpiresAt,
     this.paymentStatus = 'unpaid',
     this.paymentProof,
   });
 
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    return DateTime.tryParse(value.toString());
+  }
+
   factory Booking.fromJson(Map<String, dynamic> json) {
-    // Support both old field names and actual DB column names
-    final startDate = json['start_date'] ?? json['tanggal_mulai'];
-    final endDate = json['end_date'] ?? json['tanggal_selesai'];
+    final startDate =
+        json['start_date'] ?? json['tanggal_mulai'] ?? json['tanggal_survei'];
+    final endDate =
+        json['end_date'] ?? json['tanggal_selesai'] ?? json['tanggal_survei'];
     final amount = json['amount'] ?? json['total_biaya'];
     final notes = json['notes'] ?? json['catatan'];
+
+    final jenis = (json['jenis_pengajuan'] ?? 'sewa').toString().toLowerCase();
+
+    final parsedSurveyDate = _parseDate(json['tanggal_survei']);
+    final parsedStartDate =
+        _parseDate(startDate) ?? parsedSurveyDate ?? DateTime.now();
+    final parsedEndDate = _parseDate(endDate) ?? parsedStartDate;
 
     return Booking(
       id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
       userId: int.tryParse(json['user_id']?.toString() ?? '0') ?? 0,
       kontrakanId: int.tryParse(json['kontrakan_id']?.toString() ?? '0') ?? 0,
-      tanggalMulai: DateTime.parse(startDate),
-      tanggalSelesai: DateTime.parse(endDate),
+      tanggalMulai: parsedStartDate,
+      tanggalSelesai: parsedEndDate,
       totalBiaya: double.tryParse(amount?.toString() ?? '0') ?? 0,
-      status: json['status'] ?? 'pending',
-      catatan: notes,
+      status: json['status']?.toString() ?? 'pending',
+      catatan: notes?.toString(),
       kontrakan: json['kontrakan'],
-      paymentStatus: json['payment_status'] ?? 'unpaid',
-      paymentProof: json['payment_proof'],
+      jenisPengajuan: jenis,
+      tanggalSurvei: parsedSurveyDate,
+      jamSurvei: json['jam_survei']?.toString(),
+      surveyFollowUpExpiresAt: _parseDate(
+        json['survey_follow_up_expires_at'],
+      ),
+      paymentStatus: json['payment_status']?.toString() ?? 'unpaid',
+      paymentProof: json['payment_proof']?.toString(),
     );
   }
 
-  // Format total biaya
+  bool get isSurvei => jenisPengajuan == 'survei';
+
+  bool get isSewa => !isSurvei;
+
+  bool get isSurveyFollowUpActive =>
+      isSurvei && status.toLowerCase() == 'confirmed';
+
+  String get jenisLabel {
+    return isSurvei ? 'Pengajuan Survei' : 'Pengajuan Sewa';
+  }
+
+  bool get canUploadPaymentProof {
+    return isSewa &&
+        status.toLowerCase() == 'confirmed' &&
+        paymentStatus == 'unpaid';
+  }
+
+  bool get isWaitingPaymentVerification {
+    return isSewa && paymentStatus == 'verification';
+  }
+
   String get formattedTotalBiaya {
-    return 'Rp ${totalBiaya.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}';
+    if (isSurvei) return '-';
+
+    final nominal = totalBiaya.toStringAsFixed(0).replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match match) => '${match[1]}.',
+    );
+
+    return 'Rp $nominal';
   }
 
-  // Computed duration in months from start and end date
   int get durasiBulan {
-    return ((tanggalSelesai.year - tanggalMulai.year) * 12 +
-            tanggalSelesai.month -
-            tanggalMulai.month)
-        .clamp(1, 99);
+    if (isSurvei) return 0;
+
+    final totalBulan =
+        (tanggalSelesai.year - tanggalMulai.year) * 12 +
+        tanggalSelesai.month -
+        tanggalMulai.month;
+
+    return totalBulan.clamp(1, 99).toInt();
   }
 
-  // Status badge color
   String get statusColor {
     switch (status.toLowerCase()) {
       case 'confirmed':
-        return 'green';
-      case 'active':
         return 'blue';
+      case 'checked_in':
+      case 'active':
+        return 'green';
       case 'completed':
+      case 'expired':
         return 'gray';
       case 'cancelled':
         return 'red';
@@ -76,21 +138,60 @@ class Booking {
     }
   }
 
-  // Status label Indonesia
   String get statusLabel {
+    if (isSurvei) {
+      switch (status.toLowerCase()) {
+        case 'pending':
+          return 'Menunggu Konfirmasi Survei';
+        case 'confirmed':
+          return 'Survei Disetujui';
+        case 'completed':
+          return 'Survei Selesai';
+        case 'cancelled':
+          return 'Tidak Jadi Sewa';
+        case 'expired':
+          return 'Masa Tindak Lanjut Berakhir';
+        default:
+          return status;
+      }
+    }
+
     switch (status.toLowerCase()) {
       case 'pending':
-        return 'Menunggu';
+        return 'Menunggu Persetujuan Sewa';
       case 'confirmed':
-        return 'Dikonfirmasi';
+        switch (paymentStatus.toLowerCase()) {
+          case 'paid':
+            return 'Sewa Disetujui';
+          case 'verification':
+            return 'Menunggu Verifikasi Pembayaran';
+          default:
+            return 'Menunggu Pembayaran';
+        }
+      case 'checked_in':
       case 'active':
-        return 'Aktif';
+        return 'Sedang Ditempati';
       case 'completed':
-        return 'Selesai';
+        return 'Sewa Selesai';
       case 'cancelled':
-        return 'Dibatalkan';
+        return 'Pengajuan Sewa Dibatalkan';
       default:
         return status;
+    }
+  }
+
+  String get paymentStatusLabel {
+    if (isSurvei) return '-';
+
+    switch (paymentStatus.toLowerCase()) {
+      case 'paid':
+        return 'Lunas';
+      case 'verification':
+        return 'Menunggu Verifikasi';
+      case 'refunded':
+        return 'Dikembalikan';
+      default:
+        return 'Belum Bayar';
     }
   }
 }

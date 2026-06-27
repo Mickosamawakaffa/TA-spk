@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/booking_service.dart';
+import 'booking_form_screen.dart';
+import '../models/kontrakan.dart';
 import '../models/booking.dart';
 
 // ignore_for_file: deprecated_member_use
@@ -54,12 +56,22 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
       final bookings = await _bookingService.getBookingHistory();
       if (!mounted) return;
       setState(() {
-        _activeBookings = bookings
-            .where((b) => b.status == 'confirmed' || b.status == 'pending')
-            .toList();
-        _pastBookings = bookings
-            .where((b) => b.status == 'completed' || b.status == 'cancelled')
-            .toList();
+        _activeBookings = bookings.where((b) {
+          final status = b.status.toLowerCase();
+
+          return status == 'pending' ||
+              status == 'confirmed' ||
+              status == 'checked_in';
+        }).toList();
+
+        _pastBookings = bookings.where((b) {
+          final status = b.status.toLowerCase();
+
+          return status == 'completed' ||
+              status == 'cancelled' ||
+              status == 'expired';
+        }).toList();
+
         _isLoading = false;
       });
     } catch (e) {
@@ -68,7 +80,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Gagal memuat riwayat booking'),
+          content: const Text('Gagal memuat riwayat pengajuan'),
           backgroundColor: Colors.red[700],
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -80,7 +92,9 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
     }
   }
 
-  Future<void> _cancelBooking(int bookingId) async {
+  Future<void> _cancelBooking(Booking booking) async {
+    final jenisLabel = booking.isSurvei ? 'Survei' : 'Pengajuan Sewa';
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -93,13 +107,18 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
               size: 24,
             ),
             const SizedBox(width: 10),
-            const Text(
-              'Batalkan Booking',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            Expanded(
+              child: Text(
+                'Batalkan $jenisLabel',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
-        content: const Text('Apakah Anda yakin ingin membatalkan booking ini?'),
+        content: Text('Apakah Anda yakin ingin membatalkan $jenisLabel ini?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -120,10 +139,14 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
         ],
       ),
     );
+
     if (confirm != true) return;
+
     try {
-      final result = await _bookingService.cancelBooking(bookingId);
+      final result = await _bookingService.cancelBooking(booking.id);
+
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -149,12 +172,16 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
           margin: const EdgeInsets.all(16),
         ),
       );
-      if (result['success'] == true) _loadBookings();
+
+      if (result['success'] == true) {
+        _loadBookings();
+      }
     } catch (e) {
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal membatalkan booking: $e'),
+          content: Text('Gagal membatalkan pengajuan: $e'),
           backgroundColor: const Color(0xFFC62828),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -164,6 +191,179 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
         ),
       );
     }
+  }
+
+  Future<void> _openSewaFromSurvey(Booking booking) async {
+    final rawKontrakan = booking.kontrakan;
+
+    if (rawKontrakan is! Map) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Data kontrakan tidak dapat dibuka. Silakan coba lagi.',
+          ),
+          backgroundColor: Color(0xFFC62828),
+        ),
+      );
+      return;
+    }
+
+    final kontrakan = Kontrakan.fromJson(
+      Map<String, dynamic>.from(rawKontrakan),
+    );
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            BookingFormScreen(kontrakan: kontrakan, jenisPengajuan: 'sewa'),
+      ),
+    );
+
+    if (mounted) {
+      _loadBookings();
+    }
+  }
+
+  Future<void> _markSurveyAsNotRenting(Booking booking) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Tidak Jadi Sewa?',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        content: const Text(
+          'Pengajuan survei akan ditutup dan dipindahkan ke riwayat. '
+          'Kontrakan tetap tersedia untuk pengguna lain.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Kembali'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFC62828),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Ya, Tidak Jadi'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final result = await _bookingService.cancelBooking(booking.id);
+
+    if (!mounted) return;
+
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Survei ditutup. Data pengajuan dipindahkan ke riwayat.',
+          ),
+          backgroundColor: Color(0xFF2E7D32),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      _loadBookings();
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(result['message'] ?? 'Gagal menutup pengajuan survei.'),
+        backgroundColor: const Color(0xFFC62828),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Widget _buildSurveyFollowUpActions(Booking booking) {
+    final deadline = booking.surveyFollowUpExpiresAt;
+    final deadlineText = deadline == null
+        ? 'Silakan ajukan sewa atau pilih Tidak Jadi Sewa dalam 2x24 jam.'
+        : 'Sisa waktu: ${_formatRemainingTime(deadline)}\n'
+              'Batas akhir: ${_formatDateTime(deadline)}';
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8E1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFFCC80)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.timer_outlined, color: Color(0xFFF57C00), size: 18),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Tindak Lanjut Survei',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFFE65100),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 7),
+          Text(
+            deadlineText,
+            style: const TextStyle(
+              fontSize: 12,
+              height: 1.35,
+              color: Color(0xFF6D4C41),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => _openSewaFromSurvey(booking),
+              icon: const Icon(Icons.home_work_rounded, size: 18),
+              label: const Text('Ajukan Sewa'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1565C0),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _markSurveyAsNotRenting(booking),
+              icon: const Icon(Icons.cancel_outlined, size: 18),
+              label: const Text('Tidak Jadi Sewa'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFC62828),
+                side: const BorderSide(color: Color(0xFFEF9A9A)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _uploadPaymentProof(Booking booking) async {
@@ -356,7 +556,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Booking Saya',
+                              'Pengajuan Saya',
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w700,
@@ -366,7 +566,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                             ),
                             SizedBox(height: 2),
                             Text(
-                              'Pantau status aktif dan riwayat booking',
+                              'Pantau status survei dan pengajuan sewa',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Colors.white70,
@@ -441,7 +641,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
             const SizedBox(height: 20),
             Center(
               child: Text(
-                isActive ? 'Belum ada booking aktif' : 'Belum ada riwayat',
+                isActive ? 'Belum ada pengajuan aktif' : 'Belum ada riwayat',
                 style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
@@ -453,8 +653,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
             Center(
               child: Text(
                 isActive
-                    ? 'Booking kontrakan Anda akan muncul di sini'
-                    : 'Riwayat booking sebelumnya akan muncul di sini',
+                    ? 'Pengajuan survei atau sewa Anda akan muncul di sini'
+                    : 'Riwayat pengajuan sebelumnya akan muncul di sini',
                 style: TextStyle(fontSize: 13, color: Colors.grey[500]),
                 textAlign: TextAlign.center,
               ),
@@ -482,32 +682,40 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
     String statusText;
     IconData statusIcon;
 
-    switch (booking.status) {
+    switch (booking.status.toLowerCase()) {
       case 'pending':
         statusColor = const Color(0xFFF57C00);
-        statusText = 'Menunggu';
         statusIcon = Icons.schedule_rounded;
         break;
       case 'confirmed':
         statusColor = const Color(0xFF2E7D32);
-        statusText = 'Dikonfirmasi';
         statusIcon = Icons.check_circle_rounded;
+        break;
+      case 'checked_in':
+      case 'active':
+        statusColor = const Color(0xFF1565C0);
+        statusIcon = Icons.home_rounded;
         break;
       case 'completed':
         statusColor = const Color(0xFF1565C0);
-        statusText = 'Selesai';
         statusIcon = Icons.done_all_rounded;
         break;
+      case 'expired':
+        statusColor = Colors.grey.shade700;
+        statusIcon = Icons.timer_off_rounded;
+        break;
+
       case 'cancelled':
         statusColor = const Color(0xFFC62828);
-        statusText = 'Dibatalkan';
         statusIcon = Icons.cancel_rounded;
         break;
+
       default:
         statusColor = Colors.grey;
-        statusText = 'Unknown';
         statusIcon = Icons.help_rounded;
     }
+
+    statusText = booking.statusLabel;
 
     // Get kontrakan name if available
     String kontrakanName = 'Kontrakan';
@@ -571,7 +779,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'ID: #${booking.id}',
+                        "ID: #${booking.id} • ${booking.isSurvei ? 'Survei' : 'Sewa'}",
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[500],
@@ -615,119 +823,81 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             child: Column(
               children: [
-                // Date info in a compact row
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF7F8FC),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      _buildDateRow(
-                        Icons.login_rounded,
-                        'Mulai',
-                        _formatDate(booking.tanggalMulai),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Divider(height: 1, color: Colors.grey[200]),
-                      ),
-                      _buildDateRow(
-                        Icons.logout_rounded,
-                        'Selesai',
-                        _formatDate(booking.tanggalSelesai),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Divider(height: 1, color: Colors.grey[200]),
-                      ),
-                      _buildDateRow(
-                        Icons.timelapse_rounded,
-                        'Durasi',
-                        '${booking.durasiBulan} Bulan',
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 14),
-
-                // Price and Payment
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                if (booking.isSurvei)
+                  _buildSurveyScheduleCard(booking)
+                else ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF7F8FC),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
                       children: [
-                        Text(
-                          'Total Harga',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[500],
-                            fontWeight: FontWeight.w500,
-                          ),
+                        _buildDateRow(
+                          Icons.login_rounded,
+                          'Mulai',
+                          _formatDate(booking.tanggalMulai),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Rp ${_formatPrice(booking.totalBiaya)}',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF1565C0),
-                          ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Divider(height: 1, color: Colors.grey[200]),
+                        ),
+                        _buildDateRow(
+                          Icons.logout_rounded,
+                          'Selesai',
+                          _formatDate(booking.tanggalSelesai),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Divider(height: 1, color: Colors.grey[200]),
+                        ),
+                        _buildDateRow(
+                          Icons.timelapse_rounded,
+                          'Durasi',
+                          '${booking.durasiBulan} bulan',
                         ),
                       ],
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: booking.paymentStatus == 'paid'
-                            ? const Color(0xFFE8F5E9)
-                            : const Color(0xFFFFF3E0),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            booking.paymentStatus == 'paid'
-                                ? Icons.check_circle_rounded
-                                : Icons.pending_rounded,
-                            size: 14,
-                            color: booking.paymentStatus == 'paid'
-                                ? const Color(0xFF2E7D32)
-                                : const Color(0xFFF57C00),
-                          ),
-                          const SizedBox(width: 5),
                           Text(
-                            booking.paymentStatus == 'paid'
-                                ? 'Lunas'
-                                : 'Belum Bayar',
+                            'Estimasi Biaya',
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: booking.paymentStatus == 'paid'
-                                  ? const Color(0xFF2E7D32)
-                                  : const Color(0xFFF57C00),
+                              color: Colors.grey[500],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Rp ${_formatPrice(booking.totalBiaya)}',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF1565C0),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
+                      _buildPaymentChip(booking),
+                    ],
+                  ),
+                ],
 
                 // Payment proof
-                if (booking.paymentProof != null) ...[
+                if (!booking.isSurvei && booking.paymentProof != null) ...[
                   const SizedBox(height: 12),
                   GestureDetector(
                     onTap: () {
-                      final Future<Uint8List?> future =
-                          _bookingService.getPaymentProofBytes(booking.id);
+                      final Future<Uint8List?> future = _bookingService
+                          .getPaymentProofBytes(booking.id);
                       showDialog(
                         context: context,
                         builder: (ctx) => Dialog(
@@ -875,15 +1045,23 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                   ),
                 ],
 
+                if (booking.isSurveyFollowUpActive) ...[
+                  const SizedBox(height: 14),
+                  _buildSurveyFollowUpActions(booking),
+                ],
                 // Actions
                 if (booking.status == 'pending') ...[
                   const SizedBox(height: 14),
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => _cancelBooking(booking.id),
+                      onPressed: () => _cancelBooking(booking),
                       icon: const Icon(Icons.close_rounded, size: 18),
-                      label: const Text('Batalkan Booking'),
+                      label: Text(
+                        booking.isSurvei
+                            ? 'Batalkan Survei'
+                            : 'Batalkan Pengajuan Sewa',
+                      ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFFC62828),
                         side: const BorderSide(color: Color(0xFFEF9A9A)),
@@ -895,8 +1073,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                     ),
                   ),
                 ],
-                if (booking.status == 'confirmed' &&
-                    booking.paymentStatus == 'unpaid') ...[
+                if (booking.canUploadPaymentProof) ...[
                   const SizedBox(height: 14),
                   SizedBox(
                     width: double.infinity,
@@ -930,6 +1107,107 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                   ),
                 ],
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSurveyScheduleCard(Booking booking) {
+    final tanggal = booking.tanggalSurvei ?? booking.tanggalMulai;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8F5E9),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFA5D6A7)),
+      ),
+      child: Column(
+        children: [
+          _buildDateRow(
+            Icons.event_available_rounded,
+            'Jadwal Survei',
+            _formatDate(tanggal),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Divider(height: 1, color: Colors.green[100]),
+          ),
+          _buildDateRow(
+            Icons.schedule_rounded,
+            'Jam Survei',
+            booking.jamSurvei ?? '-',
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Divider(height: 1, color: Colors.green[100]),
+          ),
+          const Row(
+            children: [
+              Icon(
+                Icons.info_outline_rounded,
+                size: 15,
+                color: Color(0xFF2E7D32),
+              ),
+              SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  'Survei tidak memerlukan pembayaran.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF2E7D32),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentChip(Booking booking) {
+    final isPaid = booking.paymentStatus == 'paid';
+    final isVerification = booking.paymentStatus == 'verification';
+
+    final color = isPaid
+        ? const Color(0xFF2E7D32)
+        : isVerification
+        ? const Color(0xFF1565C0)
+        : const Color(0xFFF57C00);
+
+    final background = isPaid
+        ? const Color(0xFFE8F5E9)
+        : isVerification
+        ? const Color(0xFFE3F2FD)
+        : const Color(0xFFFFF3E0);
+
+    final icon = isPaid
+        ? Icons.check_circle_rounded
+        : isVerification
+        ? Icons.hourglass_top_rounded
+        : Icons.pending_rounded;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 5),
+          Text(
+            booking.paymentStatusLabel,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
             ),
           ),
         ],
@@ -979,6 +1257,35 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
       'Des',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
+  String _formatDateTime(DateTime date) {
+    final dateText = _formatDate(date);
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '$dateText, $hour:$minute';
+  }
+
+  String _formatRemainingTime(DateTime deadline) {
+    final remaining = deadline.difference(DateTime.now());
+
+    if (remaining.isNegative) {
+      return 'Waktu tindak lanjut telah habis';
+    }
+
+    final days = remaining.inDays;
+    final hours = remaining.inHours % 24;
+    final minutes = remaining.inMinutes % 60;
+
+    if (days > 0) {
+      return '$days Hari $hours Jam';
+    }
+
+    if (hours > 0) {
+      return '$hours Jam $minutes Menit';
+    }
+
+    return '$minutes Menit';
   }
 
   String _formatPrice(double price) {

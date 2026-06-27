@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
@@ -21,7 +21,7 @@ class AuthService {
   // HttpClient - lazy initialization
   HttpClient? _httpClient;
 
-  // ✅ Secure storage for sensitive data (token & user)
+  // âœ… Secure storage for sensitive data (token & user)
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
     iOptions: IOSOptions(
@@ -39,7 +39,7 @@ class AuthService {
     if (_httpClient == null) {
       _httpClient = HttpClient();
 
-      // ✅ Security: NEVER bypass certificate validation in release builds.
+      // âœ… Security: NEVER bypass certificate validation in release builds.
       // In debug builds, allow self-signed certs only for local dev hosts.
       if (kDebugMode) {
         _httpClient!.badCertificateCallback = (cert, host, port) {
@@ -93,7 +93,7 @@ class AuthService {
         _currentUser = User.fromJson(jsonDecode(userJson));
       }
 
-      // ✅ Migration: if secure storage empty, try legacy SharedPreferences once.
+      // âœ… Migration: if secure storage empty, try legacy SharedPreferences once.
       if (_token == null) {
         final prefs = await SharedPreferences.getInstance();
         final legacyToken = prefs.getString(AppConfig.tokenKey);
@@ -506,27 +506,59 @@ class AuthService {
   }
 
   // Get current user
+  // Get current user
   Future<User?> getCurrentUser() async {
-    if (_token == null) return null;
+    if (_token == null) {
+      return _currentUser;
+    }
 
     try {
-      final response = await http.get(
-        Uri.parse('${AppConfig.baseUrl}/user'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $_token',
-        },
-      );
+      final response = await http
+          .get(
+            Uri.parse('${AppConfig.baseUrl}/user'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'Authorization': 'Bearer $_token',
+            },
+          )
+          .timeout(AppConfig.connectionTimeout);
 
-      if (response.statusCode == 200) {
-        final user = User.fromJson(jsonDecode(response.body));
-        _currentUser = user;
-        return user;
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        final decoded = jsonDecode(response.body);
+
+        // Mendukung respons API langsung atau respons yang dibungkus data/user.
+        Map<String, dynamic>? userData;
+
+        if (decoded is Map<String, dynamic>) {
+          if (decoded['data'] is Map) {
+            userData = Map<String, dynamic>.from(decoded['data']);
+          } else if (decoded['user'] is Map) {
+            userData = Map<String, dynamic>.from(decoded['user']);
+          } else {
+            userData = decoded;
+          }
+        }
+
+        if (userData != null) {
+          final user = User.fromJson(userData);
+
+          // Jangan menimpa data lokal dengan user kosong dari respons yang tidak valid.
+          if (user.name.trim().isNotEmpty || user.email.trim().isNotEmpty) {
+            _currentUser = user;
+
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString(AppConfig.userKey, jsonEncode(user.toJson()));
+
+            return user;
+          }
+        }
       }
-      return null;
+
+      // Tetap tampilkan data yang tersimpan bila server tidak memberi profil valid.
+      return _currentUser;
     } catch (e) {
-      return null;
+      return _currentUser;
     }
   }
 
@@ -551,8 +583,10 @@ class AuthService {
 
       if (response.statusCode == 200 && data['success'] == true) {
         final user = User.fromJson(data['data']);
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(AppConfig.userKey, jsonEncode(user.toJson()));
+        await _secureStorage.write(
+          key: AppConfig.userKey,
+          value: jsonEncode(user.toJson()),
+        );
         _currentUser = user;
         return {'success': true, 'message': data['message']};
       } else {
