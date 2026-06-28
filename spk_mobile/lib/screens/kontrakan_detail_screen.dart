@@ -612,6 +612,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
         final imageUrl = galleryItems.isEmpty
             ? _kontrakan.primaryPhoto
             : galleryItems[index].photoUrl;
+        debugPrint('KONTRAKAN DETAIL IMAGE URL: $imageUrl');
 
         return CachedNetworkImage(
           imageUrl: imageUrl,

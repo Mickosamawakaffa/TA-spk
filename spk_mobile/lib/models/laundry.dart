@@ -98,10 +98,15 @@ class Laundry {
     if (galleryList.isEmpty &&
         json['foto'] != null &&
         json['foto'].toString().isNotEmpty) {
+      final resolved = json['foto_url'] != null && json['foto_url'].toString().isNotEmpty
+          ? json['foto_url'].toString()
+          : (json['foto'].toString().startsWith('http')
+              ? json['foto'].toString()
+              : '${AppConfig.serverUrl}/uploads/Laundry/${json['foto']}');
       galleryList.add(
         GaleriLaundry(
           id: json['id'] ?? 0,
-          foto: json['foto'].toString(),
+          foto: resolved,
           isPrimary: true,
           urutan: 0,
         ),

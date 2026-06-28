@@ -61,10 +61,13 @@ class Kontrakan {
     if (galleryList.isEmpty &&
         json['foto'] != null &&
         json['foto'].toString().isNotEmpty) {
+      final resolved = json['foto_url'] != null && json['foto_url'].toString().isNotEmpty
+          ? json['foto_url'].toString()
+          : _resolveKontrakanPhotoPath(json['foto'].toString());
       galleryList.add(
         Galeri(
           id: json['id'] ?? 0,
-          foto: json['foto'].toString(),
+          foto: resolved,
           isPrimary: true,
           urutan: 0,
         ),

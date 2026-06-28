@@ -28,6 +28,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
   @override
   void initState() {
     super.initState();
+    debugPrint('LAUNDRY DETAIL IMAGE URL: ${widget.laundry.primaryPhoto}');
     _checkFavorite();
   }
 
