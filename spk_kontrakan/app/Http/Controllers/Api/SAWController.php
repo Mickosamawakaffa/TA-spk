@@ -453,10 +453,10 @@ class SAWController extends Controller
                 // Normalisasi based on tipe (Benefit/Cost)
                 if (strtolower($k->tipe) === 'benefit') {
                     $maxVal = $maxValues[$field] ?: 1;
-                    $row['normalisasi'][$field] = $nilai / $maxVal;
+                    $row['normalisasi'][$field] = (float)$nilai / (float)$maxVal;
                 } else { // Cost
                     $minVal = $minValues[$field] ?: 1;
-                    $row['normalisasi'][$field] = $nilai > 0 ? $minVal / $nilai : 0;
+                    $row['normalisasi'][$field] = (float)$nilai > 0 ? (float)$minVal / (float)$nilai : 0;
                 }
             }
 
@@ -533,10 +533,10 @@ class SAWController extends Controller
                 // Normalisasi based on tipe (Benefit/Cost)
                 if (strtolower($k->tipe) === 'benefit') {
                     $maxVal = $maxValues[$field] ?: 1;
-                    $row['normalisasi'][$field] = $nilai / $maxVal;
+                    $row['normalisasi'][$field] = (float)$nilai / (float)$maxVal;
                 } else { // Cost
                     $minVal = $minValues[$field] ?: 1;
-                    $row['normalisasi'][$field] = $nilai > 0 ? $minVal / $nilai : 0;
+                    $row['normalisasi'][$field] = (float)$nilai > 0 ? (float)$minVal / (float)$nilai : 0;
                 }
             }
 
