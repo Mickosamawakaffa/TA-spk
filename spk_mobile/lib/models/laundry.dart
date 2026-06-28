@@ -12,6 +12,8 @@ class Laundry {
   final String jamTutup;
   final double hargaPerKg;
   final double hargaKiloan;
+  final double hargaHarian;
+  final double hargaJam;
   final int waktuProses; // dalam jam
   final String? deskripsi;
   final String? fotoUtama;
@@ -34,6 +36,8 @@ class Laundry {
     required this.jamTutup,
     required this.hargaPerKg,
     required this.hargaKiloan,
+    required this.hargaHarian,
+    required this.hargaJam,
     required this.waktuProses,
     this.deskripsi,
     this.fotoUtama,
@@ -67,22 +71,33 @@ class Laundry {
       hargaKiloan = double.tryParse(json['harga_kiloan'].toString()) ?? 0;
     }
 
-    if ((harga == 0 || hargaKiloan == 0) &&
-        json['layanan'] != null &&
+    double hargaHarian = 0;
+    double hargaJam = 0;
+
+    if (json['layanan'] != null &&
         (json['layanan'] as List).isNotEmpty) {
       final layananList = json['layanan'] as List;
       harga = harga > 0
           ? harga
           : double.tryParse(layananList.first['harga']?.toString() ?? '0') ?? 0;
       for (final item in layananList) {
-        final jenis = item['jenis_layanan']?.toString().toLowerCase();
+        final jenis = item['jenis_layanan']?.toString().toLowerCase() ?? '';
         final itemHarga =
             double.tryParse(item['harga']?.toString() ?? '0') ?? 0;
-        if (jenis == 'kiloan') {
+        
+        if (jenis == 'harian' || jenis == 'kiloan' || jenis == 'reguler') {
+          hargaHarian = itemHarga;
           hargaKiloan = itemHarga;
+        } else if (jenis == 'jam' || jenis == 'express' || jenis == 'kilat' || jenis == 'satuan') {
+          hargaJam = itemHarga;
         }
       }
     }
+
+    // Fallback if not populated
+    if (hargaHarian == 0) hargaHarian = hargaKiloan > 0 ? hargaKiloan : harga;
+    if (hargaJam == 0) hargaJam = harga;
+
 
     // Get foto from API and build gallery list
     final List<GaleriLaundry> galleryList = [];
@@ -129,6 +144,8 @@ class Laundry {
       jamTutup: _parseTime(json['jam_tutup'], '20:00'),
       hargaPerKg: harga,
       hargaKiloan: hargaKiloan,
+      hargaHarian: hargaHarian,
+      hargaJam: hargaJam,
       waktuProses: json['waktu_proses'] ?? 24,
       deskripsi: json['deskripsi'],
       fotoUtama: json['foto_utama'],
@@ -196,7 +213,23 @@ class Laundry {
 
   // Format harga dengan Rupiah
   String get formattedHarga {
-    return 'Rp ${_formatRupiah(hargaPerKg)}';
+    return 'Rp ${_formatRupiah(hargaHarian > 0 ? hargaHarian : hargaPerKg)}';
+  }
+
+  // Format harga sesuai jenis layanan (harian / jam)
+  String formattedHargaFor(String? jenisLayanan) {
+    if (jenisLayanan == null || jenisLayanan.isEmpty) {
+      return formattedHarga;
+    }
+    
+    final target = jenisLayanan.toLowerCase();
+    if (target == 'jam' || target == 'express' || target == 'kilat' || target == 'satuan') {
+      final val = hargaJam > 0 ? hargaJam : hargaPerKg;
+      return 'Rp ${_formatRupiah(val)}';
+    } else {
+      final val = hargaHarian > 0 ? hargaHarian : hargaPerKg;
+      return 'Rp ${_formatRupiah(val)}';
+    }
   }
 
   String _formatRupiah(double value) {

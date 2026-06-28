@@ -11,6 +11,7 @@ class LaundryCard extends StatelessWidget {
   final bool showRanking;
   final double? userLatitude;
   final double? userLongitude;
+  final String? selectedJenisLayanan;
 
   const LaundryCard({
     super.key,
@@ -20,6 +21,7 @@ class LaundryCard extends StatelessWidget {
     this.showRanking = false,
     this.userLatitude,
     this.userLongitude,
+    this.selectedJenisLayanan,
   });
 
   @override
@@ -198,7 +200,7 @@ class LaundryCard extends StatelessWidget {
                         child: Row(
                           children: [
                             Text(
-                              laundry.formattedHarga,
+                              laundry.formattedHargaFor(selectedJenisLayanan),
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,

@@ -8,8 +8,13 @@ import '../widgets/app_placeholder.dart';
 
 class LaundryDetailScreen extends StatefulWidget {
   final Laundry laundry;
+  final String? selectedJenisLayanan;
 
-  const LaundryDetailScreen({super.key, required this.laundry});
+  const LaundryDetailScreen({
+    super.key,
+    required this.laundry,
+    this.selectedJenisLayanan,
+  });
 
   @override
   State<LaundryDetailScreen> createState() => _LaundryDetailScreenState();
@@ -286,7 +291,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                                         _buildHeaderChip(
                                           icon: Icons.payments_rounded,
                                           label:
-                                              '${widget.laundry.formattedHargaKiloan}/kg',
+                                              '${widget.laundry.formattedHargaFor(widget.selectedJenisLayanan)}/kg',
                                         ),
                                         _buildHeaderChip(
                                           icon: Icons.schedule_rounded,
@@ -355,12 +360,29 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                   title: 'Harga',
                   child: Column(
                     children: [
-                      _buildPriceCard(
-                        'Laundry Kiloan',
-                        widget.laundry.formattedHargaKiloan,
-                        Icons.scale,
-                        const Color(0xFF00897B),
-                      ),
+                      if (widget.laundry.hargaHarian > 0) ...[
+                        _buildPriceCard(
+                          'Laundry Kiloan (Harian/Reguler)',
+                          widget.laundry.formattedHargaFor("harian"),
+                          Icons.scale,
+                          const Color(0xFF00897B),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      if (widget.laundry.hargaJam > 0)
+                        _buildPriceCard(
+                          'Laundry Express (Jam/Satuan)',
+                          widget.laundry.formattedHargaFor("jam"),
+                          Icons.flash_on,
+                          const Color(0xFFFF9800),
+                        ),
+                      if (widget.laundry.hargaHarian == 0 && widget.laundry.hargaJam == 0)
+                        _buildPriceCard(
+                          'Laundry Kiloan',
+                          widget.laundry.formattedHargaKiloan,
+                          Icons.scale,
+                          const Color(0xFF00897B),
+                        ),
                     ],
                   ),
                 ),

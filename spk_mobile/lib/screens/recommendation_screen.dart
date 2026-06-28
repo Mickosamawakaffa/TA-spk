@@ -3101,6 +3101,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                     laundry: Laundry.fromJson(itemData),
                     userLatitude: _userLatitude,
                     userLongitude: _userLongitude,
+                    selectedJenisLayanan: _selectedJenisLayanan,
                   ),
           ),
         ],
