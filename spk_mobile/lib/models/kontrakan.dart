@@ -114,15 +114,11 @@ class Kontrakan {
 
   String get primaryPhoto {
     if (foto != null && foto!.isNotEmpty) {
-      if (foto!.startsWith('http')) {
-        return foto!;
-      }
+      return _resolveKontrakanPhotoPath(foto!);
+    }
 
-      if (foto!.startsWith('uploads/')) {
-        return '${AppConfig.serverUrl}/$foto';
-      }
-
-      return '${AppConfig.serverUrl}/uploads/kontrakan/$foto';
+    if (fotoUtama != null && fotoUtama!.isNotEmpty) {
+      return _resolveKontrakanPhotoPath(fotoUtama!);
     }
 
     if (galeri.isNotEmpty) {
@@ -131,20 +127,24 @@ class Kontrakan {
         orElse: () => galeri.first,
       );
 
-      if (primary.foto.isNotEmpty && primary.foto.startsWith('http')) {
-        return primary.foto;
-      }
-
       if (primary.foto.isNotEmpty) {
-        if (primary.foto.startsWith('uploads/')) {
-          return '${AppConfig.serverUrl}/${primary.foto}';
-        }
-
-        return '${AppConfig.serverUrl}/uploads/kontrakan/${primary.foto}';
+        return primary.photoUrl;
       }
     }
 
     return '';
+  }
+
+  static String _resolveKontrakanPhotoPath(String path) {
+    if (path.startsWith('http')) {
+      return path;
+    }
+
+    if (path.startsWith('uploads/')) {
+      return '${AppConfig.serverUrl}/$path';
+    }
+
+    return '${AppConfig.serverUrl}/uploads/kontrakan/$path';
   }
 
   String get formattedHarga {
@@ -179,6 +179,8 @@ class Galeri {
   }
 
   String get photoUrl {
+    if (foto.isEmpty) return '';
+
     if (foto.startsWith('http')) {
       return foto;
     }
@@ -187,6 +189,6 @@ class Galeri {
       return '${AppConfig.serverUrl}/$foto';
     }
 
-    return '${AppConfig.serverUrl}/uploads/kontrakan/$foto';
+    return '${AppConfig.serverUrl}/uploads/galeri/kontrakan/$foto';
   }
 }

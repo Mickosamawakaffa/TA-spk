@@ -24,21 +24,44 @@ class LocationService {
     return true;
   }
 
-  // Get current location
+  // Get current location (tries multiple strategies before giving up)
   Future<Position?> getCurrentLocation() async {
     try {
-      // Check permission first
       final hasPermission = await requestLocationPermission();
       if (!hasPermission) return null;
 
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10),
-      );
+      Position? position;
+
+      try {
+        position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 12),
+        );
+      } catch (_) {
+        try {
+          position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.medium,
+            timeLimit: const Duration(seconds: 10),
+          );
+        } catch (_) {}
+      }
+
+      position ??= await Geolocator.getLastKnownPosition();
+
+      if (position == null) {
+        try {
+          final stream = Geolocator.getPositionStream(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.medium,
+              distanceFilter: 10,
+            ),
+          );
+          position = await stream.first.timeout(const Duration(seconds: 8));
+        } catch (_) {}
+      }
 
       return position;
-    } catch (e) {
-      // Error getting location silently
+    } catch (_) {
       return null;
     }
   }

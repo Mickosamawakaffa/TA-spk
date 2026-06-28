@@ -655,17 +655,6 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
 
     try {
       final locationService = LocationService();
-      final isEnabled = await locationService.isLocationServiceEnabled();
-
-      if (!mounted) return;
-      if (!isEnabled) {
-        setState(() {
-          locationError = 'Layanan lokasi tidak aktif';
-          isLoadingLocation = false;
-        });
-        return;
-      }
-
       final position = await locationService.getCurrentLocation();
 
       if (!mounted) return;
@@ -683,16 +672,20 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
           distance = dist;
           isLoadingLocation = false;
         });
-      } else {
-        setState(() {
-          locationError = 'Gagal mendapatkan lokasi Anda';
-          isLoadingLocation = false;
-        });
+        return;
       }
+
+      final serviceEnabled = await locationService.isLocationServiceEnabled();
+      setState(() {
+        locationError = serviceEnabled
+            ? 'Gagal mendapatkan lokasi. Coba lagi.'
+            : 'Layanan lokasi tidak aktif';
+        isLoadingLocation = false;
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        locationError = 'Error: ${e.toString()}';
+        locationError = 'Gagal mendapatkan lokasi Anda';
         isLoadingLocation = false;
       });
     }

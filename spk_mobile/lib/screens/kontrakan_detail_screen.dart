@@ -5,6 +5,7 @@ import '../models/kontrakan.dart';
 import '../services/location_service.dart';
 import '../services/auth_service.dart';
 import '../services/favorite_service.dart';
+import '../services/kontrakan_service.dart';
 import 'booking_form_screen.dart';
 import '../widgets/app_placeholder.dart';
 
@@ -22,27 +23,42 @@ class KontrakanDetailScreen extends StatefulWidget {
 }
 
 class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
+  late Kontrakan _kontrakan;
   double? distance; // jarak dari kampus Polije ke kontrakan ini
   bool _isFavorite = false;
   bool _isFavLoading = false;
   final _favoriteService = FavoriteService();
+  final _kontrakanService = KontrakanService();
 
   @override
   void initState() {
     super.initState();
+    _kontrakan = widget.kontrakan;
     _checkFavorite();
     _calcDistanceFromPolije();
+    _loadDetail();
+  }
+
+  Future<void> _loadDetail() async {
+    try {
+      final fresh = await _kontrakanService.getKontrakanById(_kontrakan.id);
+      if (!mounted || fresh == null) return;
+      setState(() => _kontrakan = fresh);
+      _calcDistanceFromPolije();
+    } catch (e) {
+      debugPrint('Load kontrakan detail error: $e');
+    }
   }
 
   /// Hitung jarak dari Kampus Polije ke kontrakan ini secara langsung.
   void _calcDistanceFromPolije() {
-    if (widget.kontrakan.latitude == null || widget.kontrakan.longitude == null)
+    if (_kontrakan.latitude == null || _kontrakan.longitude == null)
       return;
     final dist = LocationService.calculateDistance(
       _polije_lat,
       _polije_lng,
-      widget.kontrakan.latitude!,
-      widget.kontrakan.longitude!,
+      _kontrakan.latitude!,
+      _kontrakan.longitude!,
     );
     setState(() => distance = dist);
   }
@@ -50,7 +66,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
   Future<void> _checkFavorite() async {
     try {
       final result = await _favoriteService.isKontrakanFavorite(
-        widget.kontrakan.id,
+        _kontrakan.id,
       );
       if (mounted) setState(() => _isFavorite = result);
     } catch (e) {
@@ -151,7 +167,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                 children: [
                   // Title & Price
                   Text(
-                    widget.kontrakan.nama,
+                    _kontrakan.nama,
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -177,7 +193,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          widget.kontrakan.formattedHarga,
+                          _kontrakan.formattedHarga,
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
@@ -202,25 +218,25 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                     runSpacing: 8,
                     children: [
                       _buildSummaryChip(
-                        icon: widget.kontrakan.isAvailable
+                        icon: _kontrakan.isAvailable
                             ? Icons.check_circle_rounded
                             : Icons.do_not_disturb_on_rounded,
-                        label: widget.kontrakan.isAvailable
+                        label: _kontrakan.isAvailable
                             ? 'Tersedia'
                             : 'Penuh',
-                        color: widget.kontrakan.isAvailable
+                        color: _kontrakan.isAvailable
                             ? const Color(0xFF2E7D32)
                             : const Color(0xFFE65100),
                       ),
                       _buildSummaryChip(
                         icon: Icons.bed_rounded,
-                        label: '${widget.kontrakan.jumlahKamar} kamar',
+                        label: '${_kontrakan.jumlahKamar} kamar',
                         color: const Color(0xFF1565C0),
                       ),
                       _buildSummaryChip(
                         icon: Icons.near_me_rounded,
                         label: _formatDistanceValue(
-                          widget.kontrakan.jarakKampus,
+                          _kontrakan.jarakKampus,
                         ),
                         color: const Color(0xFF00897B),
                       ),
@@ -230,21 +246,21 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                   const SizedBox(height: 16),
 
                   // Location
-                  _buildInfoRow(Icons.location_on, widget.kontrakan.alamat),
+                  _buildInfoRow(Icons.location_on, _kontrakan.alamat),
                   _buildInfoRow(
                     Icons.directions_walk,
-                    '${_formatDistanceValue(widget.kontrakan.jarakKampus)} dari kampus',
+                    '${_formatDistanceValue(_kontrakan.jarakKampus)} dari kampus',
                   ),
                   _buildInfoRow(
                     Icons.bed,
-                    '${widget.kontrakan.jumlahKamar} Kamar',
+                    '${_kontrakan.jumlahKamar} Kamar',
                   ),
 
                   const SizedBox(height: 20),
 
                   // Location Detection Card
-                  if (widget.kontrakan.latitude != null &&
-                      widget.kontrakan.longitude != null)
+                  if (_kontrakan.latitude != null &&
+                      _kontrakan.longitude != null)
                     _buildLocationCard(),
 
                   const SizedBox(height: 20),
@@ -262,7 +278,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: widget.kontrakan.fasilitasList.isEmpty
+                    children: _kontrakan.fasilitasList.isEmpty
                         ? [
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -285,7 +301,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                               ),
                             ),
                           ]
-                        : widget.kontrakan.fasilitasList.map((f) {
+                        : _kontrakan.fasilitasList.map((f) {
                             return Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
@@ -312,7 +328,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                           }).toList(),
                   ),
 
-                  if (widget.kontrakan.deskripsi != null) ...[
+                  if (_kontrakan.deskripsi != null) ...[
                     const SizedBox(height: 20),
                     const Text(
                       'Deskripsi',
@@ -324,7 +340,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      widget.kontrakan.deskripsi!,
+                      _kontrakan.deskripsi!,
                       style: TextStyle(
                         fontSize: 14,
                         height: 1.6,
@@ -356,13 +372,13 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
           child: Row(
             children: [
               // WhatsApp Button
-              if (widget.kontrakan.noWhatsapp != null &&
-                  widget.kontrakan.noWhatsapp!.isNotEmpty)
+              if (_kontrakan.noWhatsapp != null &&
+                  _kontrakan.noWhatsapp!.isNotEmpty)
                 Container(
                   margin: const EdgeInsets.only(right: 12),
                   child: ElevatedButton(
                     onPressed: () =>
-                        _openWhatsApp(widget.kontrakan.noWhatsapp!),
+                        _openWhatsApp(_kontrakan.noWhatsapp!),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF25D366),
                       foregroundColor: Colors.white,
@@ -394,11 +410,11 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
               // Booking Button
               Expanded(
                 child: ElevatedButton(
-                  onPressed: widget.kontrakan.isAvailable
+                  onPressed: _kontrakan.isAvailable
                       ? _showPengajuanOptions
                       : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: widget.kontrakan.isAvailable
+                    backgroundColor: _kontrakan.isAvailable
                         ? const Color(0xFF1565C0)
                         : Colors.grey,
                     foregroundColor: Colors.white,
@@ -411,7 +427,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                     elevation: 0,
                   ),
                   child: Text(
-                    widget.kontrakan.isAvailable
+                    _kontrakan.isAvailable
                         ? 'Ajukan Pengajuan'
                         : 'Sedang Penuh',
                     style: const TextStyle(
@@ -486,7 +502,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => BookingFormScreen(
-                          kontrakan: widget.kontrakan,
+                          kontrakan: _kontrakan,
                           jenisPengajuan: 'survei',
                         ),
                       ),
@@ -506,7 +522,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => BookingFormScreen(
-                          kontrakan: widget.kontrakan,
+                          kontrakan: _kontrakan,
                           jenisPengajuan: 'sewa',
                         ),
                       ),
@@ -582,11 +598,11 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
   }
 
   Widget _buildGallery() {
-    if (!widget.kontrakan.hasPhoto) {
+    if (!_kontrakan.hasPhoto) {
       return _buildMissingPhoto();
     }
 
-    final galleryItems = widget.kontrakan.galeri
+    final galleryItems = _kontrakan.galeri
         .where((item) => item.foto.isNotEmpty)
         .toList();
 
@@ -594,7 +610,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
       itemCount: galleryItems.isEmpty ? 1 : galleryItems.length,
       itemBuilder: (context, index) {
         final imageUrl = galleryItems.isEmpty
-            ? widget.kontrakan.primaryPhoto
+            ? _kontrakan.primaryPhoto
             : galleryItems[index].photoUrl;
 
         return CachedNetworkImage(
@@ -794,7 +810,7 @@ class _KontrakanDetailScreenState extends State<KontrakanDetailScreen> {
       cleaned = '62$cleaned';
     }
     final message = Uri.encodeComponent(
-      'Halo, saya tertarik dengan kontrakan ${widget.kontrakan.nama}',
+      'Halo, saya tertarik dengan kontrakan ${_kontrakan.nama}',
     );
     final url = Uri.parse('https://wa.me/$cleaned?text=$message');
     try {

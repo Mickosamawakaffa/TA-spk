@@ -10,6 +10,7 @@ import '../models/laundry.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
 import '../services/server_discovery_service.dart';
+import '../services/location_service.dart';
 import '../widgets/kontrakan_card.dart';
 import '../widgets/laundry_card.dart';
 
@@ -96,12 +97,18 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   @override
   void initState() {
     super.initState();
-    // Default bobot: profil mahasiswa (akan di-override oleh questionnaire)
-
-    _bobotHarga = 50;
-    _bobotJarak = 20;
-    _bobotKriteria3 = 15;
-    _bobotKriteria4 = 15;
+    // Default bobot: kontrakan seimbang 25% tiap kriteria
+    if (widget.category == 'kontrakan') {
+      _bobotHarga = 25;
+      _bobotJarak = 25;
+      _bobotKriteria3 = 25;
+      _bobotKriteria4 = 25;
+    } else {
+      _bobotHarga = 50;
+      _bobotJarak = 20;
+      _bobotKriteria3 = 15;
+      _bobotKriteria4 = 15;
+    }
 
     // Load user info
     _loadUser();
@@ -199,7 +206,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Ringkasan bobot (tap segmen untuk edit)',
+          'Ringkasan bobot (tap segmen untuk fokus slider)',
           style: TextStyle(fontSize: 11, color: Colors.grey[500]),
         ),
       ],
@@ -227,6 +234,51 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     );
   }
 
+  Widget _buildBobotSlider(int index, int value, {VoidCallback? onChanged}) {
+    final maxBobot = _getMaxBobot(index);
+    final clampedValue = value.clamp(10, maxBobot);
+    final divisions = maxBobot > 10 ? ((maxBobot - 10) ~/ 5) : null;
+
+    return Column(
+      children: [
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            activeTrackColor: _categoryColor,
+            inactiveTrackColor: _categoryColor.withOpacity(0.12),
+            thumbColor: _categoryColor,
+            overlayColor: _categoryColor.withOpacity(0.15),
+            trackHeight: 6,
+            tickMarkShape: SliderTickMarkShape.noTickMark,
+          ),
+          child: Slider(
+            value: clampedValue.toDouble(),
+            min: 10,
+            max: maxBobot.toDouble(),
+            divisions: divisions,
+            label: '$clampedValue%',
+            onChanged: (v) {
+              _updateBobot(index, v.round());
+              onChanged?.call();
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('10%', style: TextStyle(fontSize: 10, color: Colors.grey[500])),
+              Text(
+                '$maxBobot%',
+                style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildBobotRow({
     required int index,
     required String label,
@@ -239,133 +291,107 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     final percent = value.clamp(0, 100);
     final priorityColor = _getPriorityColor(value);
 
-    return InkWell(
-      onTap: () => _showBobotPicker(index),
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE4EDF7)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: _categoryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, size: 18, color: _categoryColor),
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE4EDF7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _categoryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.grey[850],
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        tipeDesc,
-                        style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: _categoryColor.withOpacity(0.3)),
-                  ),
-                  child: Text(
-                    '$percent%',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: _categoryColor,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Icon(Icons.chevron_right, color: Colors.grey[400]),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: priorityColor.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    'Prioritas ${_getPriorityLabel(value)}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: priorityColor,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: isCost
-                        ? Colors.orange.withOpacity(0.15)
-                        : Colors.green.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    isCost ? 'Cost' : 'Benefit',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: isCost ? Colors.orange[800] : Colors.green[800],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(999),
-              child: Stack(
-                children: [
-                  Container(
-                    height: 10,
-                    color: _categoryColor.withOpacity(0.12),
-                  ),
-                  LayoutBuilder(
-                    builder: (ctx, c) {
-                      return Container(
-                        height: 10,
-                        width: c.maxWidth * (percent / 100.0),
-                        color: _categoryColor,
-                      );
-                    },
-                  ),
-                ],
+                child: Icon(icon, size: 18, color: _categoryColor),
               ),
-            ),
-          ],
-        ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.grey[850],
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      tipeDesc,
+                      style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: _categoryColor.withOpacity(0.3)),
+                ),
+                child: Text(
+                  '$percent%',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: _categoryColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: priorityColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  'Prioritas ${_getPriorityLabel(value)}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: priorityColor,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isCost
+                      ? Colors.orange.withOpacity(0.15)
+                      : Colors.green.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  isCost ? 'Cost' : 'Benefit',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: isCost ? Colors.orange[800] : Colors.green[800],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          _buildBobotSlider(index, value),
+        ],
       ),
     );
   }
@@ -418,16 +444,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     final icon = item['icon'] as IconData;
     final tipeDesc = item['tipeDesc'] as String;
 
-    final currentValues = [
-      _bobotHarga,
-      _bobotJarak,
-      _bobotKriteria3,
-      _bobotKriteria4,
-    ];
-
-    final options = _getBobotOptionsFor(index);
-    final selected = currentValues[index];
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -435,105 +451,112 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            final currentValues = [
+              _bobotHarga,
+              _bobotJarak,
+              _bobotKriteria3,
+              _bobotKriteria4,
+            ];
+            final selected = currentValues[index];
+
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: _categoryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(icon, color: _categoryColor),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            label,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: _categoryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(icon, color: _categoryColor),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                label,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                tipeDesc,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: _categoryColor.withOpacity(0.3),
                             ),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            tipeDesc,
-                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          child: Text(
+                            '$selected%',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: _categoryColor,
+                            ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: _categoryColor.withOpacity(0.3)),
-                      ),
-                      child: Text(
-                        '$selected%',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: _categoryColor,
+                    const SizedBox(height: 10),
+                    Text(
+                      'Geser slider (10%–70%). Total otomatis diseimbangkan menjadi 100%.',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                    _buildBobotSlider(
+                      index,
+                      selected,
+                      onChanged: () => setModalState(() {}),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _categoryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Selesai',
+                          style: TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  'Pilih bobot. Total otomatis diseimbangkan menjadi 100%.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: options.map((v) {
-                    final isSel = v == selected;
-                    return InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () {
-                        _updateBobot(index, v);
-                        Navigator.of(ctx).pop();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: isSel ? _categoryColor : Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isSel
-                                ? _categoryColor
-                                : const Color(0xFFE4EDF7),
-                            width: isSel ? 2 : 1,
-                          ),
-                        ),
-                        child: Text(
-                          '$v%',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: isSel ? Colors.white : Colors.grey[800],
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 12),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
@@ -831,18 +854,13 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     });
   }
 
-  /// Get the maximum dropdown value for a given bobot index
+  /// Get the maximum slider value for a given bobot index (min 10, max 70).
   int _getMaxBobot(int index) {
     int othersMin = 0;
     for (int i = 0; i < 4; i++) {
       if (i != index) othersMin += 10; // minimum 10% each
     }
     return (100 - othersMin).clamp(10, 70); // max 70
-  }
-
-  List<int> _getBobotOptionsFor(int index) {
-    int max = _getMaxBobot(index);
-    return List.generate(((max - 10) ~/ 5) + 1, (i) => 10 + i * 5);
   }
 
   String _getPriorityLabel(int value) {
@@ -1039,120 +1057,66 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   }
 
   Future<void> _detectUserLocation() async {
-    // Guard: prevent re-entrant / duplicate calls
     if (_isDetectingLocation) return;
 
     setState(() => _isDetectingLocation = true);
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        if (!mounted) return;
-        // Offer user to open location settings
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('GPS mati. Buka pengaturan lokasi?'),
-            action: SnackBarAction(
-              label: 'Buka',
-              onPressed: () => Geolocator.openLocationSettings(),
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
-        setState(() => _isDetectingLocation = false);
-        return;
-      }
+      final locationService = LocationService();
+      final position = await locationService.getCurrentLocation();
 
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Izin lokasi ditolak'),
-              backgroundColor: Colors.red,
-            ),
-          );
-          setState(() => _isDetectingLocation = false);
-          return;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
+      if (position != null) {
         if (!mounted) return;
+        setState(() {
+          _userLatitude = position.latitude;
+          _userLongitude = position.longitude;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Izin lokasi ditolak permanen. Ubah di pengaturan.'),
-            backgroundColor: Colors.red,
+            content: Text('Lokasi berhasil dideteksi!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
           ),
         );
-        setState(() => _isDetectingLocation = false);
-        return;
-      }
-
-      // Primary attempt: get current position with timeout
-      Position? position;
-      try {
-        position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-        ).timeout(
-          const Duration(seconds: 15),
-          onTimeout: () => throw TimeoutException('Deteksi lokasi timeout'),
-        );
-      } catch (e) {
-        debugPrint('getCurrentPosition failed: $e');
-      }
-
-      // Fallback: try last known position
-      if (position == null) {
-        try {
-          position = await Geolocator.getLastKnownPosition();
-          debugPrint('getLastKnownPosition result: $position');
-        } catch (e) {
-          debugPrint('getLastKnownPosition failed: $e');
-        }
-      }
-
-      // Further fallback: subscribe briefly to position stream
-      if (position == null) {
-        try {
-          final stream = Geolocator.getPositionStream(
-            locationSettings: const LocationSettings(
-              accuracy: LocationAccuracy.high,
-              distanceFilter: 10,
-            ),
-          );
-          position = await stream.first.timeout(const Duration(seconds: 10));
-          debugPrint('getPositionStream first: $position');
-        } catch (e) {
-          debugPrint('getPositionStream failed: $e');
-        }
-      }
-
-      if (position == null) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Gagal mendapatkan lokasi. Pastikan GPS dan izin sudah aktif.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        setState(() => _isDetectingLocation = false);
         return;
       }
 
       if (!mounted) return;
-      setState(() {
-        _userLatitude = position!.latitude;
-        _userLongitude = position!.longitude;
-        _isDetectingLocation = false;
-      });
 
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              permission == LocationPermission.deniedForever
+                  ? 'Izin lokasi ditolak permanen. Ubah di pengaturan aplikasi.'
+                  : 'Izin lokasi ditolak. Aktifkan izin lokasi untuk melanjutkan.',
+            ),
+            backgroundColor: Colors.red,
+            action: permission == LocationPermission.deniedForever
+                ? SnackBarAction(
+                    label: 'Buka',
+                    onPressed: () => Geolocator.openAppSettings(),
+                  )
+                : null,
+          ),
+        );
+        return;
+      }
+
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lokasi berhasil dideteksi!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(
+            serviceEnabled
+                ? 'Gagal mendapatkan lokasi. Coba lagi di area terbuka.'
+                : 'GPS mati. Buka pengaturan lokasi?',
+          ),
+          backgroundColor: Colors.red,
+          action: SnackBarAction(
+            label: 'Buka',
+            onPressed: () => Geolocator.openLocationSettings(),
+          ),
         ),
       );
     } catch (e) {
@@ -1165,7 +1129,10 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
           backgroundColor: Colors.red,
         ),
       );
-      setState(() => _isDetectingLocation = false);
+    } finally {
+      if (mounted) {
+        setState(() => _isDetectingLocation = false);
+      }
     }
   }
 
@@ -2420,7 +2387,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Tap salah satu kriteria untuk mengubah bobot. Total akan disesuaikan otomatis menjadi 100%.',
+            'Geser slider pada setiap kriteria (10%–70%). Total akan disesuaikan otomatis menjadi 100%.',
             style: TextStyle(fontSize: 11, color: Colors.grey[500]),
           ),
           const SizedBox(height: 12),

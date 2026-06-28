@@ -177,7 +177,7 @@ class Laundry {
         return primary.foto;
       }
       if (primary.foto.isNotEmpty) {
-        return '${AppConfig.serverUrl}/uploads/Laundry/${primary.foto}';
+        return primary.photoUrl;
       }
     }
     // Return empty string when no photo available to avoid unnecessary
@@ -252,11 +252,16 @@ class GaleriLaundry {
 
   // Get full photo URL
   String get photoUrl {
-    // Check if it's already a full URL
+    if (foto.isEmpty) return '';
+
     if (foto.startsWith('http')) {
       return foto;
     }
-    // Build full URL from uploads
-    return '${AppConfig.serverUrl}/uploads/Laundry/$foto';
+
+    if (foto.startsWith('uploads/')) {
+      return '${AppConfig.serverUrl}/$foto';
+    }
+
+    return '${AppConfig.serverUrl}/uploads/galeri/laundry/$foto';
   }
 }
