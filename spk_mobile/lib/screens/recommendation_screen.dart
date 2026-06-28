@@ -417,7 +417,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         'icon': widget.category == 'kontrakan'
             ? Icons.bed_outlined
             : Icons.speed_outlined,
-        'tipe': 'Benefit',
+        'tipe': widget.category == 'kontrakan' ? 'Benefit' : 'Cost',
         'tipeDesc': widget.category == 'kontrakan'
             ? 'Semakin banyak semakin baik'
             : 'Semakin cepat semakin baik',
@@ -2705,7 +2705,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               const SizedBox(width: 6),
               _buildBobotMiniChip('Jarak', _bobotJarak, true),
               const SizedBox(width: 6),
-              _buildBobotMiniChip(_kriteria3Label, _bobotKriteria3, false),
+              _buildBobotMiniChip(_kriteria3Label, _bobotKriteria3, widget.category == 'laundry'),
               const SizedBox(width: 6),
               _buildBobotMiniChip(_kriteria4Label, _bobotKriteria4, false),
             ],
@@ -3229,6 +3229,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       case 'kecepatan_layanan':
         return 'Kecepatan';
       case 'layanan':
+      case 'Fasilitas layanan':
         return 'Layanan';
       default:
         return key;
@@ -3246,6 +3247,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         return _bobotKriteria3 / 100;
       case 'fasilitas_count':
       case 'layanan':
+      case 'Fasilitas layanan':
         return _bobotKriteria4 / 100;
       default:
         return 0;
