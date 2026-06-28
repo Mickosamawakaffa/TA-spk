@@ -167,6 +167,23 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::put('/profile/update', [AuthController::class, 'updateProfile']);
+
+    // Send/Resend Email Verification Notification
+    Route::post('/email/verification-notification', function (Request $request) {
+        if ($request->user()->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email Anda sudah diverifikasi.',
+            ], 400);
+        }
+
+        $request->user()->sendEmailVerificationNotification();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tautan verifikasi baru telah dikirim ke email Anda.',
+        ]);
+    })->middleware('throttle:3,1');
     
     // Booking Routes
     Route::prefix('bookings')->group(function () {

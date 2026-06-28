@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'login.dart';
 import 'screens/improved_home_screen.dart';
+import 'screens/email_verification_screen.dart';
 import 'services/auth_service.dart';
 import 'services/server_discovery_service.dart';
 
@@ -311,7 +312,9 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
 
     final destination = _authService.isAuthenticated
-        ? const ImprovedHomeScreen()
+        ? (_authService.currentUser?.isEmailVerified == true
+            ? const ImprovedHomeScreen()
+            : const EmailVerificationScreen())
         : const LoginScreen();
 
     Navigator.pushReplacement(

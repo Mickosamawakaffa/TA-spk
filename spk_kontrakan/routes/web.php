@@ -212,3 +212,29 @@ Route::middleware('auth:admin')->group(function () {
 
     Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 });
+
+// -------------------------------------------------
+// EMAIL VERIFICATION LANDING PAGE (PUBLIC - SIGNED)
+// -------------------------------------------------
+Route::get('/email/verify/{id}/{hash}', function ($id, $hash, \Illuminate\Http\Request $request) {
+    // Temukan user berdasarkan ID
+    $user = \App\Models\User::findOrFail($id);
+    
+    // Verifikasi hash email
+    if (! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+        abort(403, 'Tautan verifikasi tidak valid.');
+    }
+    
+    // Tandai email sebagai terverifikasi
+    if (! $user->hasVerifiedEmail()) {
+        $user->markEmailAsVerified();
+        event(new \Illuminate\Auth\Events\Verified($user));
+    }
+    
+    // Kembalikan view sukses yang indah
+    return view('auth.verified_success', [
+        'name' => $user->name,
+        'email' => $user->email
+    ]);
+})->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
+

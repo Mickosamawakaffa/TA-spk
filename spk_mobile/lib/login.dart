@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'screens/improved_home_screen.dart';
+import 'screens/email_verification_screen.dart';
 import 'register.dart';
 import 'services/auth_service.dart';
 
@@ -234,10 +235,15 @@ class _LoginScreenState extends State<LoginScreen> {
       final success = result['success'] ?? false;
 
       if (success == true) {
+        final user = _authService.currentUser;
         if (mounted) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const ImprovedHomeScreen()),
+            MaterialPageRoute(
+              builder: (context) => user?.isEmailVerified == true
+                  ? const ImprovedHomeScreen()
+                  : const EmailVerificationScreen(),
+            ),
           );
         }
       } else {

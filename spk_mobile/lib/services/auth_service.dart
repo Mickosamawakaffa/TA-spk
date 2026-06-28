@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
@@ -547,8 +547,10 @@ class AuthService {
           if (user.name.trim().isNotEmpty || user.email.trim().isNotEmpty) {
             _currentUser = user;
 
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString(AppConfig.userKey, jsonEncode(user.toJson()));
+            await _secureStorage.write(
+              key: AppConfig.userKey,
+              value: jsonEncode(user.toJson()),
+            );
 
             return user;
           }
@@ -559,6 +561,39 @@ class AuthService {
       return _currentUser;
     } catch (e) {
       return _currentUser;
+    }
+  }
+
+  /// Mengirim ulang email verifikasi
+  Future<Map<String, dynamic>> resendVerificationEmail() async {
+    if (_token == null) {
+      return {'success': false, 'message': 'Sesi telah habis. Silakan login kembali.'};
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.baseUrl}/email/verification-notification'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+      ).timeout(AppConfig.connectionTimeout);
+
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': decoded['message'] ?? 'Tautan verifikasi terkirim!'
+        };
+      } else {
+        return {
+          'success': false,
+          'message': decoded['message'] ?? 'Gagal mengirim email verifikasi.'
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Koneksi bermasalah: $e'};
     }
   }
 

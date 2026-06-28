@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'login.dart';
+import 'screens/email_verification_screen.dart';
 import 'services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -493,7 +494,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     size: 20,
                   ),
                   SizedBox(width: 10),
-                  Text('Registrasi berhasil! Silakan login.'),
+                  Text('Registrasi berhasil! Silakan verifikasi email Anda.'),
                 ],
               ),
               backgroundColor: const Color(0xFF2E7D32),
@@ -512,7 +513,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (_) => LoginScreen(initialEmail: _emailController.text),
+              builder: (_) => const EmailVerificationScreen(),
             ),
           );
         }

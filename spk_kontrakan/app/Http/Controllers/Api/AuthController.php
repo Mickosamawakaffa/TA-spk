@@ -32,6 +32,9 @@ class AuthController extends Controller
             // Refresh user to ensure all fields are loaded from DB
             $user->refresh();
 
+            // Fire registered event to trigger verification email notification
+            event(new \Illuminate\Auth\Events\Registered($user));
+
             $token = $user->createToken('mobile-app-token')->plainTextToken;
 
             Log::info('Registration successful', ['user_id' => $user->id]);
