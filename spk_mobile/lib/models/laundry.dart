@@ -16,6 +16,7 @@ class Laundry {
   final String? deskripsi;
   final String? fotoUtama;
   final String? foto; // Field foto dari API
+  final String? fotoUrl; // Full absolute URL dari API (foto_url)
   final List<GaleriLaundry> galeri;
   final double? avgRating;
   final int? totalReviews;
@@ -37,6 +38,7 @@ class Laundry {
     this.deskripsi,
     this.fotoUtama,
     this.foto,
+    this.fotoUrl,
     this.galeri = const [],
     this.avgRating,
     this.totalReviews,
@@ -126,6 +128,7 @@ class Laundry {
       deskripsi: json['deskripsi'],
       fotoUtama: json['foto_utama'],
       foto: json['foto'], // Store raw foto field
+      fotoUrl: json['foto_url'], // Full URL dari API
       galeri: galleryList,
       avgRating: json['avg_rating'] != null
           ? double.tryParse(json['avg_rating'].toString())
@@ -157,17 +160,20 @@ class Laundry {
   }
 
   // Get primary photo URL
-  // Prioritize 'foto' field (Admin-set primary photo) over galeri entries,
-  // because galeri items may reference files that have been deleted/replaced.
+  // Priority: foto_url (full URL from API) > foto field > galeri
   String get primaryPhoto {
-    // 1. Prefer the explicit 'foto' field (most up-to-date primary photo)
+    // 1. Gunakan foto_url dari API jika sudah full URL (paling akurat)
+    if (fotoUrl != null && fotoUrl!.isNotEmpty) {
+      return fotoUrl!;
+    }
+    // 2. Construct URL dari nama file foto
     if (foto != null && foto!.isNotEmpty) {
       if (foto!.startsWith('http')) {
         return foto!;
       }
       return '${AppConfig.serverUrl}/uploads/Laundry/$foto';
     }
-    // 2. Fall back to galeri items if foto is not set
+    // 3. Fall back to galeri items if foto is not set
     if (galeri.isNotEmpty) {
       final primary = galeri.firstWhere(
         (g) => g.isPrimary,
@@ -180,8 +186,6 @@ class Laundry {
         return primary.photoUrl;
       }
     }
-    // Return empty string when no photo available to avoid unnecessary
-    // network requests to placeholder services (prevents TLS/handshake errors)
     return '';
   }
 

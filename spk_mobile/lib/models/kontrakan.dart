@@ -12,6 +12,7 @@ class Kontrakan {
   final String status;
   final String? fotoUtama;
   final String? foto;
+  final String? fotoUrl; // Full absolute URL dari API (foto_url)
   final String? noWhatsapp;
   final List<Galeri> galeri;
   final double? avgRating;
@@ -31,6 +32,7 @@ class Kontrakan {
     required this.status,
     this.fotoUtama,
     this.foto,
+    this.fotoUrl,
     this.noWhatsapp,
     this.galeri = const [],
     this.avgRating,
@@ -81,6 +83,7 @@ class Kontrakan {
       status: json['status'] ?? 'tersedia',
       fotoUtama: json['foto_utama'],
       foto: json['foto'],
+      fotoUrl: json['foto_url'], // Full URL dari API (SAW response)
       noWhatsapp: json['no_whatsapp'],
       galeri: galleryList,
       avgRating: json['avg_rating'] != null
@@ -113,6 +116,12 @@ class Kontrakan {
   }
 
   String get primaryPhoto {
+    // 1. Gunakan foto_url dari API jika sudah full URL (paling akurat, tidak perlu tebak folder)
+    if (fotoUrl != null && fotoUrl!.isNotEmpty) {
+      return fotoUrl!;
+    }
+
+    // 2. Construct URL dari nama file foto
     if (foto != null && foto!.isNotEmpty) {
       return _resolveKontrakanPhotoPath(foto!);
     }
