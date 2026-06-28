@@ -452,11 +452,17 @@ class SAWController extends Controller
 
                 // Normalisasi based on tipe (Benefit/Cost)
                 if (strtolower($k->tipe) === 'benefit') {
-                    $maxVal = $maxValues[$field] ?: 1;
-                    $row['normalisasi'][$field] = (float)$nilai / (float)$maxVal;
+                    $maxVal = (float)($maxValues[$field] ?? 1.0);
+                    if ($maxVal == 0.0) {
+                        $maxVal = 1.0;
+                    }
+                    $row['normalisasi'][$field] = (float)$nilai / $maxVal;
                 } else { // Cost
-                    $minVal = $minValues[$field] ?: 1;
-                    $row['normalisasi'][$field] = (float)$nilai > 0 ? (float)$minVal / (float)$nilai : 0;
+                    $minVal = (float)($minValues[$field] ?? 1.0);
+                    if ($minVal == 0.0) {
+                        $minVal = 1.0;
+                    }
+                    $row['normalisasi'][$field] = (float)$nilai > 0 ? $minVal / (float)$nilai : 0;
                 }
             }
 
@@ -532,11 +538,17 @@ class SAWController extends Controller
 
                 // Normalisasi based on tipe (Benefit/Cost)
                 if (strtolower($k->tipe) === 'benefit') {
-                    $maxVal = $maxValues[$field] ?: 1;
-                    $row['normalisasi'][$field] = (float)$nilai / (float)$maxVal;
+                    $maxVal = (float)($maxValues[$field] ?? 1.0);
+                    if ($maxVal == 0.0) {
+                        $maxVal = 1.0;
+                    }
+                    $row['normalisasi'][$field] = (float)$nilai / $maxVal;
                 } else { // Cost
-                    $minVal = $minValues[$field] ?: 1;
-                    $row['normalisasi'][$field] = (float)$nilai > 0 ? (float)$minVal / (float)$nilai : 0;
+                    $minVal = (float)($minValues[$field] ?? 1.0);
+                    if ($minVal == 0.0) {
+                        $minVal = 1.0;
+                    }
+                    $row['normalisasi'][$field] = (float)$nilai > 0 ? $minVal / (float)$nilai : 0;
                 }
             }
 
