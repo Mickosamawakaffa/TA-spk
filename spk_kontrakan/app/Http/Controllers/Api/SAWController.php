@@ -312,7 +312,7 @@ class SAWController extends Controller
                     'harga' => $request->bobot_harga / 100,
                     'jarak' => $request->bobot_jarak / 100,
                     'kecepatan_layanan' => $request->bobot_kecepatan / 100,
-                    'layanan' => $request->bobot_layanan / 100,
+                    'Fasilitas layanan' => $request->bobot_layanan / 100,
                 ];
             }
         }
@@ -626,6 +626,7 @@ class SAWController extends Controller
                 return $waktu > 0 ? $waktu : 24;
             
             case 'layanan':
+            case 'Fasilitas layanan':
                 // Jumlah variasi layanan yang tersedia
                 return $item->layanan->count() ?: 1;
             
