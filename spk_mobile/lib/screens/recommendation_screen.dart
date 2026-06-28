@@ -380,7 +380,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  isCost ? 'Cost' : 'Benefit',
+                  isCost ? 'Biaya' : 'Keuntungan',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
