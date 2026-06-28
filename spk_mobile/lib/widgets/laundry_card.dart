@@ -236,7 +236,7 @@ class LaundryCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '${laundry.waktuProses}h',
+                              '${laundry.waktuProsesFor(selectedJenisLayanan)}h',
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,

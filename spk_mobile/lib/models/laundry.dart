@@ -15,6 +15,8 @@ class Laundry {
   final double hargaHarian;
   final double hargaJam;
   final int waktuProses; // dalam jam
+  final int waktuProsesHarian;
+  final int waktuProsesJam;
   final String? deskripsi;
   final String? fotoUtama;
   final String? foto; // Field foto dari API
@@ -39,6 +41,8 @@ class Laundry {
     required this.hargaHarian,
     required this.hargaJam,
     required this.waktuProses,
+    required this.waktuProsesHarian,
+    required this.waktuProsesJam,
     this.deskripsi,
     this.fotoUtama,
     this.foto,
@@ -98,6 +102,29 @@ class Laundry {
     if (hargaHarian == 0) hargaHarian = hargaKiloan > 0 ? hargaKiloan : harga;
     if (hargaJam == 0) hargaJam = harga;
 
+    int waktuProsesHarian = 0;
+    int waktuProsesJam = 0;
+
+    if (json['layanan'] != null &&
+        (json['layanan'] as List).isNotEmpty) {
+      for (final item in json['layanan'] as List) {
+        final jenis = item['jenis_layanan']?.toString().toLowerCase() ?? '';
+        final estimasi = int.tryParse(item['estimasi_selesai']?.toString() ?? '0') ?? 0;
+        final waktu = int.tryParse(item['waktu_proses']?.toString() ?? '0') ?? 0;
+        final actualWaktu = waktu > 0 ? waktu : (estimasi > 0 ? estimasi : 24);
+        
+        if (jenis == 'harian' || jenis == 'kiloan' || jenis == 'reguler') {
+          waktuProsesHarian = actualWaktu;
+        } else if (jenis == 'jam' || jenis == 'express' || jenis == 'kilat' || jenis == 'satuan') {
+          waktuProsesJam = actualWaktu;
+        }
+      }
+    }
+
+    if (waktuProsesHarian == 0) waktuProsesHarian = json['waktu_proses'] ?? 24;
+    if (waktuProsesJam == 0) waktuProsesJam = json['waktu_proses'] ?? 24;
+
+
 
     // Get foto from API and build gallery list
     final List<GaleriLaundry> galleryList = [];
@@ -147,6 +174,8 @@ class Laundry {
       hargaHarian: hargaHarian,
       hargaJam: hargaJam,
       waktuProses: json['waktu_proses'] ?? 24,
+      waktuProsesHarian: waktuProsesHarian,
+      waktuProsesJam: waktuProsesJam,
       deskripsi: json['deskripsi'],
       fotoUtama: json['foto_utama'],
       foto: json['foto'], // Store raw foto field
@@ -229,6 +258,20 @@ class Laundry {
     } else {
       final val = hargaHarian > 0 ? hargaHarian : hargaPerKg;
       return 'Rp ${_formatRupiah(val)}';
+    }
+  }
+
+  // Format waktu proses sesuai jenis layanan (harian / jam)
+  int waktuProsesFor(String? jenisLayanan) {
+    if (jenisLayanan == null || jenisLayanan.isEmpty) {
+      return waktuProsesHarian > 0 ? waktuProsesHarian : waktuProses;
+    }
+    
+    final target = jenisLayanan.toLowerCase();
+    if (target == 'jam' || target == 'express' || target == 'kilat' || target == 'satuan') {
+      return waktuProsesJam > 0 ? waktuProsesJam : waktuProses;
+    } else {
+      return waktuProsesHarian > 0 ? waktuProsesHarian : waktuProses;
     }
   }
 
