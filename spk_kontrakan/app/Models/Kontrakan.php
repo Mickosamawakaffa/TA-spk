@@ -33,6 +33,40 @@ class Kontrakan extends Model
     ];
 
     /**
+     * Tambahkan foto_url ke semua JSON response secara otomatis
+     */
+    protected $appends = ['foto_url'];
+
+    /**
+     * Accessor: foto_url = full absolute URL foto utama
+     * Mengecek keberadaan file di disk agar URL selalu benar,
+     * terlepas dari casing nama folder (kontrakan vs Kontrakan).
+     */
+    public function getFotoUrlAttribute(): ?string
+    {
+        if (empty($this->foto)) {
+            return null;
+        }
+
+        $foto = $this->foto;
+
+        if (str_starts_with($foto, 'http')) {
+            return $foto;
+        }
+
+        // Cek keberadaan file di tiap kemungkinan folder
+        $folders = ['uploads/kontrakan', 'uploads/Kontrakan'];
+        foreach ($folders as $folder) {
+            if (file_exists(public_path($folder . '/' . $foto))) {
+                return url($folder . '/' . $foto);
+            }
+        }
+
+        // Fallback: konstruksi URL dengan folder lowercase (standar)
+        return url('uploads/kontrakan/' . $foto);
+    }
+
+    /**
      * ========== RELASI ADMIN ==========
      */
 

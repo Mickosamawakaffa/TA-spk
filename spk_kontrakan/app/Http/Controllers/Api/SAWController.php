@@ -633,6 +633,8 @@ class SAWController extends Controller
     /**
      * Sanitize any image URLs in the item array/object by removing external placeholders
      * to avoid mobile clients attempting TLS connections to via.placeholder.com.
+     * Also injects foto_url (full absolute URL) so mobile doesn't need to guess
+     * the upload folder casing (uploads/kontrakan vs uploads/Kontrakan, etc.).
      */
     private function sanitizeItemForMobile($item)
     {
@@ -652,6 +654,31 @@ class SAWController extends Controller
         };
 
         $sanitize($arr);
+
+        // Inject foto_url: full absolute URL so mobile doesn't need to guess folder casing
+        if (!empty($arr['foto'])) {
+            $foto = $arr['foto'];
+            if (str_starts_with($foto, 'http')) {
+                // Already a full URL
+                $arr['foto_url'] = $foto;
+            } else {
+                $baseUrl = rtrim(url('/'), '/');
+                // Detect correct folder by checking file existence on disk
+                if (file_exists(public_path('uploads/kontrakan/' . $foto))) {
+                    $arr['foto_url'] = $baseUrl . '/uploads/kontrakan/' . $foto;
+                } elseif (file_exists(public_path('uploads/Laundry/' . $foto))) {
+                    $arr['foto_url'] = $baseUrl . '/uploads/Laundry/' . $foto;
+                } elseif (file_exists(public_path('uploads/Kontrakan/' . $foto))) {
+                    $arr['foto_url'] = $baseUrl . '/uploads/Kontrakan/' . $foto;
+                } else {
+                    // Fallback: build URL from kontrakan path
+                    $arr['foto_url'] = $baseUrl . '/uploads/kontrakan/' . $foto;
+                }
+            }
+        } else {
+            $arr['foto_url'] = null;
+        }
+
         return $arr;
     }
 }
