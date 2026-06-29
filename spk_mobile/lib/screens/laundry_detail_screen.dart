@@ -295,7 +295,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                                         ),
                                         _buildHeaderChip(
                                           icon: Icons.schedule_rounded,
-                                          label: '${widget.laundry.waktuProsesFor(widget.selectedJenisLayanan)} jam',
+                                          label: widget.laundry.formattedWaktuProsesFor(widget.selectedJenisLayanan),
                                         ),
                                       ],
                                     ),
@@ -347,7 +347,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                       _buildInfoRow(
                         Icons.schedule,
                         'Kecepatan Layanan',
-                        '${widget.laundry.waktuProsesFor(widget.selectedJenisLayanan)} jam',
+                        widget.laundry.formattedWaktuProsesFor(widget.selectedJenisLayanan),
                       ),
                     ],
                   ),

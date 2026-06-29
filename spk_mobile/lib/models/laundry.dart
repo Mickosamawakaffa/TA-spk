@@ -291,7 +291,26 @@ class Laundry {
 
   double get jarak => jarakKampus; // alias for jarak field
   double get rating => avgRating ?? 0.0;
-  String get estimasiSelesai => '$waktuProses jam';
+  // Format jam secara umum menjadi format ramah pengguna (contoh: "3 hari", "10 jam")
+  static String formatJam(int jam) {
+    if (jam >= 24) {
+      final hari = jam ~/ 24;
+      final sisaJam = jam % 24;
+      if (sisaJam == 0) {
+        return '$hari hari';
+      } else {
+        return '$hari hari $sisaJam jam';
+      }
+    }
+    return '$jam jam';
+  }
+
+  // Format waktu proses sesuai jenis layanan
+  String formattedWaktuProsesFor(String? jenisLayanan) {
+    return formatJam(waktuProsesFor(jenisLayanan));
+  }
+
+  String get estimasiSelesai => formatJam(waktuProses);
 
   // Check if currently open
   bool get isOpen {
