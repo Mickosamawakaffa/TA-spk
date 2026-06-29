@@ -566,12 +566,47 @@ class BookingController extends Controller
         }
     }
 
+        /**
+     * Verifikasi pembayaran (status verification -> paid)
+     */
+    public function verifyPayment(Request $request, Booking $booking)
+    {
+        // ========== AUTHORIZATION ===========
+        $admin = auth()->guard('admin')->user();
+        if ($admin) {
+            if ($booking->kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses ke booking ini.');
+            }
+        }
+
+        // Only allow verification when status is verification
+        if ($booking->payment_status !== 'verification') {
+            return back()->with('error', 'Status pembayaran bukan verifikasi.');
+        }
+
+        $method = $request->input('payment_method', 'cash');
+        $booking->update([
+            'payment_status' => 'paid',
+            'payment_method' => $method,
+            'paid_at' => now(),
+        ]);
+
+        return back()->with('success', 'Pembayaran berhasil diverifikasi dan ditandai lunas.');
+    }
+
     /**
      * Hapus booking
      */
     public function destroy(Booking $booking)
     {
         // ========== AUTHORIZATION ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin) {
+            if ($booking->kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses ke booking ini.');
+            }
+        }
+
         $admin = auth()->guard('admin')->user();
         if ($admin) {
             if ($booking->kontrakan->admin_id !== $admin->id) {

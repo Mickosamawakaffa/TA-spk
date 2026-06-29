@@ -290,6 +290,21 @@
                         </button>
                         @endif
                     </form>
+                    @if($booking->payment_status == 'verification')
+                    <form action="{{ route('admin.bookings.verify-payment', $booking->id) }}" method="POST" class="mt-2">
+                        @csrf
+                        <div class="input-group">
+                            <select name="payment_method" class="form-select" required>
+                                <option value="cash">Cash</option>
+                                <option value="transfer">Transfer</option>
+                                <option value="other">Lainnya</option>
+                            </select>
+                            <button type="submit" class="btn btn-success" onclick="return confirm('Verifikasi pembayaran?')">
+                                Verifikasi
+                            </button>
+                        </div>
+                    </form>
+                    @endif
                     @endif
 
                     {{-- Cancel --}}

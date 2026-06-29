@@ -189,6 +189,19 @@
                                 <span class="badge {{ $booking->payment_status == 'paid' ? 'bg-success' : 'bg-secondary' }}">
                                     {{ $booking->payment_status_label }}
                                 </span>
+                                @if($booking->payment_status == 'verification')
+                                    <form action="{{ route('admin.bookings.verify-payment', $booking->id) }}" method="POST" class="d-inline ms-2">
+                                        @csrf
+                                        <select name="payment_method" class="form-select d-inline w-auto" required>
+                                            <option value="cash">Cash</option>
+                                            <option value="transfer">Transfer</option>
+                                            <option value="other">Lainnya</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Verifikasi pembayaran?')">
+                                            Verifikasi
+                                        </button>
+                                    </form>
+                                @endif
                                 @if($booking->payment_proof)
                                 <a href="{{ route('admin.bookings.payment-proof', $booking->id) }}" target="_blank" class="btn btn-sm btn-outline-success ms-1" title="Lihat Bukti Transfer">
                                     <i class="bi bi-image"></i>

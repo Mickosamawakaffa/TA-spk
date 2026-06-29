@@ -146,6 +146,7 @@ Route::middleware('auth:admin')->group(function () {
         Route::post('/{booking}/cancel', [BookingController::class, 'cancel'])->name('cancel');
         Route::post('/{booking}/mark-paid', [BookingController::class, 'markPaid'])->name('mark-paid');
         Route::post('/{booking}/toggle-payment', [BookingController::class, 'togglePaymentStatus'])->name('toggle-payment');
+        Route::post('/{booking}/verify-payment', [BookingController::class, 'verifyPayment'])->name('verify-payment');
         
         // API & History
         Route::post('/check-availability', [BookingController::class, 'checkAvailability'])->name('check-availability');
