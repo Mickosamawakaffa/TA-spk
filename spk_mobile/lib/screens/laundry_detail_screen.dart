@@ -371,7 +371,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                       ],
                       if (widget.laundry.hargaJam > 0)
                         _buildPriceCard(
-                          'Laundry Express (Jam/Satuan)',
+                          'Laundry Express (Jam)',
                           widget.laundry.formattedHargaFor("jam"),
                           Icons.flash_on,
                           const Color(0xFFFF9800),
