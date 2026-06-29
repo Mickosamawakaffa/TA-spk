@@ -366,6 +366,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                           widget.laundry.formattedHargaFor("harian"),
                           Icons.scale,
                           const Color(0xFF00897B),
+                          duration: widget.laundry.formattedWaktuProsesFor("harian"),
                         ),
                         const SizedBox(height: 8),
                       ],
@@ -375,6 +376,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                           widget.laundry.formattedHargaFor("jam"),
                           Icons.flash_on,
                           const Color(0xFFFF9800),
+                          duration: widget.laundry.formattedWaktuProsesFor("jam"),
                         ),
                       if (widget.laundry.hargaHarian == 0 && widget.laundry.hargaJam == 0)
                         _buildPriceCard(
@@ -382,6 +384,7 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                           widget.laundry.formattedHargaKiloan,
                           Icons.scale,
                           const Color(0xFF00897B),
+                          duration: widget.laundry.formattedWaktuProsesFor("harian"),
                         ),
                     ],
                   ),
@@ -811,8 +814,9 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
     String title,
     String price,
     IconData icon,
-    Color color,
-  ) {
+    Color color, {
+    String? duration,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -839,6 +843,17 @@ class _LaundryDetailScreenState extends State<LaundryDetailScreen> {
                   title,
                   style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                 ),
+                if (duration != null && duration.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    'Estimasi selesai: $duration',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 4),
                 Text(
                   price,
