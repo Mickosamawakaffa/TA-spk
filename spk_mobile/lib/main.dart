@@ -264,7 +264,6 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<double> _scaleAnim;
-  String _statusText = 'Memulai aplikasi...';
 
   @override
   void initState() {
@@ -291,12 +290,9 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _checkAuth() async {
-    // 🔍 Auto-detect server IP dengan fallback ke konfigurasi default.
-    // Ini membantu APK tetap bisa konek saat IP LAN berubah.
+    // Auto-detect server IP (status callback ditelan, user hanya lihat "Sedang memuat...")
     await ServerDiscoveryService.discover(
-      onStatus: (status) {
-        if (mounted) setState(() => _statusText = status);
-      },
+      onStatus: (_) {}, // Tidak tampilkan info teknis ke user
     ).timeout(
       const Duration(seconds: 8),
       onTimeout: () {
@@ -305,7 +301,6 @@ class _SplashScreenState extends State<SplashScreen>
       },
     );
 
-    if (mounted) setState(() => _statusText = 'Memeriksa sesi...');
     await _authService.loadToken();
     await Future.delayed(const Duration(milliseconds: 400));
 
@@ -335,82 +330,122 @@ class _SplashScreenState extends State<SplashScreen>
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1565C0), Color(0xFF0D47A1), Color(0xFF1A237E)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF1565C0), Color(0xFF1E88E5)],
           ),
         ),
-        child: Center(
-          child: FadeTransition(
-            opacity: _fadeAnim,
-            child: ScaleTransition(
-              scale: _scaleAnim,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(28),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 30,
-                          offset: const Offset(0, 10),
+        child: Stack(
+          children: [
+            // ==================== KONTEN UTAMA (TENGAH) ====================
+            Center(
+              child: FadeTransition(
+                opacity: _fadeAnim,
+                child: ScaleTransition(
+                  scale: _scaleAnim,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Logo toga di dalam CircleAvatar putih
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 30,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.school_rounded,
-                      size: 64,
-                      color: Color(0xFF1565C0),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  const Text(
-                    'Kontrak Kampus',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Rekomendasi Kontrakan & Laundry untuk Mahasiswa',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.8),
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  SizedBox(
-                    width: 32,
-                    height: 32,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Colors.white.withOpacity(0.9),
+                        child: const CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.white,
+                          child: Icon(
+                            Icons.school,
+                            size: 56,
+                            color: Color(0xFF1565C0),
+                          ),
+                        ),
                       ),
-                    ),
+
+                      const SizedBox(height: 32),
+
+                      // Nama aplikasi — bold, non-italic, 28sp, putih
+                      const Text(
+                        'Kontrak Kampus',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          fontStyle: FontStyle.normal,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // Tagline — kecil, putih transparan
+                      Text(
+                        'Rekomendasi Kontrakan & Laundry untuk Mahasiswa',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.8),
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+
+                      const SizedBox(height: 48),
+
+                      // Teks loading ramah user
+                      Text(
+                        'Sedang memuat...',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white.withValues(alpha: 0.7),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Loading indicator di bawah teks loading
+                      SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white.withValues(alpha: 0.9),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _statusText,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.white.withOpacity(0.7),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
+
+            // ==================== VERSI APP (BAWAH TENGAH) ====================
+            Positioned(
+              bottom: 32,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Text(
+                  'v1.0.0',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+
