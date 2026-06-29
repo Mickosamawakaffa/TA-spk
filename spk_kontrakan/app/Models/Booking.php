@@ -287,6 +287,23 @@ class Booking extends Model
         };
     }
 
+    /**
+     * Cek apakah booking ini adalah pengajuan survei
+     */
+    public function isSurvey(): bool
+    {
+        return $this->jenis_pengajuan === 'survei';
+    }
+
+    /**
+     * Cek apakah booking ini adalah pengajuan sewa
+     * Data lama yang belum memiliki jenis tetap dianggap sebagai sewa.
+     */
+    public function isSewa(): bool
+    {
+        return !$this->isSurvey();
+    }
+
     // ========== ACTIONS ==========
 
     /**
