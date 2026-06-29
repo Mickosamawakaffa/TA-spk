@@ -595,6 +595,45 @@ class BookingController extends Controller
     }
 
     /**
+     * Tolak verifikasi pembayaran (status verification -> unpaid)
+     */
+    public function rejectPayment(Request $request, Booking $booking)
+    {
+        // ========== AUTHORIZATION ===========
+        $admin = auth()->guard('admin')->user();
+        if ($admin) {
+            if ($booking->kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses ke booking ini.');
+            }
+        }
+
+        // Only allow rejection when status is verification
+        if ($booking->payment_status !== 'verification') {
+            return back()->with('error', 'Status pembayaran bukan verifikasi.');
+        }
+
+        $request->validate([
+            'rejection_reason' => 'required|string|max:1000',
+        ], [
+            'rejection_reason.required' => 'Alasan penolakan wajib diisi.',
+        ]);
+
+        // Hapus file bukti pembayaran yang salah/tidak valid
+        if ($booking->payment_proof) {
+            Storage::disk(self::PAYMENT_PROOF_PUBLIC_DISK)->delete($booking->payment_proof);
+            Storage::disk(self::PAYMENT_PROOF_PRIVATE_DISK)->delete($booking->payment_proof);
+        }
+
+        $booking->update([
+            'payment_status' => 'unpaid',
+            'payment_proof' => null,
+            'payment_rejection_reason' => $request->rejection_reason,
+        ]);
+
+        return back()->with('success', 'Pembayaran ditolak. Penyewa telah diinformasikan untuk mengunggah ulang.');
+    }
+
+    /**
      * Hapus booking
      */
     public function destroy(Booking $booking)

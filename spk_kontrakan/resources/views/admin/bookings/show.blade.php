@@ -192,11 +192,24 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
+                        @if($booking->jenis_pengajuan === 'survei')
+                        <label class="text-muted small">Jadwal Survei</label>
+                        <div class="fw-semibold">
+                            <i class="bi bi-calendar-event me-1 text-success"></i>{{ $booking->start_date->format('d M Y') }}
+                        </div>
+                        @if($booking->jam_survei)
+                        <div class="fw-semibold mt-1">
+                            <i class="bi bi-clock me-1 text-success"></i>Pukul {{ $booking->jam_survei }} WIB
+                        </div>
+                        @endif
+                        <span class="badge bg-success mt-1">Survei</span>
+                        @else
                         <label class="text-muted small">Periode Sewa</label>
                         <div class="fw-semibold">
                             {{ $booking->start_date->format('d M Y') }} - {{ $booking->end_date->format('d M Y') }}
                         </div>
                         <span class="badge bg-light text-dark">{{ $booking->duration_days }} hari ({{ $booking->duration_months }} bulan)</span>
+                        @endif
                     </div>
                     <hr>
                     <div class="d-flex justify-content-between mb-2">
@@ -304,6 +317,9 @@
                             </button>
                         </div>
                     </form>
+                    <button type="button" class="btn btn-danger w-100 mt-2" data-bs-toggle="modal" data-bs-target="#rejectPaymentModal">
+                        <i class="bi bi-x-circle me-1"></i>Tolak Pembayaran
+                    </button>
                     @endif
                     @endif
 
@@ -361,4 +377,29 @@
     </div>
 </div>
 @endif
+
+{{-- Reject Payment Modal --}}
+<div class="modal fade" id="rejectPaymentModal" tabindex="-1" aria-labelledby="rejectPaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ route('admin.bookings.reject-payment', $booking->id) }}" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="rejectPaymentModalLabel">Tolak Verifikasi Pembayaran</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="rejection_reason" class="form-label">Alasan Penolakan</label>
+                        <textarea class="form-control" id="rejection_reason" name="rejection_reason" rows="3" required placeholder="Masukkan alasan penolakan (misal: Bukti pembayaran tidak valid/kurang jelas)"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger">Tolak Pembayaran</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection

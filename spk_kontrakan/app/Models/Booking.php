@@ -78,6 +78,9 @@ class Booking extends Model
         'checked_out_at',
         'cancelled_at',
         'cancellation_reason',
+        'payment_rejection_reason',
+        'jam_survei',
+        'tanggal_survei',
     ];
 
     protected $casts = [

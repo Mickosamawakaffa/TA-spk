@@ -9,6 +9,46 @@ class Kontrakan extends Model
 {
     use HasFactory;
 
+    /**
+     * Boot method to handle model events.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($kontrakan) {
+            // Hapus foto utama jika ada
+            if ($kontrakan->foto) {
+                $paths = [
+                    public_path('uploads/kontrakan/' . $kontrakan->foto),
+                    public_path('uploads/Kontrakan/' . $kontrakan->foto)
+                ];
+                foreach ($paths as $path) {
+                    if (file_exists($path)) {
+                        @unlink($path);
+                    }
+                }
+            }
+
+            // Hapus semua foto di galeri beserta file fisiknya
+            if ($kontrakan->galeri) {
+                foreach ($kontrakan->galeri as $g) {
+                    $filePath = public_path('uploads/galeri/kontrakan/' . $g->foto);
+                    if (file_exists($filePath)) {
+                        @unlink($filePath);
+                    }
+                    $g->delete();
+                }
+            }
+
+            // Hapus reviews terkait
+            $kontrakan->reviews()->delete();
+
+            // Hapus favorites terkait
+            $kontrakan->favorites()->delete();
+        });
+    }
+
     protected $fillable = [
         'admin_id',
         'nama',

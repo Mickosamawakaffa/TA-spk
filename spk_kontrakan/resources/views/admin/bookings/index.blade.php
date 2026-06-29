@@ -172,10 +172,23 @@
                                 <small class="text-muted">{{ $booking->tenant_phone }}</small>
                             </td>
                             <td>
-                                <div>{{ $booking->start_date->format('d M Y') }}</div>
-                                <small class="text-muted">s/d {{ $booking->end_date->format('d M Y') }}</small>
-                                <br>
-                                <span class="badge bg-light text-dark">{{ $booking->duration_days }} hari</span>
+                                @if($booking->jenis_pengajuan === 'survei')
+                                    <div class="fw-semibold text-success">
+                                        <i class="bi bi-calendar-event me-1"></i>{{ $booking->start_date->format('d M Y') }}
+                                    </div>
+                                    @if($booking->jam_survei)
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock me-1"></i>Pukul {{ $booking->jam_survei }} WIB
+                                    </small>
+                                    @endif
+                                    <br>
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Survei</span>
+                                @else
+                                    <div>{{ $booking->start_date->format('d M Y') }}</div>
+                                    <small class="text-muted">s/d {{ $booking->end_date->format('d M Y') }}</small>
+                                    <br>
+                                    <span class="badge bg-light text-dark">{{ $booking->duration_days }} hari</span>
+                                @endif
                             </td>
                             <td>
                                 <span class="fw-semibold">Rp {{ number_format($booking->amount, 0, ',', '.') }}</span>
@@ -199,6 +212,9 @@
                                         </select>
                                         <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Verifikasi pembayaran?')">
                                             Verifikasi
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger ms-1" data-bs-toggle="modal" data-bs-target="#rejectPaymentModal" data-action="{{ route('admin.bookings.reject-payment', $booking->id) }}">
+                                            Tolak
                                         </button>
                                     </form>
                                 @endif
@@ -278,11 +294,49 @@
         @endif
     </div>
 </div>
+
+{{-- Reject Payment Modal --}}
+<div class="modal fade" id="rejectPaymentModal" tabindex="-1" aria-labelledby="rejectPaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="rejectPaymentForm" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="rejectPaymentModalLabel">Tolak Verifikasi Pembayaran</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="rejection_reason" class="form-label">Alasan Penolakan</label>
+                        <textarea class="form-control" id="rejection_reason" name="rejection_reason" rows="3" required placeholder="Masukkan alasan penolakan (misal: Bukti pembayaran tidak valid/kurang jelas)"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger">Tolak Pembayaran</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Handle Reject Payment Modal action URL
+        const rejectPaymentModal = document.getElementById('rejectPaymentModal');
+        if (rejectPaymentModal) {
+            rejectPaymentModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const actionUrl = button.getAttribute('data-action');
+                const form = document.getElementById('rejectPaymentForm');
+                if (form) {
+                    form.setAttribute('action', actionUrl);
+                }
+            });
+        }
+
         const selectAll = document.getElementById('selectAllBookings');
         const checkboxes = Array.from(document.querySelectorAll('.booking-checkbox'));
         const selectableCheckboxes = checkboxes.filter(item => !item.disabled);

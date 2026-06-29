@@ -58,80 +58,169 @@ class BookingController extends Controller
     }
 
     /**
-     * Create booking baru
+     * Create pengajuan baru (survei atau sewa) dari mobile
      */
     public function store(Request $request)
+    {
+        $jenis = $request->input('jenis_pengajuan', 'sewa');
+
+        if ($jenis === 'survei') {
+            return $this->storeSurvei($request);
+        }
+
+        return $this->storeSewa($request);
+    }
+
+    /**
+     * Simpan pengajuan survei
+     */
+    private function storeSurvei(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'kontrakan_id'   => 'required|exists:kontrakans,id',
+            'tanggal_survei' => 'required|date|after:today',
+            'jam_survei'     => 'required|string',
+            'catatan'        => 'nullable|string|max:1000',
+        ], [
+            'kontrakan_id.required'   => 'Kontrakan wajib dipilih',
+            'tanggal_survei.required' => 'Tanggal survei wajib diisi',
+            'tanggal_survei.after'    => 'Tanggal survei harus setelah hari ini',
+            'jam_survei.required'     => 'Jam survei wajib diisi',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success'    => false,
+                'message'    => 'Validasi gagal',
+                'error_code' => 'VALIDATION_ERROR',
+                'errors'     => $validator->errors(),
+            ], 422);
+        }
+
+        $kontrakan = Kontrakan::find($request->kontrakan_id);
+
+        if (!$kontrakan) {
+            return response()->json([
+                'success'    => false,
+                'message'    => 'Kontrakan tidak ditemukan',
+                'error_code' => 'NOT_FOUND',
+            ], 404);
+        }
+
+        // Untuk survei, kontrakan cukup tersedia (tidak occupied)
+        if ($kontrakan->status === 'occupied') {
+            return response()->json([
+                'success'    => false,
+                'message'    => 'Kontrakan sedang ditempati',
+                'error_code' => 'NOT_AVAILABLE',
+            ], 400);
+        }
+
+        $tanggalSurvei = Carbon::parse($request->tanggal_survei);
+
+        $booking = Booking::create([
+            'user_id'          => $request->user()->id,
+            'kontrakan_id'     => $request->kontrakan_id,
+            'jenis_pengajuan'  => 'survei',
+            'tanggal_survei'   => $tanggalSurvei,
+            'jam_survei'       => $request->jam_survei,
+            'start_date'       => $tanggalSurvei,
+            'end_date'         => $tanggalSurvei,
+            'amount'           => 0,
+            'status'           => 'pending',
+            'payment_status'   => 'unpaid',
+            'booking_source'   => 'user',
+            'notes'            => $request->catatan,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pengajuan survei berhasil dikirim. Tunggu konfirmasi dari pemilik.',
+            'data'    => $booking->load('kontrakan'),
+        ], 201);
+    }
+
+    /**
+     * Simpan pengajuan sewa
+     */
+    private function storeSewa(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'kontrakan_id' => 'required|exists:kontrakans,id',
             'tanggal_mulai' => 'required|date|after:today',
             'durasi_bulan' => 'required|integer|min:1|max:12',
-            'catatan' => 'nullable|string',
-            'payment_proof' => 'required|image|mimes:jpeg,jpg,png|max:5120',
+            'catatan'      => 'nullable|string|max:1000',
+            'ktp_photo'    => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
         ], [
-            'payment_proof.required' => 'Bukti pembayaran wajib diunggah',
-            'payment_proof.image' => 'File harus berupa gambar',
-            'payment_proof.mimes' => 'Format file harus jpeg, jpg, atau png',
-            'payment_proof.max' => 'Ukuran file maksimal 5MB',
+            'kontrakan_id.required'  => 'Kontrakan wajib dipilih',
+            'tanggal_mulai.required' => 'Tanggal mulai sewa wajib diisi',
+            'tanggal_mulai.after'    => 'Tanggal mulai harus setelah hari ini',
+            'durasi_bulan.required'  => 'Durasi sewa wajib diisi',
+            'ktp_photo.image'        => 'Foto KTP harus berupa gambar',
+            'ktp_photo.mimes'        => 'Format KTP harus jpeg, jpg, atau png',
+            'ktp_photo.max'          => 'Ukuran foto KTP maksimal 5MB',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
-                'success' => false,
-                'message' => 'Validasi gagal',
+                'success'    => false,
+                'message'    => 'Validasi gagal',
                 'error_code' => 'VALIDATION_ERROR',
-                'errors' => $validator->errors()
+                'errors'     => $validator->errors(),
             ], 422);
         }
 
-        // Check kontrakan availability
         $kontrakan = Kontrakan::find($request->kontrakan_id);
-        
-        // Handle both status values: 'tersedia' and 'available'
+
+        if (!$kontrakan) {
+            return response()->json([
+                'success'    => false,
+                'message'    => 'Kontrakan tidak ditemukan',
+                'error_code' => 'NOT_FOUND',
+            ], 404);
+        }
+
+        // Cek ketersediaan kontrakan
         if (!in_array($kontrakan->status, ['tersedia', 'available'])) {
             return response()->json([
-                'success' => false,
-                'message' => 'Kontrakan tidak tersedia',
+                'success'    => false,
+                'message'    => 'Kontrakan tidak tersedia untuk disewa',
                 'error_code' => 'NOT_AVAILABLE',
             ], 400);
         }
 
-        // Calculate tanggal selesai
         $startDate = Carbon::parse($request->tanggal_mulai);
-        $endDate = $startDate->copy()->addMonths((int)$request->durasi_bulan);
-
-        // Calculate total biaya from annual price pro-rated to monthly duration
-        $amount = $kontrakan->harga * ((int)$request->durasi_bulan / 12);
+        $endDate   = $startDate->copy()->addMonths((int)$request->durasi_bulan);
+        $amount    = $kontrakan->harga * ((int)$request->durasi_bulan / 12);
 
         $bookingData = [
-            'user_id' => $request->user()->id,
-            'kontrakan_id' => $request->kontrakan_id,
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'amount' => $amount,
-            'status' => 'pending',
-            'notes' => $request->catatan,
+            'user_id'         => $request->user()->id,
+            'kontrakan_id'    => $request->kontrakan_id,
+            'jenis_pengajuan' => 'sewa',
+            'start_date'      => $startDate,
+            'end_date'        => $endDate,
+            'amount'          => $amount,
+            'status'          => 'pending',
+            'payment_status'  => 'unpaid',
+            'booking_source'  => 'user',
+            'notes'           => $request->catatan,
         ];
 
-        // Handle payment proof upload
-        if ($request->hasFile('payment_proof')) {
-            // ✅ Store sensitive payment proof in PRIVATE storage
-            $path = $request->file('payment_proof')->store(self::PAYMENT_PROOF_DIR, self::PAYMENT_PROOF_PRIVATE_DISK);
-            $bookingData['payment_proof'] = $path;
-            $bookingData['payment_status'] = 'paid';
-            $bookingData['payment_method'] = 'transfer';
-            $bookingData['paid_at'] = now();
+        // Upload foto KTP jika disertakan
+        if ($request->hasFile('ktp_photo')) {
+            $ktpPath = $request->file('ktp_photo')->store('ktp_photos', self::PAYMENT_PROOF_PRIVATE_DISK);
+            $bookingData['ktp_photo'] = $ktpPath;
         }
 
         $booking = Booking::create($bookingData);
 
-        // Update status kontrakan ke booked saat ada booking masuk
+        // Update status kontrakan ke booked
         $kontrakan->update(['status' => 'booked']);
 
         return response()->json([
             'success' => true,
-            'message' => 'Booking berhasil dibuat',
-            'data' => $booking->load('kontrakan')
+            'message' => 'Pengajuan sewa berhasil dikirim. Tunggu persetujuan pemilik.',
+            'data'    => $booking->load('kontrakan'),
         ], 201);
     }
 
@@ -279,10 +368,12 @@ class BookingController extends Controller
             ], 400);
         }
 
-        if ($booking->payment_status === 'paid') {
+        if (in_array($booking->payment_status, ['paid', 'verification'])) {
             return response()->json([
-                'success' => false,
-                'message' => 'Pembayaran booking ini sudah dikonfirmasi',
+                'success'    => false,
+                'message'    => $booking->payment_status === 'paid'
+                    ? 'Pembayaran booking ini sudah dikonfirmasi'
+                    : 'Bukti pembayaran sudah diunggah dan sedang menunggu verifikasi admin',
                 'error_code' => 'ALREADY_PAID',
             ], 400);
         }
@@ -298,17 +389,17 @@ class BookingController extends Controller
         // ✅ Store sensitive payment proof in PRIVATE storage
         $path = $request->file('payment_proof')->store(self::PAYMENT_PROOF_DIR, self::PAYMENT_PROOF_PRIVATE_DISK);
 
-        // Update booking
+        // Update booking – status jadi 'verification' agar admin bisa memverifikasi
         $booking->update([
             'payment_proof'  => $path,
-            'payment_status' => 'paid',
+            'payment_status' => 'verification',
             'payment_method' => 'transfer',
-            'paid_at'        => now(),
+            'payment_rejection_reason' => null,
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Bukti pembayaran berhasil diunggah. Pembayaran Anda telah dikonfirmasi.',
+            'message' => 'Bukti pembayaran berhasil diunggah. Menunggu verifikasi admin.',
             'data'    => $booking->fresh()->load('kontrakan'),
         ], 200);
     }

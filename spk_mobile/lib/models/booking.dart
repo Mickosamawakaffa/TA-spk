@@ -1,4 +1,4 @@
-﻿class Booking {
+class Booking {
   final int id;
   final int userId;
   final int kontrakanId;
@@ -18,6 +18,7 @@
   // Pembayaran hanya digunakan pada pengajuan sewa.
   final String paymentStatus;
   final String? paymentProof;
+  final String? paymentRejectionReason;
 
   Booking({
     required this.id,
@@ -35,6 +36,7 @@
     this.surveyFollowUpExpiresAt,
     this.paymentStatus = 'unpaid',
     this.paymentProof,
+    this.paymentRejectionReason,
   });
 
   static DateTime? _parseDate(dynamic value) {
@@ -75,6 +77,7 @@
       ),
       paymentStatus: json['payment_status']?.toString() ?? 'unpaid',
       paymentProof: json['payment_proof']?.toString(),
+      paymentRejectionReason: json['payment_rejection_reason']?.toString(),
     );
   }
 

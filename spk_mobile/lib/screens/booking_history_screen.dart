@@ -1073,6 +1073,54 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                     ),
                   ),
                 ],
+                if (booking.paymentRejectionReason != null &&
+                    booking.paymentRejectionReason!.isNotEmpty) ...[
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(top: 14),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF1F0),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFFA39E)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          Icons.error_outline_rounded,
+                          color: Color(0xFFF5222D),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Pembayaran Ditolak',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFF5222D),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                booking.paymentRejectionReason!,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF8C1D1D),
+                                  height: 1.35,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 if (booking.canUploadPaymentProof) ...[
                   const SizedBox(height: 14),
                   SizedBox(
