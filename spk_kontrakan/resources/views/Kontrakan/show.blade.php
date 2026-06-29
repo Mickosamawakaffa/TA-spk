@@ -760,7 +760,7 @@
                         <i class="bi bi-pencil me-2"></i>Edit Data
                     </a>
                     
-                    @if(auth()->user()->role == 'super_admin')
+                    @if(auth()->user()->role == 'super_admin' || auth()->user()->id == $kontrakan->admin_id)
                     <form action="{{ route('kontrakan.destroy', $kontrakan->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus kontrakan {{ $kontrakan->nama }}?')">
                         @csrf
                         @method('DELETE')
@@ -769,7 +769,7 @@
                         </button>
                     </form>
                     @else
-                    <button type="button" class="btn btn-secondary w-100" disabled title="Hanya Super Admin yang dapat menghapus data">
+                    <button type="button" class="btn btn-secondary w-100" disabled title="Hanya pemilik kontrakan atau Super Admin yang dapat menghapus data">
                         <i class="bi bi-lock me-2"></i>Hapus Data (Terbatas)
                     </button>
                     @endif

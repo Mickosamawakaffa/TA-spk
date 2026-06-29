@@ -991,7 +991,7 @@
                     </span>
                     
                     <!-- Bulk Action Buttons - Style seperti Laundry -->
-                    @if(auth()->user()->role == 'super_admin' && $kontrakan->count() > 0)
+                    @if((auth()->user()->role == 'super_admin' || auth()->user()->role == 'admin') && $kontrakan->count() > 0)
                     <div id="bulkDeleteBtn" style="display: none;" class="w-100 w-md-auto">
                         <button 
                             type="button" 
@@ -1056,7 +1056,7 @@
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div class="d-flex align-items-start gap-2 flex-grow-1">
-                                    @if(auth()->user()->role == 'super_admin')
+                                    @if(auth()->user()->role == 'super_admin' || auth()->user()->id == $item->admin_id)
                                     <input 
                                         type="checkbox" 
                                         class="form-check-input mt-1 row-checkbox" 
@@ -1155,7 +1155,7 @@
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 
-                                @if(auth()->user()->role == 'super_admin')
+                                @if(auth()->user()->role == 'super_admin' || auth()->user()->id == $item->admin_id)
                                 <button 
                                     type="button" 
                                     class="btn btn-sm flex-fill rounded-3"
@@ -1186,7 +1186,7 @@
                     <table class="table enhanced-table align-middle mb-0">
                         <thead>
                             <tr>
-                                @if(auth()->user()->role == 'super_admin')
+                                @if(auth()->user()->role == 'super_admin' || auth()->user()->role == 'admin')
                                 <th class="border-0 py-3" style="width: 50px;">
                                     <div class="form-check d-flex align-items-center justify-content-center">
                                         <input 
@@ -1229,7 +1229,7 @@
                         <tbody>
                             @foreach($kontrakan as $index => $item)
                             <tr>
-                                @if(auth()->user()->role == 'super_admin')
+                                @if(auth()->user()->role == 'super_admin' || auth()->user()->id == $item->admin_id)
                                 <td class="px-3">
                                     <input 
                                         type="checkbox" 
@@ -1330,7 +1330,7 @@
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         
-                                        @if(auth()->user()->role == 'super_admin')
+                                        @if(auth()->user()->role == 'super_admin' || auth()->user()->id == $item->admin_id)
                                         <button 
                                             type="button" 
                                             class="btn btn-sm"
