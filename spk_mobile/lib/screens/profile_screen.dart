@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/auth_service.dart';
 import '../services/favorite_service.dart';
 import '../services/booking_service.dart';
@@ -25,6 +27,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _isLoading = true;
   int _totalFavorites = 0;
   int _totalBookings = 0;
+  File? _profileImage;
 
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
@@ -111,6 +114,115 @@ class _ProfileScreenState extends State<ProfileScreen>
     return '${months[date.month]} ${date.year}';
   }
 
+  Future<void> _pickProfileImage() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Pilih Sumber Foto',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1A2E),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1565C0).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.camera_alt_rounded,
+                      color: Color(0xFF1565C0)),
+                ),
+                title: const Text('Kamera',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Ambil foto baru'),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF00897B).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.photo_library_rounded,
+                      color: Color(0xFF00897B)),
+                ),
+                title: const Text('Galeri',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Pilih dari galeri'),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null && mounted) {
+        setState(() {
+          _profileImage = File(pickedFile.path);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Foto profil berhasil diperbarui'),
+            backgroundColor: const Color(0xFF00897B),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memilih foto: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -181,6 +293,26 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 );
                               },
                             ),
+                            _buildMenuItem(
+                              icon: Icons.notifications_outlined,
+                              iconColor: const Color(0xFFFF8F00),
+                              iconBg: const Color(0xFFFF8F00),
+                              title: 'Pengaturan Notifikasi',
+                              subtitle: 'Atur preferensi notifikasi',
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text('Fitur pengaturan notifikasi akan segera hadir'),
+                                    backgroundColor: const Color(0xFF1565C0),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    margin: const EdgeInsets.all(16),
+                                  ),
+                                );
+                              },
+                            ),
                           ]),
 
                           const SizedBox(height: 24),
@@ -241,6 +373,46 @@ class _ProfileScreenState extends State<ProfileScreen>
                               title: 'Tentang Aplikasi',
                               subtitle: 'Informasi & versi aplikasi',
                               onTap: _showAboutDialog,
+                            ),
+                            _buildMenuItem(
+                              icon: Icons.help_outline_rounded,
+                              iconColor: const Color(0xFF0288D1),
+                              iconBg: const Color(0xFF0288D1),
+                              title: 'Bantuan & FAQ',
+                              subtitle: 'Pertanyaan umum & panduan',
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text('Fitur bantuan & FAQ akan segera hadir'),
+                                    backgroundColor: const Color(0xFF1565C0),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    margin: const EdgeInsets.all(16),
+                                  ),
+                                );
+                              },
+                            ),
+                            _buildMenuItem(
+                              icon: Icons.privacy_tip_outlined,
+                              iconColor: const Color(0xFF5E35B1),
+                              iconBg: const Color(0xFF5E35B1),
+                              title: 'Kebijakan Privasi',
+                              subtitle: 'Syarat & ketentuan privasi',
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text('Fitur kebijakan privasi akan segera hadir'),
+                                    backgroundColor: const Color(0xFF1565C0),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    margin: const EdgeInsets.all(16),
+                                  ),
+                                );
+                              },
                             ),
                           ]),
 
@@ -343,42 +515,78 @@ class _ProfileScreenState extends State<ProfileScreen>
                   // Avatar + Info
                   Row(
                     children: [
-                      // Avatar with shadow and gradient ring
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 16,
-                              offset: const Offset(0, 6),
+                      // Avatar with shadow, gradient ring, and camera button
+                      Stack(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [Colors.white, Color(0xFFBBDEFB)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                          child: CircleAvatar(
-                            radius: 40,
-                            backgroundColor: const Color(0xFF0D47A1),
-                            child: Text(
-                              _getInitials(_currentUser?.name ?? ''),
-                              style: const TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                                letterSpacing: 1,
+                            child: Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [Colors.white, Color(0xFFBBDEFB)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
+                              child: CircleAvatar(
+                                radius: 40,
+                                backgroundColor: const Color(0xFF0D47A1),
+                                backgroundImage: _profileImage != null
+                                    ? FileImage(_profileImage!)
+                                    : null,
+                                child: _profileImage == null
+                                    ? Text(
+                                        _getInitials(_currentUser?.name ?? ''),
+                                        style: const TextStyle(
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.white,
+                                          letterSpacing: 1,
+                                        ),
+                                      )
+                                    : null,
                               ),
                             ),
                           ),
-                        ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: GestureDetector(
+                              onTap: _pickProfileImage,
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1565C0),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.2),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.camera_alt_rounded,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(width: 18),
 
@@ -697,33 +905,26 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   // ==================== LOGOUT ====================
   Widget _buildLogoutButton() {
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: 54,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.red.shade200, width: 1.5),
-      ),
-      child: Material(
-        color: Colors.red.shade50.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: _handleLogout,
-          borderRadius: BorderRadius.circular(16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.logout_rounded, color: Colors.red.shade600, size: 20),
-              const SizedBox(width: 10),
-              Text(
-                'Keluar dari Akun',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.red.shade600,
-                ),
-              ),
-            ],
+      child: ElevatedButton.icon(
+        onPressed: _handleLogout,
+        icon: const Icon(Icons.logout_rounded, size: 20),
+        label: const Text(
+          'Keluar dari Akun',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.white,
+          elevation: 2,
+          shadowColor: Colors.red.withValues(alpha: 0.3),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
         ),
       ),
