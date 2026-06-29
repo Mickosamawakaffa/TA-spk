@@ -31,7 +31,10 @@ class LaundryCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => LaundryDetailScreen(laundry: laundry),
+            builder: (context) => LaundryDetailScreen(
+              laundry: laundry,
+              selectedJenisLayanan: selectedJenisLayanan,
+            ),
           ),
         );
       },
