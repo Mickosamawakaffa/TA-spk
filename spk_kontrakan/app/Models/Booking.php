@@ -100,6 +100,7 @@ class Booking extends Model
 
     const PAYMENT_UNPAID = 'unpaid';
     const PAYMENT_PAID = 'paid';
+    const PAYMENT_VERIFICATION = 'verification';
     const PAYMENT_REFUNDED = 'refunded';
 
     // ========== RELASI ==========
@@ -281,6 +282,7 @@ class Booking extends Model
     {
         return match ($this->payment_status) {
             self::PAYMENT_UNPAID => 'Belum Bayar',
+            self::PAYMENT_VERIFICATION => 'Menunggu Verifikasi',
             self::PAYMENT_PAID => 'Lunas',
             self::PAYMENT_REFUNDED => 'Dikembalikan',
             default => ucfirst($this->payment_status),
