@@ -29,9 +29,10 @@ class Booking extends Model
      */
     public static function syncKontrakanStatus($kontrakanId)
     {
-        // Cek apakah ada booking checked_in
+        // Cek apakah ada booking checked_in (sewa)
         $hasCheckedIn = static::where('kontrakan_id', $kontrakanId)
             ->where('status', self::STATUS_CHECKED_IN)
+            ->where('jenis_pengajuan', 'sewa')
             ->exists();
 
         if ($hasCheckedIn) {
@@ -39,9 +40,10 @@ class Booking extends Model
             return;
         }
 
-        // Cek apakah ada booking confirmed atau pending
+        // Cek apakah ada booking confirmed atau pending (sewa)
         $hasActiveOrPending = static::where('kontrakan_id', $kontrakanId)
             ->whereIn('status', [self::STATUS_CONFIRMED, self::STATUS_PENDING])
+            ->where('jenis_pengajuan', 'sewa')
             ->exists();
 
         if ($hasActiveOrPending) {
