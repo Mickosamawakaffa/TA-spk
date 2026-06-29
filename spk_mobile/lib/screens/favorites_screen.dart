@@ -677,7 +677,7 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                       children: [
                         _buildInfoChip(
                           Icons.schedule_rounded,
-                          '${laundry.waktuProses}h proses',
+                          '${laundry.estimasiSelesai} proses',
                           const Color(0xFF00897B),
                         ),
                         const SizedBox(width: 8),

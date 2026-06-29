@@ -1060,7 +1060,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${laundry.waktuProses} jam',
+                          laundry.estimasiSelesai,
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],

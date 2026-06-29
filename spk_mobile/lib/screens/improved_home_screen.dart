@@ -1378,7 +1378,7 @@ class _ImprovedHomeScreenState extends State<ImprovedHomeScreen> {
                             ),
                             const SizedBox(width: 3),
                             Text(
-                              '${laundry.waktuProses}h',
+                              laundry.estimasiSelesai,
                               style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
