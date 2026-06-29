@@ -301,6 +301,44 @@ class BookingController extends Controller
     }
 
     /**
+     * Stream KTP photo securely for admin (NOT public storage link).
+     */
+    public function ktpPhoto(Booking $booking)
+    {
+        // ========== AUTHORIZATION: Cek apakah admin punya akses ke booking ini ==========
+        $admin = auth()->guard('admin')->user();
+        if ($admin) {
+            if ($booking->kontrakan->admin_id !== $admin->id) {
+                abort(403, 'Anda tidak memiliki akses ke booking ini.');
+            }
+        }
+
+        if (!$booking->ktp_photo) {
+            abort(404, 'Foto KTP tidak tersedia.');
+        }
+
+        $path = $booking->ktp_photo;
+
+        // Mendukung disk private (secure) dan public sebagai fallback
+        $disk = self::PAYMENT_PROOF_PRIVATE_DISK;
+        if (!Storage::disk($disk)->exists($path)) {
+            if (Storage::disk(self::PAYMENT_PROOF_PUBLIC_DISK)->exists($path)) {
+                $disk = self::PAYMENT_PROOF_PUBLIC_DISK;
+            } else {
+                abort(404, 'File foto KTP tidak ditemukan.');
+            }
+        }
+
+        $absolutePath = Storage::disk($disk)->path($path);
+
+        return response()->file($absolutePath, [
+            'Content-Disposition' => 'inline; filename="ktp-photo-' . $booking->id . '"',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+        ]);
+    }
+
+    /**
      * Tampilkan form edit booking
      */
     public function edit(Booking $booking)

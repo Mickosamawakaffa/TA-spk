@@ -6,6 +6,8 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -83,6 +85,17 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by(
                 $request->user()?->id ?: $request->ip()
             );
+        });
+
+        // Kustomisasi Email Verifikasi Berbahasa Indonesia
+        VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
+            return (new MailMessage)
+                ->subject('Verifikasi Alamat Email - Kontrak Kampus')
+                ->greeting('Halo, ' . $notifiable->name . '!')
+                ->line('Silakan klik tombol di bawah ini untuk memverifikasi alamat email akun Kontrak Kampus Anda.')
+                ->action('Verifikasi Email', $url)
+                ->line('Jika Anda tidak merasa mendaftar akun di aplikasi kami, Anda dapat mengabaikan email ini.')
+                ->salutation('Salam Hangat, \nTim Kontrak Kampus');
         });
     }
 }

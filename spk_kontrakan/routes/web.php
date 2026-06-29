@@ -133,6 +133,8 @@ Route::middleware('auth:admin')->group(function () {
         Route::get('/{booking}', [BookingController::class, 'show'])->name('show');
         // ✅ Secure payment proof view (not public storage link)
         Route::get('/{booking}/payment-proof', [BookingController::class, 'paymentProof'])->name('payment-proof');
+        // ✅ Secure KTP photo view
+        Route::get('/{booking}/ktp-photo', [BookingController::class, 'ktpPhoto'])->name('ktp-photo');
         Route::get('/{booking}/edit', [BookingController::class, 'edit'])->name('edit');
         Route::put('/{booking}', [BookingController::class, 'update'])->name('update');
         Route::delete('/{booking}', [BookingController::class, 'destroy'])->name('destroy');

@@ -66,6 +66,8 @@ class Booking extends Model
         'payment_status',
         'payment_method',
         'payment_proof',
+        'ktp_photo',
+        'jenis_pengajuan',
         'paid_at',
         'notes',
         'booking_source',

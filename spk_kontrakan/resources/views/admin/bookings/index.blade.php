@@ -194,6 +194,11 @@
                                     <i class="bi bi-image"></i>
                                 </a>
                                 @endif
+                                @if($booking->jenis_pengajuan === 'sewa' && $booking->ktp_photo)
+                                <a href="{{ route('admin.bookings.ktp-photo', $booking->id) }}" target="_blank" class="btn btn-sm btn-outline-primary ms-1" title="Lihat Foto KTP">
+                                    <i class="bi bi-person-vcard"></i>
+                                </a>
+                                @endif
                                 @if($booking->booking_source == 'user')
                                 <span class="badge bg-info ms-1" title="Booking dari User">
                                     <i class="bi bi-person"></i>
