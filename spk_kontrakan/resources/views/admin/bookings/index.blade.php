@@ -178,7 +178,7 @@
                                     </div>
                                     @if($booking->jam_survei)
                                     <small class="text-muted">
-                                        <i class="bi bi-clock me-1"></i>Pukul {{ $booking->jam_survei }} WIB
+                                        <i class="bi bi-clock me-1"></i>Pukul {{ date('H.i', strtotime($booking->jam_survei)) }} WIB
                                     </small>
                                     @endif
                                     <br>

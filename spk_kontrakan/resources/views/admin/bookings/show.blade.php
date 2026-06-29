@@ -199,7 +199,7 @@
                         </div>
                         @if($booking->jam_survei)
                         <div class="fw-semibold mt-1">
-                            <i class="bi bi-clock me-1 text-success"></i>Pukul {{ $booking->jam_survei }} WIB
+                            <i class="bi bi-clock me-1 text-success"></i>Pukul {{ date('H.i', strtotime($booking->jam_survei)) }} WIB
                         </div>
                         @endif
                         <span class="badge bg-success mt-1">Survei</span>
